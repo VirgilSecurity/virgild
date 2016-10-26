@@ -2,7 +2,13 @@ package storage
 
 import (
 	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
+	search "gopkg.in/virgilsecurity/virgil-sdk-go.v4/search"
 )
+
+type CardStorage interface {
+	GetCard(id string) (*virgil.Card, error)
+	SearchCards(criteria *search.Criteria) ([]*virgil.Card, error)
+}
 
 type Logger interface {
 	Printf(format string, v ...interface{})
