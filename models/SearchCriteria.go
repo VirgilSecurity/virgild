@@ -1,8 +1,8 @@
 package models
 
 const (
-	GlobalScope string = "global"
-	Application string = "application"
+	GlobalScope      string = "global"
+	ApplicationScope string = "application"
 )
 
 type Criteria struct {

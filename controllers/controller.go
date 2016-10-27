@@ -29,6 +29,11 @@ func (c *Controller) SearchCards(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("Data has incorrect format")
 	}
+
+	if cr.Scope == "" {
+		cr.Scope = models.ApplicationScope
+	}
+
 	cards, err := c.Storage.SearchCards(cr)
 	if err != nil {
 		return nil, err
