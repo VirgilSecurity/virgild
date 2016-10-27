@@ -13,6 +13,7 @@ type Logger interface {
 type Controller interface {
 	GetCard(id string) ([]byte, error)
 	SearchCards([]byte) ([]byte, error)
+	CreateCard([]byte) ([]byte, error)
 }
 
 func MakeRouter(contreoller Controller, logger Logger) Router {
@@ -37,6 +38,18 @@ func (r *Router) GetHandleRequest() fasthttp.RequestHandler {
 
 func (r *Router) Init() {
 	v4 := r.router.Group("/v4")
+
+	v4.Post("/card", func(ctx *routing.Context) error {
+		data := ctx.PostBody()
+		res, err := r.controller.CreateCard(data)
+
+		if err != nil {
+			return err
+		}
+
+		ctx.Write(res)
+		return nil
+	})
 
 	v4.Post("/card/actions/search", func(ctx *routing.Context) error {
 		data := ctx.PostBody()

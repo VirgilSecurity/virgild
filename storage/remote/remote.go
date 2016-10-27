@@ -72,6 +72,26 @@ func (s *Remote) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	return res, nil
 }
 
+func (s *Remote) CreateCard(c models.CardRequst) (models.CardResponse, error) {
+	appID := "[YOUR_APP_ID_HERE]"
+	appKeyPassword := "[YOUR_APP_KEY_PASSWORD_HERE]"
+	appKeyData, err := ioutil.ReadFile("[YOUR_APP_KEY_PATH_HERE]")
+	appKey, err := crypto.ImportPrivateKey(appKeyData, appKeyPassword)
+
+	ccr := virgil.CreateCardRequest{
+		Identity:     c.Identity,
+		IdentityType: c.IdentityType,
+		PublicKey:    c.PublicKey,
+		Scope:        c.Scope,
+		SignableRequest: virgil.SignableRequest{
+			Signatures: models.Signatures,
+		},
+		Signatures: c.Signatures,
+	}
+	err = requestSigner.AuthoritySign(ccr, appID, appKey)
+	return virgil.CreateCard(ccr)
+}
+
 func mapCardToCardRequest(card *virgil.Card) models.CardResponse {
 	return models.CardResponse{
 		ID:       card.ID,

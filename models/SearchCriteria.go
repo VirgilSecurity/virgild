@@ -10,3 +10,11 @@ type Criteria struct {
 	IdentityType string   `json:"identity_type"`
 	Identities   []string `json:"identities"`
 }
+
+func ResolveScope(scope string) string {
+	if scope == GlobalScope {
+		return GlobalScope
+	} else {
+		return ApplicationScope
+	}
+}
