@@ -12,6 +12,7 @@ type Logger interface {
 
 type Controller interface {
 	GetCard(id string) ([]byte, error)
+	SearchCards([]byte) ([]byte, error)
 }
 
 func MakeRouter(contreoller Controller, logger Logger) Router {
@@ -37,17 +38,28 @@ func (r *Router) GetHandleRequest() fasthttp.RequestHandler {
 func (r *Router) Init() {
 	v4 := r.router.Group("/v4")
 
+	v4.Post("/card/actions/search", func(ctx *routing.Context) error {
+		data := ctx.PostBody()
+		res, err := r.controller.SearchCards(data)
+
+		if err != nil {
+			return err
+		}
+
+		ctx.Write(res)
+		return nil
+	})
+
 	v4.Get("/card/<id>", func(ctx *routing.Context) error {
 		id := ctx.Param("id")
 		res, err := r.controller.GetCard(id)
 
 		if err != nil {
 			return err
-			r.logger.Println("Get card by id (", id, ") Error:", err)
-			ctx.Error("Service unavailable. Please contact your administrator.", 500)
 		}
 
 		ctx.Write(res)
 		return nil
 	})
+
 }

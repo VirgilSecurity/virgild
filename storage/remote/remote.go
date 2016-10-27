@@ -45,7 +45,7 @@ func (s *Remote) GetCard(id string) (models.CardResponse, error) {
 	return mapCardToCardRequest(card), nil
 }
 
-func (s *Remote) SearchCard(c models.Criteria) (models.CardsResponse, error) {
+func (s *Remote) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	var res models.CardsResponse
 	var scope enums.VirgilEnum
 
