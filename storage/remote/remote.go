@@ -5,11 +5,17 @@ import (
 	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/enums"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/search"
+	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/virgilcrypto"
+	"io/ioutil"
 )
 
 type RemoteConfig struct {
 	CardsServiceAddress         string
 	ReadonlyCardsServiceAddress string
+	AppID                       string
+	Passsword                   string
+	AppKey                      string
+	AppKeyPath                  string
 }
 
 func MakeRemoteStorage(token string, conf RemoteConfig) *Remote {
@@ -26,13 +32,31 @@ func MakeRemoteStorage(token string, conf RemoteConfig) *Remote {
 		ReadonlyCardsServiceAddress: conf.ReadonlyCardsServiceAddress,
 	}
 
+	if conf.AppKey == "" {
+		b, err := ioutil.ReadFile(conf.AppKeyPath)
+		if err != nil {
+			panic(err)
+		}
+		conf.AppKey = string(b)
+	}
+
+	crypto := virgil.NewCrypto()
+	appKey, err := crypto.ImportPrivateKey([]byte(conf.AppKey), conf.Passsword)
+	if err != nil {
+		panic(err)
+	}
+
 	return &Remote{
-		client: virgil.NewClient(token),
+		client:     virgil.NewClient(token),
+		appID:      conf.AppID,
+		privateKey: appKey,
 	}
 }
 
 type Remote struct {
-	client virgil.VirgilClient
+	client     virgil.VirgilClient
+	appID      string
+	privateKey virgilcrypto.PrivateKey
 }
 
 func (s *Remote) GetCard(id string) (models.CardResponse, error) {
@@ -72,24 +96,35 @@ func (s *Remote) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	return res, nil
 }
 
-func (s *Remote) CreateCard(c models.CardRequst) (models.CardResponse, error) {
-	appID := "[YOUR_APP_ID_HERE]"
-	appKeyPassword := "[YOUR_APP_KEY_PASSWORD_HERE]"
-	appKeyData, err := ioutil.ReadFile("[YOUR_APP_KEY_PATH_HERE]")
-	appKey, err := crypto.ImportPrivateKey(appKeyData, appKeyPassword)
+func (s *Remote) CreateCard(c models.CardRequest) (models.CardResponse, error) {
 
-	ccr := virgil.CreateCardRequest{
-		Identity:     c.Identity,
-		IdentityType: c.IdentityType,
-		PublicKey:    c.PublicKey,
-		Scope:        c.Scope,
-		SignableRequest: virgil.SignableRequest{
-			Signatures: models.Signatures,
-		},
-		Signatures: c.Signatures,
+	var scope enums.VirgilEnum
+	if c.Scope == "global" {
+		scope = enums.CardScope.Global
+	} else {
+		scope = enums.CardScope.Application
 	}
-	err = requestSigner.AuthoritySign(ccr, appID, appKey)
-	return virgil.CreateCard(ccr)
+
+	ccr := virgil.NewEmptyCreateCardRequest()
+	ccr.Identity = c.Identity
+	ccr.IdentityType = c.IdentityType
+	ccr.PublicKey = c.PublicKey
+	ccr.Scope = scope
+	ccr.Signatures = c.Meta.Signatures
+
+	requestSigner := virgil.RequestSigner{
+		Crypto: virgil.NewCrypto(),
+	}
+	err := requestSigner.AuthoritySign(ccr, s.appID, s.privateKey)
+	if err != nil {
+		return models.CardResponse{}, err
+	}
+
+	card, err := virgil.CreateCard(ccr)
+	if err != nil {
+		return models.CardResponse{}, err
+	}
+	return mapCardToCardRequest(card), nil
 }
 
 func mapCardToCardRequest(card *virgil.Card) models.CardResponse {
