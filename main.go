@@ -15,11 +15,10 @@ func main() {
 	sr := remote.MakeRemoteStorage("AT.690efbee018f626722658e1a660df013f9c0c18b21edbf845ab1d52cfbee499f", remote.RemoteConfig{
 		CardsServiceAddress:         "https://cards-stg.virgilsecurity.com",
 		ReadonlyCardsServiceAddress: "https://cards-ro-stg.virgilsecurity.com",
-		AppID:     "d32b745ec2f3ab47add5d89a18f41f5076dc93ccfb5f3c6a575aef58506a24ec",
-		Passsword: "",
-		AppKey: []byte(`-----BEGIN PRIVATE KEY-----
-MC4CAQAwBQYDK2VwBCIEICM4hGSdeteNCGAmgI1rYo9lEq91bsgqIIOs4mC4h+IK
------END PRIVATE KEY-----`),
+		AppID: "d32b745ec2f3ab47add5d89a18f41f5076dc93ccfb5f3c6a575aef58506a24ec",
+		PublicKey: []byte(`-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEA8jJqWY5hm4tvmnM6QXFdFCErRCnoYdhVNjFggffSCoc=
+-----END PUBLIC KEY-----`),
 	})
 
 	sl := local.MakeLocalStorage("sqlite3:test.db")

@@ -62,3 +62,15 @@ func (s Sync) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	}
 	return csl, nil
 }
+
+func (s Sync) CreateCard(c models.CardResponse) (models.CardResponse, error) {
+	r, err := s.Remote.CreateCard(c)
+	if err != nil {
+		return models.CardResponse{}, err
+	}
+	_, err = s.Local.CreateCard(r)
+	if err != nil {
+		fmt.Printf("Local storage err:", err)
+	}
+	return r, nil
+}
