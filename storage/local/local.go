@@ -107,7 +107,7 @@ func (s Local) CreateCard(c models.CardResponse) (models.CardResponse, error) {
 	return c, nil
 }
 
-func (s Local) RevokCard(id string, c models.CardResponse) error {
+func (s Local) RevokeCard(id string, c models.CardResponse) error {
 	_, err := s.engine.Id(id).Delete(new(CardSql))
 	return err
 }
