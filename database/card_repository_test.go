@@ -91,6 +91,17 @@ func Test_Get_EmptyResult_ReturnNil(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func Test_Get_ReturnErr_ReturnErr(t *testing.T) {
+	orm := Before()
+	orm.Close()
+
+	repo := CardRepository{
+		Orm: orm,
+	}
+	_, err := repo.Get("asdf")
+	assert.NotNil(t, err)
+}
+
 func Test_Get_HasResult_ReturnVal(t *testing.T) {
 	orm := Before()
 	defer orm.Close()
@@ -133,6 +144,19 @@ func Test_Find_FilledOnlyIdentities_ReturnVal(t *testing.T) {
 
 	assert.NotNil(t, actual)
 	assert.EqualValues(t, expected, actual)
+}
+
+func Test_Search_ReturnErr_ReturnErr(t *testing.T) {
+	orm := Before()
+	orm.Close()
+
+	repo := CardRepository{
+		Orm: orm,
+	}
+	_, err := repo.Find(models.Criteria{
+		Identities: []string{"identity1", "identity2"},
+	})
+	assert.NotNil(t, err)
 }
 
 func Test_Find_FilledIdentitiesScope_ReturnVal(t *testing.T) {
@@ -238,6 +262,25 @@ func Test_Add(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func Test_Add_ReturnErr_ReturnErr(t *testing.T) {
+	orm := Before()
+	orm.Close()
+
+	repo := CardRepository{
+		Orm: orm,
+	}
+	expected := CardSql{
+		Identity:     "some identity",
+		IdentityType: "global",
+		Scope:        "global",
+		Id:           "id",
+		Card:         "some information",
+	}
+	err := repo.Add(expected)
+
+	assert.NotNil(t, err)
+}
+
 func Test_Delete(t *testing.T) {
 	orm := Before()
 	defer orm.Close()
@@ -250,4 +293,18 @@ func Test_Delete(t *testing.T) {
 	var actual CardSql
 	has, _ := orm.ID("id").Get(&actual)
 	assert.False(t, has)
+}
+
+func Test_Delete_ReturnErr_ReturnErr(t *testing.T) {
+	orm := Before()
+	orm.Close()
+
+	repo := CardRepository{
+		Orm: orm,
+	}
+	repo.Delete("id1")
+	var actual CardSql
+	_, err := orm.ID("id").Get(&actual)
+
+	assert.NotNil(t, err)
 }

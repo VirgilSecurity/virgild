@@ -45,7 +45,7 @@ type CardRepository interface {
 	Get(id string) (*CardSql, error)
 	Find(models.Criteria) ([]CardSql, error)
 	Add(CardSql) error
-	Delete(id) error
+	Delete(string) error
 }
 
 type Local struct {
