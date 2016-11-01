@@ -9,7 +9,7 @@ type Storage interface {
 	GetCard(id string) (models.CardResponse, error)
 	SearchCards(models.Criteria) (models.CardsResponse, error)
 	CreateCard(models.CardResponse) (models.CardResponse, error)
-	RevokCard(id string, c models.CardResponse) error
+	RevokeCard(id string, c models.CardResponse) error
 }
 
 type Sync struct {
@@ -76,12 +76,12 @@ func (s Sync) CreateCard(c models.CardResponse) (models.CardResponse, error) {
 	return r, nil
 }
 
-func (s Sync) RevokCard(id string, c models.CardResponse) error {
-	err := s.Remote.RevokCard(id, c)
+func (s Sync) RevokeCard(id string, c models.CardResponse) error {
+	err := s.Remote.RevokeCard(id, c)
 	if err != nil {
 		return err
 	}
-	err = s.Local.RevokCard(id, c)
+	err = s.Local.RevokeCard(id, c)
 	if err != nil {
 		return err
 	}
