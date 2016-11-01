@@ -30,7 +30,7 @@ func (s MockStorage) SearchCards(c models.Criteria) ([]models.CardResponse, erro
 		return nil, args.Error(1)
 	}
 }
-func (s MockStorage) CreateCard(r models.CardResponse) (*models.CardResponse, error) {
+func (s MockStorage) CreateCard(r *models.CardResponse) (*models.CardResponse, error) {
 	args := s.Called(r)
 	v, ok := args.Get(0).(*models.CardResponse)
 	if ok {
@@ -39,7 +39,7 @@ func (s MockStorage) CreateCard(r models.CardResponse) (*models.CardResponse, er
 		return nil, args.Error(1)
 	}
 }
-func (s MockStorage) RevokeCard(id string, r models.CardResponse) error {
+func (s MockStorage) RevokeCard(id string, r *models.CardResponse) error {
 	args := s.Called(id, r)
 	return args.Error(1)
 }
@@ -138,7 +138,7 @@ func Test_GetCard_LocalNotFoundCardRemoteReturnVal_AddToLocal(t *testing.T) {
 	expected := MakeFakeCardResponseWith("test")
 
 	local.On("GetCard", id).Return(nil, nil)
-	local.On("CreateCard", *expected).Return(expected, nil)
+	local.On("CreateCard", expected).Return(expected, nil)
 
 	remote.On("GetCard", id).Return(expected, nil).Once()
 

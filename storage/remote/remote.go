@@ -84,7 +84,7 @@ func (s *Remote) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	return res, nil
 }
 
-func (s *Remote) CreateCard(c models.CardResponse) (*models.CardResponse, error) {
+func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, error) {
 	vrs := virgil.SignedResponse{
 		ID: c.ID,
 		Meta: virgil.ResponseMeta{
@@ -116,7 +116,7 @@ func (s *Remote) CreateCard(c models.CardResponse) (*models.CardResponse, error)
 	return mapCardToCardRequest(card), nil
 }
 
-func (s *Remote) RevokeCard(id string, c models.CardResponse) error {
+func (s *Remote) RevokeCard(id string, c *models.CardResponse) error {
 	r := virgil.NewEmptyRevokeCardRequest()
 
 	json.Unmarshal(c.Snapshot, r)

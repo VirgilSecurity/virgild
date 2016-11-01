@@ -82,7 +82,7 @@ func (s Local) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	return r, err
 }
 
-func (s Local) CreateCard(c models.CardResponse) (*models.CardResponse, error) {
+func (s Local) CreateCard(c *models.CardResponse) (*models.CardResponse, error) {
 	var cr models.CardRequest
 	err := json.Unmarshal(c.Snapshot, &cr)
 	if err != nil {
@@ -104,10 +104,10 @@ func (s Local) CreateCard(c models.CardResponse) (*models.CardResponse, error) {
 	if err != nil {
 		fmt.Println("Insert errore:", err)
 	}
-	return &c, nil
+	return c, nil
 }
 
-func (s Local) RevokeCard(id string, c models.CardResponse) error {
+func (s Local) RevokeCard(id string, c *models.CardResponse) error {
 	_, err := s.engine.Id(id).Delete(new(CardSql))
 	return err
 }

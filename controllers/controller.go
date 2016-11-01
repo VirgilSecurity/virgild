@@ -9,8 +9,8 @@ import (
 type Storage interface {
 	GetCard(id string) (*models.CardResponse, error)
 	SearchCards(models.Criteria) ([]models.CardResponse, error)
-	CreateCard(models.CardResponse) (*models.CardResponse, error)
-	RevokeCard(id string, c models.CardResponse) error
+	CreateCard(*models.CardResponse) (*models.CardResponse, error)
+	RevokeCard(id string, c *models.CardResponse) error
 }
 
 type Controller struct {
@@ -44,8 +44,8 @@ func (c *Controller) SearchCards(data []byte) ([]byte, error) {
 }
 
 func (c *Controller) CreateCard(data []byte) ([]byte, error) {
-	var cr models.CardResponse
-	err := json.Unmarshal(data, &cr)
+	cr := new(models.CardResponse)
+	err := json.Unmarshal(data, cr)
 	if err != nil {
 		return nil, errors.New("Data has incorrect format")
 	}
@@ -57,8 +57,8 @@ func (c *Controller) CreateCard(data []byte) ([]byte, error) {
 }
 
 func (c *Controller) RevokeCard(id string, data []byte) error {
-	var cr models.CardResponse
-	err := json.Unmarshal(data, &cr)
+	cr := new(models.CardResponse)
+	err := json.Unmarshal(data, cr)
 	if err != nil {
 		return errors.New("Data has incorrect format")
 	}

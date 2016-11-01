@@ -8,8 +8,8 @@ import (
 type Storage interface {
 	GetCard(id string) (*models.CardResponse, error)
 	SearchCards(models.Criteria) ([]models.CardResponse, error)
-	CreateCard(models.CardResponse) (*models.CardResponse, error)
-	RevokeCard(id string, c models.CardResponse) error
+	CreateCard(*models.CardResponse) (*models.CardResponse, error)
+	RevokeCard(id string, c *models.CardResponse) error
 }
 
 type Logger interface {
@@ -33,7 +33,7 @@ func (s Sync) GetCard(id string) (*models.CardResponse, error) {
 		if err != nil || c == nil {
 			return nil, err
 		}
-		return s.Local.CreateCard(*c)
+		return s.Local.CreateCard(c)
 	}
 	return c, nil
 }
@@ -60,7 +60,7 @@ func (s Sync) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 				}
 			}
 			if !exist {
-				s.Local.CreateCard(vr)
+				s.Local.CreateCard(&vr)
 			}
 		}
 		return csr, nil
@@ -68,19 +68,19 @@ func (s Sync) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	return csl, nil
 }
 
-func (s Sync) CreateCard(c models.CardResponse) (*models.CardResponse, error) {
+func (s Sync) CreateCard(c *models.CardResponse) (*models.CardResponse, error) {
 	r, err := s.Remote.CreateCard(c)
 	if err != nil {
 		return nil, err
 	}
-	_, err = s.Local.CreateCard(*r)
+	_, err = s.Local.CreateCard(r)
 	if err != nil {
 		fmt.Printf("Local storage err:", err)
 	}
 	return r, nil
 }
 
-func (s Sync) RevokeCard(id string, c models.CardResponse) error {
+func (s Sync) RevokeCard(id string, c *models.CardResponse) error {
 	err := s.Remote.RevokeCard(id, c)
 	if err != nil {
 		return err
