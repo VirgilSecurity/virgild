@@ -14,6 +14,7 @@ type Controller interface {
 	GetCard(id string) ([]byte, error)
 	SearchCards([]byte) ([]byte, error)
 	CreateCard([]byte) ([]byte, error)
+	RevokCard(id string, data []byte) error
 }
 
 func MakeRouter(contreoller Controller, logger Logger) Router {
@@ -38,6 +39,12 @@ func (r *Router) GetHandleRequest() fasthttp.RequestHandler {
 
 func (r *Router) Init() {
 	v4 := r.router.Group("/v4")
+
+	v4.Delete("/card/<id>", func(ctx *routing.Context) error {
+		data := ctx.PostBody()
+		id := ctx.Param("id")
+		return r.controller.RevokCard(id, data)
+	})
 
 	v4.Post("/card", func(ctx *routing.Context) error {
 		data := ctx.PostBody()

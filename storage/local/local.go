@@ -24,7 +24,7 @@ func MakeLocalStorage(db string) Local {
 		panic("Cannot connect to db")
 	}
 
-	err = engine.Sync2(new(CardSql))
+	err = engine.Sync(new(CardSql))
 	if err != nil {
 		panic("Cannot sync with db")
 	}
@@ -35,8 +35,8 @@ func MakeLocalStorage(db string) Local {
 }
 
 type CardSql struct {
-	Id           string
-	Identity     string
+	Id           string `xorm:"PK"`
+	Identity     string `xorm:"Index"`
 	IdentityType string
 	Scope        string
 	Card         string
@@ -63,7 +63,11 @@ func (s Local) GetCard(id string) (models.CardResponse, error) {
 func (s Local) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	var r models.CardsResponse
 	var cs []CardSql
-	err := s.engine.In("identity", c.Identities).And("scope = ?", c.Scope).And("scope = ?", c.Scope).Find(&cs)
+	q := s.engine.In("identity", c.Identities).And("scope = ?", c.Scope)
+	if c.IdentityType != "" {
+		q = q.And("identity_type = ?", c.IdentityType)
+	}
+	err := q.Find(&cs)
 	if err != nil {
 		return r, err
 	}
@@ -101,4 +105,9 @@ func (s Local) CreateCard(c models.CardResponse) (models.CardResponse, error) {
 		fmt.Println("Insert errore:", err)
 	}
 	return c, nil
+}
+
+func (s Local) RevokCard(id string, c models.CardResponse) error {
+	_, err := s.engine.Id(id).Delete(new(CardSql))
+	return err
 }

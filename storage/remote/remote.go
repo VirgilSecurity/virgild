@@ -1,6 +1,8 @@
 package remote
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"github.com/VirgilSecurity/virgil-apps-cards-cacher/models"
 	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/enums"
@@ -115,6 +117,21 @@ func (s *Remote) CreateCard(c models.CardResponse) (models.CardResponse, error) 
 		return models.CardResponse{}, err
 	}
 	return mapCardToCardRequest(card), nil
+}
+
+func (s *Remote) RevokCard(id string, c models.CardResponse) error {
+	var (
+		dst []byte
+		r   virgil.RevokeCardRequest
+	)
+	base64.StdEncoding.Decode(dst, c.Snapshot)
+
+	json.Unmarshal(dst, &r)
+	for k, v := range c.Meta.Signatures {
+		r.AppendSignature(k, v)
+	}
+
+	return s.client.RevokeCard(&r)
 }
 
 func mapCardToCardRequest(card *virgil.Card) models.CardResponse {

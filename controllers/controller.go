@@ -11,6 +11,7 @@ type Storage interface {
 	GetCard(id string) (models.CardResponse, error)
 	SearchCards(models.Criteria) (models.CardsResponse, error)
 	CreateCard(models.CardResponse) (models.CardResponse, error)
+	RevokCard(id string, c models.CardResponse) error
 }
 
 type Controller struct {
@@ -20,7 +21,6 @@ type Controller struct {
 func (c *Controller) GetCard(id string) ([]byte, error) {
 	card, err := c.Storage.GetCard(id)
 	if err != nil {
-		fmt.Println("Errore:", err)
 		return nil, err
 	}
 	return json.Marshal(card)
@@ -56,4 +56,13 @@ func (c *Controller) CreateCard(data []byte) ([]byte, error) {
 		return nil, err
 	}
 	return json.Marshal(card)
+}
+
+func (c *Controller) RevokCard(id string, data []byte) error {
+	var cr models.CardResponse
+	err := json.Unmarshal(data, &cr)
+	if err != nil {
+		return errors.New("Data has incorrect format")
+	}
+	return c.Storage.RevokCard(id, cr)
 }
