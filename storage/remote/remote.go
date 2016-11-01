@@ -57,7 +57,7 @@ func (s *Remote) GetCard(id string) (*models.CardResponse, error) {
 	return mapCardToCardRequest(card), nil
 }
 
-func (s *Remote) SearchCards(c models.Criteria) (models.CardsResponse, error) {
+func (s *Remote) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	var scope enums.VirgilEnum
 
 	if c.Scope == models.GlobalScope {
@@ -76,7 +76,7 @@ func (s *Remote) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 		return nil, err
 	}
 
-	res := models.CardsResponse{}
+	res := []models.CardResponse{}
 	for _, v := range cards {
 		res = append(res, *mapCardToCardRequest(v))
 	}

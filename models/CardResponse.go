@@ -1,7 +1,5 @@
 package models
 
-type CardsResponse []CardResponse
-
 type CardResponse struct {
 	ID       string       `json:"id"`
 	Snapshot []byte       `json:"content_snapshot"` // the raw serialized version of CardRequest

@@ -60,8 +60,8 @@ func (s Local) GetCard(id string) (*models.CardResponse, error) {
 	return r, err
 }
 
-func (s Local) SearchCards(c models.Criteria) (models.CardsResponse, error) {
-	var r models.CardsResponse
+func (s Local) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
+	var r []models.CardResponse
 	var cs []CardSql
 	q := s.engine.In("identity", c.Identities).And("scope = ?", c.Scope)
 	if c.IdentityType != "" {

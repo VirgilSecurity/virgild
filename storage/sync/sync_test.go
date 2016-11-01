@@ -21,11 +21,11 @@ func (s MockStorage) GetCard(id string) (*models.CardResponse, error) {
 		return nil, args.Error(1)
 	}
 }
-func (s MockStorage) SearchCards(c models.Criteria) (models.CardsResponse, error) {
+func (s MockStorage) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	args := s.Called(c)
-	v, ok := args.Get(0).(*models.CardsResponse)
+	v, ok := args.Get(0).([]models.CardResponse)
 	if ok {
-		return *v, args.Error(1)
+		return v, args.Error(1)
 	} else {
 		return nil, args.Error(1)
 	}

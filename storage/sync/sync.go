@@ -7,7 +7,7 @@ import (
 
 type Storage interface {
 	GetCard(id string) (*models.CardResponse, error)
-	SearchCards(models.Criteria) (models.CardsResponse, error)
+	SearchCards(models.Criteria) ([]models.CardResponse, error)
 	CreateCard(models.CardResponse) (*models.CardResponse, error)
 	RevokeCard(id string, c models.CardResponse) error
 }
@@ -38,7 +38,7 @@ func (s Sync) GetCard(id string) (*models.CardResponse, error) {
 	return c, nil
 }
 
-func (s Sync) SearchCards(c models.Criteria) (models.CardsResponse, error) {
+func (s Sync) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 
 	csl, err := s.Local.SearchCards(c)
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 
 type Storage interface {
 	GetCard(id string) (*models.CardResponse, error)
-	SearchCards(models.Criteria) (models.CardsResponse, error)
+	SearchCards(models.Criteria) ([]models.CardResponse, error)
 	CreateCard(models.CardResponse) (*models.CardResponse, error)
 	RevokeCard(id string, c models.CardResponse) error
 }
