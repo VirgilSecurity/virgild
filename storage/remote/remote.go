@@ -2,7 +2,7 @@ package remote
 
 import (
 	"encoding/json"
-	"github.com/VirgilSecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/enums"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/search"
@@ -49,18 +49,15 @@ type Remote struct {
 	client virgil.VirgilClient
 }
 
-func (s *Remote) GetCard(id string) (models.CardResponse, error) {
-	var res models.CardResponse
-
+func (s *Remote) GetCard(id string) (*models.CardResponse, error) {
 	card, err := s.client.GetCard(id)
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 	return mapCardToCardRequest(card), nil
 }
 
 func (s *Remote) SearchCards(c models.Criteria) (models.CardsResponse, error) {
-	var res models.CardsResponse
 	var scope enums.VirgilEnum
 
 	if c.Scope == models.GlobalScope {
@@ -76,17 +73,18 @@ func (s *Remote) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	})
 
 	if err != nil {
-		return res, err
+		return nil, err
 	}
 
+	res := models.CardsResponse{}
 	for _, v := range cards {
-		res = append(res, mapCardToCardRequest(v))
+		res = append(res, *mapCardToCardRequest(v))
 	}
 
 	return res, nil
 }
 
-func (s *Remote) CreateCard(c models.CardResponse) (models.CardResponse, error) {
+func (s *Remote) CreateCard(c models.CardResponse) (*models.CardResponse, error) {
 	vrs := virgil.SignedResponse{
 		ID: c.ID,
 		Meta: virgil.ResponseMeta{
@@ -98,7 +96,7 @@ func (s *Remote) CreateCard(c models.CardResponse) (models.CardResponse, error) 
 	}
 	card, err := vrs.ToCard(virgil.NewCrypto())
 	if err != nil {
-		return models.CardResponse{}, err
+		return nil, err
 	}
 	r := virgil.NewEmptyCreateCardRequest()
 	r.Data = card.Data
@@ -113,7 +111,7 @@ func (s *Remote) CreateCard(c models.CardResponse) (models.CardResponse, error) 
 
 	card, err = s.client.CreateCard(r)
 	if err != nil {
-		return models.CardResponse{}, err
+		return nil, err
 	}
 	return mapCardToCardRequest(card), nil
 }
@@ -129,8 +127,8 @@ func (s *Remote) RevokeCard(id string, c models.CardResponse) error {
 	return s.client.RevokeCard(r)
 }
 
-func mapCardToCardRequest(card *virgil.Card) models.CardResponse {
-	return models.CardResponse{
+func mapCardToCardRequest(card *virgil.Card) *models.CardResponse {
+	return &models.CardResponse{
 		ID:       card.ID,
 		Snapshot: card.Snapshot,
 		Meta: models.ResponseMeta{

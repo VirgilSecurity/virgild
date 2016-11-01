@@ -21,14 +21,16 @@ MCowBQYDK2VwAyEA8jJqWY5hm4tvmnM6QXFdFCErRCnoYdhVNjFggffSCoc=
 -----END PUBLIC KEY-----`),
 	})
 
+	l := log.New(os.Stderr, "", log.LstdFlags)
 	sl := local.MakeLocalStorage("sqlite3:test.db")
 
 	router := http.MakeRouter(&controllers.Controller{
 		Storage: sync.Sync{
 			Local:  sl,
 			Remote: sr,
+			Logger: l,
 		},
-	}, log.New(os.Stderr, "", log.LstdFlags))
+	}, l)
 
 	fasthttp.ListenAndServe(":8081", router.GetHandleRequest())
 }

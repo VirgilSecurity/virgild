@@ -13,18 +13,28 @@ type MockStorage struct {
 	mock.Mock
 }
 
-func (s MockStorage) GetCard(id string) (models.CardResponse, error) {
+func (s MockStorage) GetCard(id string) (*models.CardResponse, error) {
 	args := s.Called(id)
-	return args.Get(0).(models.CardResponse), args.Error(1)
+	v, ok := args.Get(0).(*models.CardResponse)
+	if ok {
+		return v, args.Error(1)
+	} else {
+		return nil, args.Error(1)
+	}
 }
 func (s MockStorage) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	args := s.Called(c)
 	return args.Get(0).(models.CardsResponse), args.Error(1)
 }
 
-func (s MockStorage) CreateCard(c models.CardResponse) (models.CardResponse, error) {
+func (s MockStorage) CreateCard(c models.CardResponse) (*models.CardResponse, error) {
 	args := s.Called(c)
-	return args.Get(0).(models.CardResponse), args.Error(1)
+	v, ok := args.Get(0).(*models.CardResponse)
+	if ok {
+		return v, args.Error(1)
+	} else {
+		return nil, args.Error(1)
+	}
 }
 
 func (s MockStorage) RevokeCard(id string, c models.CardResponse) error {
@@ -62,7 +72,7 @@ func Test_GetCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	id := "test"
 	errText := "Some error"
 	mStorage := MockStorage{}
-	mStorage.On("GetCard", id).Return(models.CardResponse{}, errors.New(errText))
+	mStorage.On("GetCard", id).Return(new(models.CardResponse), errors.New(errText))
 
 	c := Controller{
 		Storage: mStorage,
@@ -76,13 +86,26 @@ func Test_GetCard_StorageReturnValue_ReturnJsonByte(t *testing.T) {
 	id := "test"
 	expected := MakeFakeCardResponse()
 	mStorage := MockStorage{}
-	mStorage.On("GetCard", id).Return(expected, nil)
+	mStorage.On("GetCard", id).Return(&expected, nil)
 
 	c := Controller{
 		Storage: mStorage,
 	}
 	r, err := c.GetCard(id)
 	AssertControllerRespose(t, expected, r, err)
+}
+
+func Test_GetCard_StorageReturnNilValue_ReturnNilByte(t *testing.T) {
+	id := "test"
+	mStorage := MockStorage{}
+	mStorage.On("GetCard", id).Return(nil, nil)
+
+	c := Controller{
+		Storage: mStorage,
+	}
+	r, err := c.GetCard(id)
+	assert.Nil(t, err)
+	assert.Nil(t, r)
 }
 
 func Test_SearchCards_BrokenRequestData_ReturnErr(t *testing.T) {
@@ -170,7 +193,7 @@ func Test_CreateCard_StorageReturnErr_ReturnErr(t *testing.T) {
 
 	errText := "Some error"
 	mStorage := MockStorage{}
-	mStorage.On("CreateCard", param).Return(models.CardResponse{}, errors.New(errText))
+	mStorage.On("CreateCard", param).Return(nil, errors.New(errText))
 
 	c := Controller{
 		Storage: mStorage,
@@ -186,7 +209,7 @@ func Test_CreateCard_StorageReturnValue_ReturnJsonByte(t *testing.T) {
 
 	expected := MakeFakeCardResponseWith("expected")
 	mStorage := MockStorage{}
-	mStorage.On("CreateCard", param).Return(expected, nil)
+	mStorage.On("CreateCard", param).Return(&expected, nil)
 
 	c := Controller{
 		Storage: mStorage,

@@ -7,7 +7,6 @@ import (
 
 type Logger interface {
 	Println(v ...interface{})
-	Panicf(format string, v ...interface{})
 }
 
 type Controller interface {
@@ -77,9 +76,11 @@ func (r *Router) Init() {
 		if err != nil {
 			return err
 		}
-
+		if len(res) == 0 {
+			ctx.NotFound()
+			return nil
+		}
 		ctx.Write(res)
 		return nil
 	})
-
 }

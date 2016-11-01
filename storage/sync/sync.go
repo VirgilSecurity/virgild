@@ -2,39 +2,47 @@ package sync
 
 import (
 	"fmt"
-	"github.com/VirgilSecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 )
 
 type Storage interface {
-	GetCard(id string) (models.CardResponse, error)
+	GetCard(id string) (*models.CardResponse, error)
 	SearchCards(models.Criteria) (models.CardsResponse, error)
-	CreateCard(models.CardResponse) (models.CardResponse, error)
+	CreateCard(models.CardResponse) (*models.CardResponse, error)
 	RevokeCard(id string, c models.CardResponse) error
 }
 
+type Logger interface {
+	Println(...interface{})
+	Printf(string, ...interface{})
+}
+
 type Sync struct {
+	Logger Logger
 	Local  Storage
 	Remote Storage
 }
 
-func (s Sync) GetCard(id string) (models.CardResponse, error) {
+func (s Sync) GetCard(id string) (*models.CardResponse, error) {
 	c, err := s.Local.GetCard(id)
 	if err != nil {
-		fmt.Println("Miss cache")
-		c, err = s.Remote.GetCard(id)
-		if err != nil {
-			return c, err
-		}
-		return s.Local.CreateCard(c)
+		s.Logger.Println("Local storage (GetCard):", err)
 	}
-	return c, err
+	if c == nil {
+		c, err = s.Remote.GetCard(id)
+		if err != nil || c == nil {
+			return nil, err
+		}
+		return s.Local.CreateCard(*c)
+	}
+	return c, nil
 }
 
 func (s Sync) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 
 	csl, err := s.Local.SearchCards(c)
 	if err != nil {
-		return csl, err
+		s.Logger.Println("Local storage (SearchCards):", err)
 	}
 
 	if len(csl) != len(c.Identities) {
@@ -64,12 +72,12 @@ func (s Sync) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	return csl, nil
 }
 
-func (s Sync) CreateCard(c models.CardResponse) (models.CardResponse, error) {
+func (s Sync) CreateCard(c models.CardResponse) (*models.CardResponse, error) {
 	r, err := s.Remote.CreateCard(c)
 	if err != nil {
-		return models.CardResponse{}, err
+		return nil, err
 	}
-	_, err = s.Local.CreateCard(r)
+	_, err = s.Local.CreateCard(*r)
 	if err != nil {
 		fmt.Printf("Local storage err:", err)
 	}

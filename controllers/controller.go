@@ -7,9 +7,9 @@ import (
 )
 
 type Storage interface {
-	GetCard(id string) (models.CardResponse, error)
+	GetCard(id string) (*models.CardResponse, error)
 	SearchCards(models.Criteria) (models.CardsResponse, error)
-	CreateCard(models.CardResponse) (models.CardResponse, error)
+	CreateCard(models.CardResponse) (*models.CardResponse, error)
 	RevokeCard(id string, c models.CardResponse) error
 }
 
@@ -21,6 +21,9 @@ func (c *Controller) GetCard(id string) ([]byte, error) {
 	card, err := c.Storage.GetCard(id)
 	if err != nil {
 		return nil, err
+	}
+	if card == nil {
+		return nil, nil
 	}
 	return json.Marshal(card)
 }

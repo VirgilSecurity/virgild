@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/VirgilSecurity/virgil-apps-cards-cacher/models"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 	"strings"
 )
 
@@ -46,16 +46,16 @@ type Local struct {
 	engine *xorm.Engine
 }
 
-func (s Local) GetCard(id string) (models.CardResponse, error) {
-	var r models.CardResponse
+func (s Local) GetCard(id string) (*models.CardResponse, error) {
 	var c CardSql
 	has, err := s.engine.Where("id = ?", id).Get(&c)
 	if err != nil {
-		return r, err
+		return nil, err
 	}
 	if !has {
-		return r, errors.New("Card was not found")
+		return nil, errors.New("Card was not found")
 	}
+	r := new(models.CardResponse)
 	err = json.Unmarshal([]byte(c.Card), &r)
 	return r, err
 }
@@ -82,16 +82,16 @@ func (s Local) SearchCards(c models.Criteria) (models.CardsResponse, error) {
 	return r, err
 }
 
-func (s Local) CreateCard(c models.CardResponse) (models.CardResponse, error) {
+func (s Local) CreateCard(c models.CardResponse) (*models.CardResponse, error) {
 	var cr models.CardRequest
 	err := json.Unmarshal(c.Snapshot, &cr)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
 	jCard, err := json.Marshal(c)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 	cs := CardSql{
 		Id:           c.ID,
@@ -104,7 +104,7 @@ func (s Local) CreateCard(c models.CardResponse) (models.CardResponse, error) {
 	if err != nil {
 		fmt.Println("Insert errore:", err)
 	}
-	return c, nil
+	return &c, nil
 }
 
 func (s Local) RevokeCard(id string, c models.CardResponse) error {
