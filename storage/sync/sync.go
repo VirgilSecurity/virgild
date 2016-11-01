@@ -1,7 +1,6 @@
 package sync
 
 import (
-	"fmt"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 )
 
@@ -75,7 +74,7 @@ func (s Sync) CreateCard(c *models.CardResponse) (*models.CardResponse, error) {
 	}
 	_, err = s.Local.CreateCard(r)
 	if err != nil {
-		fmt.Printf("Local storage err:", err)
+		s.Logger.Println("Local storage (CreateCard):", err)
 	}
 	return r, nil
 }
@@ -87,7 +86,7 @@ func (s Sync) RevokeCard(id string, c *models.CardResponse) error {
 	}
 	err = s.Local.RevokeCard(id, c)
 	if err != nil {
-		return err
+		s.Logger.Println("Local storage (RevokeCard):", err)
 	}
 	return nil
 }

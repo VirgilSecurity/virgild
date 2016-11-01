@@ -79,7 +79,7 @@ func Test_GetCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	}
 	_, err := c.GetCard(id)
 	assert.NotNil(t, err)
-	assert.Equal(t, errText, err.Error())
+	assert.EqualError(t, err, errText)
 }
 
 func Test_GetCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
@@ -116,7 +116,7 @@ func Test_SearchCards_BrokenRequestData_ReturnErr(t *testing.T) {
 	}
 	_, err := c.SearchCards([]byte("Test"))
 	assert.NotNil(t, err)
-	assert.Equal(t, errText, err.Error())
+	assert.EqualError(t, err, errText)
 }
 
 func Test_SearchCards_StorageReturnErr_ReturnErr(t *testing.T) {
@@ -134,7 +134,7 @@ func Test_SearchCards_StorageReturnErr_ReturnErr(t *testing.T) {
 	}
 	_, err := c.SearchCards(data)
 	assert.NotNil(t, err)
-	assert.Equal(t, errText, err.Error())
+	assert.EqualError(t, err, errText)
 }
 
 func Test_SearchCards_StorageReturnVal_ReturnJsonByte(t *testing.T) {
@@ -184,7 +184,7 @@ func Test_CreateCard_BrokenRequestData_ReturnErr(t *testing.T) {
 	}
 	_, err := c.CreateCard([]byte("Test"))
 	assert.NotNil(t, err)
-	assert.Equal(t, errText, err.Error())
+	assert.EqualError(t, err, errText)
 }
 
 func Test_CreateCard_StorageReturnErr_ReturnErr(t *testing.T) {
@@ -200,7 +200,7 @@ func Test_CreateCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	}
 	_, err := c.CreateCard(data)
 	assert.NotNil(t, err)
-	assert.Equal(t, errText, err.Error())
+	assert.EqualError(t, err, errText)
 }
 
 func Test_CreateCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
@@ -228,7 +228,7 @@ func Test_RevokeCard_BrokenRequestData_ReturnErr(t *testing.T) {
 	}
 	err := c.RevokeCard(id, []byte("Test"))
 	assert.NotNil(t, err)
-	assert.Equal(t, errText, err.Error())
+	assert.EqualError(t, err, errText)
 }
 
 func Test_RevokeCard_StorageReturnErr_ReturnErr(t *testing.T) {
@@ -245,7 +245,7 @@ func Test_RevokeCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	}
 	err := c.RevokeCard(id, data)
 	assert.NotNil(t, err)
-	assert.Equal(t, errText, err.Error())
+	assert.EqualError(t, err, errText)
 }
 
 func Test_RevokeCard_StorageReturnNilErr_ReturnNil(t *testing.T) {

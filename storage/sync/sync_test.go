@@ -41,7 +41,7 @@ func (s MockStorage) CreateCard(r *models.CardResponse) (*models.CardResponse, e
 }
 func (s MockStorage) RevokeCard(id string, r *models.CardResponse) error {
 	args := s.Called(id, r)
-	return args.Error(1)
+	return args.Error(0)
 }
 
 type MockLogger struct {
@@ -185,7 +185,7 @@ func Test_GetCard_LocalNotFoundCardRemoteReturnErr_ReturnErr(t *testing.T) {
 	card, err := sync.GetCard(id)
 	assert.Nil(t, card)
 	assert.NotNil(t, err)
-	assert.Equal(t, "Some errore", err.Error())
+	assert.EqualError(t, err, "Some errore")
 }
 
 func Test_SearchCards_LocalReturnErr_LogErr(t *testing.T) {
@@ -260,32 +260,221 @@ func Test_SearchCards_LocalReturnValCountNotEqualOfIdentitiesInCriteriaRemoteRet
 	assert.Equal(t, remResult, actual)
 }
 
-// func Test_SearchCards_LocalReturnValCountNotEqualOfIdentitiesInCriteriaRemoteReturnVal_AddToLocal(t *testing.T) {
-// 	var (
-// 		local, remote MockStorage
-// 		c             models.Criteria
-// 		l             MockLogger
-// 		locResult     []models.CardResponse
-// 		remResult     []models.CardResponse
-// 	)
-// 	c.Identities = append(c.Identities, "test", "new")
+func Test_SearchCards_LocalReturnValCountNotEqualOfIdentitiesInCriteriaRemoteReturnVal_AddToLocal(t *testing.T) {
+	var (
+		local, remote MockStorage
+		c             models.Criteria
+		l             MockLogger
+		locResult     []models.CardResponse
+		remResult     []models.CardResponse
+	)
+	c.Identities = append(c.Identities, "test", "new")
 
-// 	cr1 := MakeFakeCardResponseWith("test1")
-// 	cr2 := MakeFakeCardResponseWith("test2")
-// 	locResult = append(locResult, *cr1)
-// 	remResult = append(remResult, *cr1, *cr2)
+	cr1 := MakeFakeCardResponseWith("test1")
+	cr2 := MakeFakeCardResponseWith("test2")
+	locResult = append(locResult, *cr1)
+	remResult = append(remResult, *cr1, *cr2)
 
-// 	local.On("SearchCards", c).Return(locResult, nil)
-// 	local.On("CreateCard", mock.Anything).Return(nil, nil)
-// 	remote.On("SearchCards", c).Return(remResult, nil)
-// 	l.On("Println")
+	local.On("SearchCards", c).Return(locResult, nil)
+	local.On("CreateCard", mock.Anything).Return(nil, nil).Once()
+	remote.On("SearchCards", c).Return(remResult, nil)
+	l.On("Println")
 
-// 	sync := Sync{
-// 		Local:  local,
-// 		Remote: remote,
-// 		Logger: l,
-// 	}
-// 	sync.SearchCards(c)
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+	sync.SearchCards(c)
 
-// 	local.AssertCalled(t, "CreateCard", cr2)
-// }
+	// TODO Check passed parameter
+	local.AssertExpectations(t)
+}
+
+func Test_SearchCards_LocalReturnValCountNotEqualOfIdentitiesInCriteriaRemoteReturnErr_ReturnErr(t *testing.T) {
+	var (
+		local, remote MockStorage
+		l             MockLogger
+		c             models.Criteria
+	)
+	c.Identities = append(c.Identities, "test")
+	local.On("SearchCards", c).Return(nil, nil)
+	remote.On("SearchCards", c).Return(nil, errors.New("Some errore"))
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+	_, err := sync.SearchCards(c)
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "Some errore")
+}
+
+func Test_CreateCard_RemoteReturnErr_ReturnErr(t *testing.T) {
+	var (
+		local, remote MockStorage
+		l             MockLogger
+		r             models.CardResponse
+	)
+	remote.On("CreateCard", &r).Return(nil, errors.New("Some errore"))
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+
+	_, err := sync.CreateCard(&r)
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "Some errore")
+}
+
+func Test_CreateCard_RemoteReturnVal_ReturnVal(t *testing.T) {
+	var (
+		local, remote MockStorage
+		l             MockLogger
+		r             models.CardResponse
+	)
+	expected := MakeFakeCardResponseWith("text")
+	local.On("CreateCard", expected).Return(nil, nil)
+	remote.On("CreateCard", &r).Return(expected, nil)
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+
+	actual, err := sync.CreateCard(&r)
+	assert.Nil(t, err)
+	assert.Equal(t, expected, actual)
+}
+
+func Test_CreateCard_RemoteReturnVal_AddToLocal(t *testing.T) {
+	var (
+		local, remote MockStorage
+		l             MockLogger
+		r             models.CardResponse
+	)
+	expected := MakeFakeCardResponseWith("text")
+	local.On("CreateCard", expected).Return(nil, nil).Once()
+	remote.On("CreateCard", &r).Return(expected, nil)
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+
+	sync.CreateCard(&r)
+
+	// TODO Check passed parameter
+	local.AssertExpectations(t)
+}
+
+func Test_CreateCard_RemoteReturnValLocalReturnErr_LogErr(t *testing.T) {
+	var (
+		local, remote MockStorage
+		r             models.CardResponse
+		l             MockLogger
+	)
+	l.On("Println").Once()
+
+	expected := MakeFakeCardResponseWith("text")
+	local.On("CreateCard", expected).Return(nil, errors.New("Some errore"))
+	remote.On("CreateCard", &r).Return(expected, nil)
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+
+	sync.CreateCard(&r)
+	l.AssertExpectations(t)
+}
+
+func Test_RevokeCard_RemoteReturnErr_ReturnErr(t *testing.T) {
+	var (
+		local, remote MockStorage
+		l             MockLogger
+		r             models.CardResponse
+	)
+	id := "test"
+	remote.On("RevokeCard", id, &r).Return(errors.New("Some errore"))
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+
+	err := sync.RevokeCard(id, &r)
+	assert.NotNil(t, err)
+	assert.EqualError(t, err, "Some errore")
+}
+
+func Test_RevokeCard_RemoteReturnNil_ReturnNil(t *testing.T) {
+	var (
+		local, remote MockStorage
+		l             MockLogger
+		r             models.CardResponse
+	)
+	id := "test"
+	remote.On("RevokeCard", id, &r).Return(nil)
+	local.On("RevokeCard", id, &r).Return(nil)
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+
+	err := sync.RevokeCard(id, &r)
+	assert.Nil(t, err)
+}
+
+func Test_RevokeCard_RemoteReturnNil_DeleteToLocal(t *testing.T) {
+	var (
+		local, remote MockStorage
+		l             MockLogger
+		r             models.CardResponse
+	)
+	id := "test"
+	remote.On("RevokeCard", id, &r).Return(nil)
+	local.On("RevokeCard", id, &r).Return(nil).Once()
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+
+	sync.RevokeCard(id, &r)
+
+	// TODO Check passed parameter
+	local.AssertExpectations(t)
+}
+
+func Test_RevokeCard_RemoteReturnValLocalReturnErr_LogErr(t *testing.T) {
+	var (
+		local, remote MockStorage
+		r             models.CardResponse
+		l             MockLogger
+	)
+	l.On("Println").Once()
+
+	id := "test"
+	remote.On("RevokeCard", id, &r).Return(nil)
+	local.On("RevokeCard", id, &r).Return(errors.New("Some errore")).Once()
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+
+	sync.RevokeCard(id, &r)
+	l.AssertExpectations(t)
+}
