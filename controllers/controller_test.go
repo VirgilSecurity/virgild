@@ -82,7 +82,7 @@ func Test_GetCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	assert.Equal(t, errText, err.Error())
 }
 
-func Test_GetCard_StorageReturnValue_ReturnJsonByte(t *testing.T) {
+func Test_GetCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	id := "test"
 	expected := MakeFakeCardResponse()
 	mStorage := MockStorage{}
@@ -137,7 +137,7 @@ func Test_SearchCards_StorageReturnErr_ReturnErr(t *testing.T) {
 	assert.Equal(t, errText, err.Error())
 }
 
-func Test_SearchCards_StorageReturnValue_ReturnJsonByte(t *testing.T) {
+func Test_SearchCards_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	criteria, _ := json.Marshal(models.Criteria{
 		IdentityType: "test",
 		Identities: []string{
@@ -203,7 +203,7 @@ func Test_CreateCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	assert.Equal(t, errText, err.Error())
 }
 
-func Test_CreateCard_StorageReturnValue_ReturnJsonByte(t *testing.T) {
+func Test_CreateCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	param := MakeFakeCardResponse()
 	data, _ := json.Marshal(&param)
 

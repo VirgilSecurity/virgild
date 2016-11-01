@@ -57,6 +57,7 @@ func (l MockLogger) Printf(format string, v ...interface{}) {
 
 func MakeFakeCardResponseWith(text string) *models.CardResponse {
 	return &models.CardResponse{
+		ID:       text,
 		Snapshot: []byte(text),
 		Meta: models.ResponseMeta{
 			CreatedAt:   text,
@@ -68,7 +69,7 @@ func MakeFakeCardResponseWith(text string) *models.CardResponse {
 	}
 }
 
-func Test_GetCard_LocalHasValue_ReturnValue(t *testing.T) {
+func Test_GetCard_LocalHasValue_ReturnVal(t *testing.T) {
 	var (
 		local, remote MockStorage
 	)
@@ -107,7 +108,7 @@ func Test_GetCard_LocalReturnErr_LogErr(t *testing.T) {
 	l.AssertExpectations(t)
 }
 
-func Test_GetCard_LocalNotFoundCardRemoteReturnValue_ReturnValue(t *testing.T) {
+func Test_GetCard_LocalNotFoundCardRemoteReturnVal_ReturnVal(t *testing.T) {
 	var (
 		local, remote MockStorage
 	)
@@ -129,7 +130,7 @@ func Test_GetCard_LocalNotFoundCardRemoteReturnValue_ReturnValue(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func Test_GetCard_LocalNotFoundCardRemoteReturnValue_AddToLocal(t *testing.T) {
+func Test_GetCard_LocalNotFoundCardRemoteReturnVal_AddToLocal(t *testing.T) {
 	var (
 		local, remote MockStorage
 	)
@@ -204,3 +205,87 @@ func Test_SearchCards_LocalReturnErr_LogErr(t *testing.T) {
 	sync.SearchCards(c)
 	l.AssertExpectations(t)
 }
+
+func Test_SearchCards_LocalReturnValCountEqualOfIdentitiesInCriteria_ReturnVal(t *testing.T) {
+	var (
+		local, remote MockStorage
+		c             models.Criteria
+		l             MockLogger
+		expected      []models.CardResponse
+	)
+	c.Identities = append(c.Identities, "test")
+	expected = append(expected, *MakeFakeCardResponseWith("test"))
+
+	local.On("SearchCards", c).Return(expected, nil)
+	l.On("Println")
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+	actual, err := sync.SearchCards(c)
+
+	assert.Nil(t, err)
+	assert.Equal(t, expected, actual)
+}
+
+func Test_SearchCards_LocalReturnValCountNotEqualOfIdentitiesInCriteriaRemoteReturnVal_ReturnVal(t *testing.T) {
+	var (
+		local, remote MockStorage
+		c             models.Criteria
+		l             MockLogger
+		locResult     []models.CardResponse
+		remResult     []models.CardResponse
+	)
+	c.Identities = append(c.Identities, "test", "new")
+
+	cr1 := MakeFakeCardResponseWith("test1")
+	cr2 := MakeFakeCardResponseWith("test2")
+	remResult = append(remResult, *cr1, *cr2)
+
+	local.On("SearchCards", c).Return(locResult, nil)
+	local.On("CreateCard", mock.Anything).Return(nil, nil)
+	remote.On("SearchCards", c).Return(remResult, nil)
+	l.On("Println")
+
+	sync := Sync{
+		Local:  local,
+		Remote: remote,
+		Logger: l,
+	}
+	actual, err := sync.SearchCards(c)
+
+	assert.Nil(t, err)
+	assert.Equal(t, remResult, actual)
+}
+
+// func Test_SearchCards_LocalReturnValCountNotEqualOfIdentitiesInCriteriaRemoteReturnVal_AddToLocal(t *testing.T) {
+// 	var (
+// 		local, remote MockStorage
+// 		c             models.Criteria
+// 		l             MockLogger
+// 		locResult     []models.CardResponse
+// 		remResult     []models.CardResponse
+// 	)
+// 	c.Identities = append(c.Identities, "test", "new")
+
+// 	cr1 := MakeFakeCardResponseWith("test1")
+// 	cr2 := MakeFakeCardResponseWith("test2")
+// 	locResult = append(locResult, *cr1)
+// 	remResult = append(remResult, *cr1, *cr2)
+
+// 	local.On("SearchCards", c).Return(locResult, nil)
+// 	local.On("CreateCard", mock.Anything).Return(nil, nil)
+// 	remote.On("SearchCards", c).Return(remResult, nil)
+// 	l.On("Println")
+
+// 	sync := Sync{
+// 		Local:  local,
+// 		Remote: remote,
+// 		Logger: l,
+// 	}
+// 	sync.SearchCards(c)
+
+// 	local.AssertCalled(t, "CreateCard", cr2)
+// }

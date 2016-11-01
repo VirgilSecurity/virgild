@@ -46,7 +46,6 @@ func (s Sync) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	}
 
 	if len(csl) != len(c.Identities) {
-		fmt.Println("Miss cache local:", len(csl), "try find:", len(c.Identities))
 		csr, err := s.Remote.SearchCards(c)
 		if err != nil {
 			return csr, err
@@ -54,15 +53,12 @@ func (s Sync) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 
 		for _, vr := range csr {
 			var exist bool = false
-			fmt.Println("remote:", vr.ID)
 			for _, vl := range csl {
-				fmt.Println("local:", vl.ID)
 				if vr.ID == vl.ID {
 					exist = true
 					break
 				}
 			}
-			fmt.Println("Exist:", exist)
 			if !exist {
 				s.Local.CreateCard(vr)
 			}
