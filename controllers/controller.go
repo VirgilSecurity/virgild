@@ -3,8 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/VirgilSecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 )
 
 type Storage interface {
@@ -42,7 +41,6 @@ func (c *Controller) SearchCards(data []byte) ([]byte, error) {
 }
 
 func (c *Controller) CreateCard(data []byte) ([]byte, error) {
-	fmt.Println("Request resived")
 	var cr models.CardResponse
 	err := json.Unmarshal(data, &cr)
 	if err != nil {
@@ -50,7 +48,6 @@ func (c *Controller) CreateCard(data []byte) ([]byte, error) {
 	}
 	card, err := c.Storage.CreateCard(cr)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	return json.Marshal(card)
