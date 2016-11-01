@@ -2,7 +2,6 @@ package local
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
@@ -42,6 +41,13 @@ type CardSql struct {
 	Card         string
 }
 
+type CardRepository interface {
+	Get(id string) (*CardSql, error)
+	Find(models.Criteria) ([]CardSql, error)
+	Add(CardSql) error
+	Delete(id) error
+}
+
 type Local struct {
 	engine *xorm.Engine
 }
@@ -53,7 +59,7 @@ func (s Local) GetCard(id string) (*models.CardResponse, error) {
 		return nil, err
 	}
 	if !has {
-		return nil, errors.New("Card was not found")
+		return nil, nil
 	}
 	r := new(models.CardResponse)
 	err = json.Unmarshal([]byte(c.Card), &r)
@@ -102,7 +108,7 @@ func (s Local) CreateCard(c *models.CardResponse) (*models.CardResponse, error) 
 	}
 	_, err = s.engine.Insert(cs)
 	if err != nil {
-		fmt.Println("Insert errore:", err)
+		fmt.Println("Insert error:", err)
 	}
 	return c, nil
 }
