@@ -5,6 +5,8 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/controllers"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/http"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/validators"
+	"io/ioutil"
 
 	"log"
 	"os"
@@ -26,7 +28,8 @@ func main() {
 	storage := MakeStorage()
 
 	router := http.MakeRouter(&controllers.Controller{
-		Storage: storage,
+		Storage:   storage,
+		Validator: MakeSignValidator(),
 	}, MakeLogger())
 
 	fasthttp.ListenAndServe(":8081", router.GetHandleRequest())
@@ -38,4 +41,21 @@ func MakeLogger() *log.Logger {
 	} else {
 		return log.New(os.Stderr, "", log.LstdFlags)
 	}
+}
+
+func MakeSignValidator() *validators.SignValidator {
+	keys := make(map[string][]byte, 0)
+	for _, v := range config.Validators {
+		if v.PublicKey != "" {
+			keys[v.AppID] = []byte(v.PublicKey)
+		} else if v.PublicKeyPath != "" {
+			b, err := ioutil.ReadFile(v.PublicKeyPath)
+			if err != nil {
+				MakeLogger().Println("Cannot read file by", v.PublicKeyPath, "path")
+				continue
+			}
+			keys[v.AppID] = b
+		}
+	}
+	return validators.MakeSignValidator(keys)
 }

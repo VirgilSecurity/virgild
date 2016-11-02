@@ -8,7 +8,7 @@ import (
 )
 
 func Test_Validate_SignMiss_ReturnErr(t *testing.T) {
-	r := models.CardResponse{
+	r := &models.CardResponse{
 		Snapshot: []byte(`Test`),
 	}
 	crypto := virgil.Crypto()
@@ -24,7 +24,7 @@ func Test_Validate_SignMiss_ReturnErr(t *testing.T) {
 }
 
 func Test_Validate_SignCorrect_ReturnNil(t *testing.T) {
-	r := models.CardResponse{
+	r := &models.CardResponse{
 		Snapshot: []byte(`Test`),
 		Meta: models.ResponseMeta{
 			Signatures: make(map[string][]byte, 0),
@@ -45,7 +45,7 @@ func Test_Validate_SignCorrect_ReturnNil(t *testing.T) {
 }
 
 func Test_Validate_SignIncorrect_ReturnErr(t *testing.T) {
-	r := models.CardResponse{
+	r := &models.CardResponse{
 		Snapshot: []byte(`Test`),
 		Meta: models.ResponseMeta{
 			Signatures: make(map[string][]byte, 0),

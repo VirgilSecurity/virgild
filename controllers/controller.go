@@ -12,8 +12,13 @@ type Storage interface {
 	RevokeCard(id string, c *models.CardResponse) error
 }
 
+type Validator interface {
+	Validate(*models.CardResponse) error
+}
+
 type Controller struct {
-	Storage Storage
+	Storage   Storage
+	Validator Validator
 }
 
 func (c *Controller) GetCard(id string) ([]byte, error) {
@@ -52,6 +57,10 @@ func (c *Controller) CreateCard(data []byte) ([]byte, error) {
 			Code: 30000,
 		}
 	}
+	err = c.Validator.Validate(cr)
+	if err != nil {
+		return nil, err
+	}
 	card, err := c.Storage.CreateCard(cr)
 	if err != nil {
 		return nil, err
@@ -66,6 +75,11 @@ func (c *Controller) RevokeCard(id string, data []byte) error {
 		return models.ErrorResponse{
 			Code: 30000,
 		}
+	}
+
+	err = c.Validator.Validate(cr)
+	if err != nil {
+		return err
 	}
 	return c.Storage.RevokeCard(id, cr)
 }
