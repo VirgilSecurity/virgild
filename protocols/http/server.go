@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols"
@@ -48,14 +47,11 @@ func (r *router) init() {
 func (r *router) auth(ctx *routing.Context) error {
 	b := ctx.Request.Header.Peek("Authorization")
 	isAuth, data := r.authHandler.Auth(string(b[:]))
-	fmt.Println("We are here")
-	if isAuth {
-		fmt.Println("Auth")
-		ctx.Next()
-	} else {
-		fmt.Println("Not Auth")
+	if !isAuth {
 		ctx.SetStatusCode(401)
 		ctx.Write(data)
+
+		ctx.Abort()
 	}
 	return nil
 }
