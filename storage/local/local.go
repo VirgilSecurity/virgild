@@ -2,44 +2,9 @@ package local
 
 import (
 	"encoding/json"
-	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/go-xorm/xorm"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
+	. "github.com/virgilsecurity/virgil-apps-cards-cacher/database/sqlmodels"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
-	"strings"
 )
-
-func MakeLocalStorage(db string) Local {
-	i := strings.Index(db, ":")
-	if i == -1 {
-		panic("Database connection should be a format {driver}:{dataSourceName}")
-	}
-	driver := db[:i]
-	s := db[i+1:]
-	engine, err := xorm.NewEngine(driver, s)
-	if err != nil {
-		panic("Cannot connect to db")
-	}
-
-	err = engine.Sync(new(CardSql))
-	if err != nil {
-		panic("Cannot sync with db")
-	}
-
-	return Local{
-		engine: engine,
-	}
-}
-
-type CardSql struct {
-	Id           string `xorm:"PK"`
-	Identity     string `xorm:"Index"`
-	IdentityType string
-	Scope        string
-	Card         string
-}
 
 type CardRepository interface {
 	Get(id string) (*CardSql, error)
@@ -48,17 +13,30 @@ type CardRepository interface {
 	Delete(string) error
 }
 
+type CardRequest struct {
+	Identity     string            `json:"identity"`
+	IdentityType string            `json:"identity_type"`
+	PublicKey    []byte            `json:"public_key"` //DER encoded public key
+	Scope        string            `json:"scope"`
+	Data         map[string]string `json:"data,omitempty"`
+	DeviceInfo   DeviceInfo        `json:"info"`
+}
+
+type DeviceInfo struct {
+	Device     string `json:"device"`
+	DeviceName string `json:"device_name"`
+}
+
 type Local struct {
-	engine *xorm.Engine
+	Repo CardRepository
 }
 
 func (s Local) GetCard(id string) (*models.CardResponse, error) {
-	var c CardSql
-	has, err := s.engine.Where("id = ?", id).Get(&c)
+	c, err := s.Repo.Get(id)
 	if err != nil {
 		return nil, err
 	}
-	if !has {
+	if c == nil {
 		return nil, nil
 	}
 	r := new(models.CardResponse)
@@ -68,12 +46,7 @@ func (s Local) GetCard(id string) (*models.CardResponse, error) {
 
 func (s Local) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	var r []models.CardResponse
-	var cs []CardSql
-	q := s.engine.In("identity", c.Identities).And("scope = ?", c.Scope)
-	if c.IdentityType != "" {
-		q = q.And("identity_type = ?", c.IdentityType)
-	}
-	err := q.Find(&cs)
+	cs, err := s.Repo.Find(c)
 	if err != nil {
 		return r, err
 	}
@@ -89,10 +62,10 @@ func (s Local) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 }
 
 func (s Local) CreateCard(c *models.CardResponse) (*models.CardResponse, error) {
-	var cr models.CardRequest
+	var cr CardRequest
 	err := json.Unmarshal(c.Snapshot, &cr)
 	if err != nil {
-		return nil, err
+		return nil, models.ErrorResponse{Code: 30107}
 	}
 
 	jCard, err := json.Marshal(c)
@@ -106,14 +79,11 @@ func (s Local) CreateCard(c *models.CardResponse) (*models.CardResponse, error) 
 		Scope:        cr.Scope,
 		Card:         string(jCard[:]),
 	}
-	_, err = s.engine.Insert(cs)
-	if err != nil {
-		fmt.Println("Insert error:", err)
-	}
-	return c, nil
+	err = s.Repo.Add(cs)
+	return c, err
 }
 
 func (s Local) RevokeCard(id string, c *models.CardResponse) error {
-	_, err := s.engine.Id(id).Delete(new(CardSql))
+	err := s.Repo.Delete(id)
 	return err
 }
