@@ -1,0 +1,10 @@
+{
+	"Server": {
+		"IP":"",
+		"Port":8081,
+		"Scheme":"http"
+	},
+	"Mode":"local",
+	"DatabseConnection":"sqlite3:",
+	"LogFile":""
+}
