@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 )
 
@@ -32,7 +31,9 @@ func (c *Controller) SearchCards(data []byte) ([]byte, error) {
 	var cr models.Criteria
 	err := json.Unmarshal(data, &cr)
 	if err != nil {
-		return nil, errors.New("Data has incorrect format")
+		return nil, models.ErrorResponse{
+			Code: 30000,
+		}
 	}
 
 	cr.Scope = models.ResolveScope(cr.Scope)
@@ -47,7 +48,9 @@ func (c *Controller) CreateCard(data []byte) ([]byte, error) {
 	cr := new(models.CardResponse)
 	err := json.Unmarshal(data, cr)
 	if err != nil {
-		return nil, errors.New("Data has incorrect format")
+		return nil, models.ErrorResponse{
+			Code: 30000,
+		}
 	}
 	card, err := c.Storage.CreateCard(cr)
 	if err != nil {
@@ -60,7 +63,9 @@ func (c *Controller) RevokeCard(id string, data []byte) error {
 	cr := new(models.CardResponse)
 	err := json.Unmarshal(data, cr)
 	if err != nil {
-		return errors.New("Data has incorrect format")
+		return models.ErrorResponse{
+			Code: 30000,
+		}
 	}
 	return c.Storage.RevokeCard(id, cr)
 }

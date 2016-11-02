@@ -109,14 +109,14 @@ func Test_GetCard_StorageReturnNilValue_ReturnNilByte(t *testing.T) {
 }
 
 func Test_SearchCards_BrokenRequestData_ReturnErr(t *testing.T) {
-	errText := "Data has incorrect format"
 	mStorage := MockStorage{}
 	c := Controller{
 		Storage: mStorage,
 	}
 	_, err := c.SearchCards([]byte("Test"))
 	assert.NotNil(t, err)
-	assert.EqualError(t, err, errText)
+	assert.IsType(t, models.ErrorResponse{}, err)
+	assert.Equal(t, 30000, err.(models.ErrorResponse).Code)
 }
 
 func Test_SearchCards_StorageReturnErr_ReturnErr(t *testing.T) {
@@ -177,14 +177,14 @@ func Test_SearchCards_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 }
 
 func Test_CreateCard_BrokenRequestData_ReturnErr(t *testing.T) {
-	errText := "Data has incorrect format"
 	mStorage := MockStorage{}
 	c := Controller{
 		Storage: mStorage,
 	}
 	_, err := c.CreateCard([]byte("Test"))
 	assert.NotNil(t, err)
-	assert.EqualError(t, err, errText)
+	assert.IsType(t, models.ErrorResponse{}, err)
+	assert.Equal(t, 30000, err.(models.ErrorResponse).Code)
 }
 
 func Test_CreateCard_StorageReturnErr_ReturnErr(t *testing.T) {
@@ -221,14 +221,14 @@ func Test_CreateCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 
 func Test_RevokeCard_BrokenRequestData_ReturnErr(t *testing.T) {
 	id := "test"
-	errText := "Data has incorrect format"
 	mStorage := MockStorage{}
 	c := Controller{
 		Storage: mStorage,
 	}
 	err := c.RevokeCard(id, []byte("Test"))
 	assert.NotNil(t, err)
-	assert.EqualError(t, err, errText)
+	assert.IsType(t, models.ErrorResponse{}, err)
+	assert.Equal(t, 30000, err.(models.ErrorResponse).Code)
 }
 
 func Test_RevokeCard_StorageReturnErr_ReturnErr(t *testing.T) {
