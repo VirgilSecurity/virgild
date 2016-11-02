@@ -34,10 +34,10 @@ func makeRemoteStorage() controllers.Storage {
 	conf := remote.RemoteConfig{
 		CardsServiceAddress:         config.RemoteService.CardsServiceAddress,
 		ReadonlyCardsServiceAddress: config.RemoteService.ReadonlyCardsServiceAddress,
-		PublicKey: []byte(`-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEA5Fle51URZN2seVuToVQKSFZ8OkF051jlUjBuM9OZSHk=
------END PUBLIC KEY-----`),
-		AppID: "d32b745ec2f3ab47add5d89a18f41f5076dc93ccfb5f3c6a575aef58506a24ec",
+		// PublicKey: []byte(`-----BEGIN PUBLIC KEY-----
+		// MCowBQYDK2VwAyEA5Fle51URZN2seVuToVQKSFZ8OkF051jlUjBuM9OZSHk=
+		// -----END PUBLIC KEY-----`),
+		// AppID: "d32b745ec2f3ab47add5d89a18f41f5076dc93ccfb5f3c6a575aef58506a24ec",
 	}
 	return remote.MakeRemoteStorage(config.RemoteService.Token, conf)
 }

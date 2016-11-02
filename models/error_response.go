@@ -11,3 +11,9 @@ type ErrorResponse struct {
 func (e ErrorResponse) Error() string {
 	return fmt.Sprintf("{\"code\":\"%v\"}", e.Code)
 }
+
+func MakeError(code int) error {
+	return ErrorResponse{
+		Code: code,
+	}
+}

@@ -12,8 +12,6 @@ import (
 type RemoteConfig struct {
 	CardsServiceAddress         string
 	ReadonlyCardsServiceAddress string
-	PublicKey                   []byte
-	AppID                       string
 }
 
 func MakeRemoteStorage(token string, conf RemoteConfig) *Remote {
@@ -30,16 +28,7 @@ func MakeRemoteStorage(token string, conf RemoteConfig) *Remote {
 		ReadonlyCardsServiceAddress: conf.ReadonlyCardsServiceAddress,
 	}
 
-	crypto := virgil.NewCrypto()
-	pk, err := crypto.ImportPublicKey(conf.PublicKey)
-	if err != nil {
-		panic(err)
-	}
-	v := virgil.NewCardsValidator(crypto)
-	v.AddVerifier(conf.AppID, pk)
-
 	client := virgil.NewClient(token)
-	client.SetCardsValidator(v)
 
 	return &Remote{
 		client: client,
@@ -95,7 +84,7 @@ func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, error
 		},
 		Snapshot: c.Snapshot,
 	}
-	card, err := vrs.ToCard(virgil.NewCrypto())
+	card, err := vrs.ToCard()
 	jCard, _ := json.MarshalIndent(card, "", "\t")
 	fmt.Println("Restored card:", string(jCard[:]))
 	if err != nil {
