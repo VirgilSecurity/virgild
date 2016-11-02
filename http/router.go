@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
@@ -39,10 +40,19 @@ func (r *Router) GetHandleRequest() fasthttp.RequestHandler {
 func (r *Router) Init() {
 	v4 := r.router.Group("/v4")
 
-	v4.Delete("/card/<id>", func(ctx *routing.Context) error {
-		data := ctx.PostBody()
+	v4.Get("/card/<id>", func(ctx *routing.Context) error {
 		id := ctx.Param("id")
-		return r.controller.RevokeCard(id, data)
+		res, err := r.controller.GetCard(id)
+
+		if err != nil {
+			return err
+		}
+		if len(res) == 0 {
+			ctx.NotFound()
+			return nil
+		}
+		ctx.Write(res)
+		return nil
 	})
 
 	v4.Post("/card", func(ctx *routing.Context) error {
@@ -50,6 +60,7 @@ func (r *Router) Init() {
 		res, err := r.controller.CreateCard(data)
 
 		if err != nil {
+			fmt.Println("Error:", err)
 			return err
 		}
 
@@ -69,18 +80,10 @@ func (r *Router) Init() {
 		return nil
 	})
 
-	v4.Get("/card/<id>", func(ctx *routing.Context) error {
+	v4.Delete("/card/<id>", func(ctx *routing.Context) error {
+		data := ctx.PostBody()
 		id := ctx.Param("id")
-		res, err := r.controller.GetCard(id)
-
-		if err != nil {
-			return err
-		}
-		if len(res) == 0 {
-			ctx.NotFound()
-			return nil
-		}
-		ctx.Write(res)
-		return nil
+		return r.controller.RevokeCard(id, data)
 	})
+
 }

@@ -2,6 +2,7 @@ package remote
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/enums"
@@ -41,7 +42,7 @@ func MakeRemoteStorage(token string, conf RemoteConfig) *Remote {
 	client.SetCardsValidator(v)
 
 	return &Remote{
-		client: virgil.NewClient(token),
+		client: client,
 	}
 }
 
@@ -95,6 +96,8 @@ func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, error
 		Snapshot: c.Snapshot,
 	}
 	card, err := vrs.ToCard(virgil.NewCrypto())
+	jCard, _ := json.MarshalIndent(card, "", "\t")
+	fmt.Println("Restored card:", string(jCard[:]))
 	if err != nil {
 		return nil, err
 	}
@@ -108,6 +111,8 @@ func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, error
 	for k, v := range card.Signatures {
 		r.AppendSignature(k, v)
 	}
+	jR, _ := json.MarshalIndent(card, "", "\t")
+	fmt.Println("New Card request:", string(jR[:]))
 
 	card, err = s.client.CreateCard(r)
 	if err != nil {
