@@ -13,7 +13,7 @@ type RemoteConfig struct {
 	ReadonlyCardsServiceAddress string
 }
 
-func MakeRemoteStorage(token string, conf RemoteConfig) *Remote {
+func MakeRemoteStorage(token string, logger Logger, conf RemoteConfig) *Remote {
 	if conf.CardsServiceAddress == "" {
 		conf.CardsServiceAddress = virgil.DefaultClientParams.CardsServiceAddress
 	}
@@ -31,6 +31,7 @@ func MakeRemoteStorage(token string, conf RemoteConfig) *Remote {
 
 	return &Remote{
 		client: client,
+		logger: logger,
 	}
 }
 
