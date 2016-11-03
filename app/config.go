@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"encoding/json"
@@ -14,7 +14,7 @@ const (
 	HTTPS Scheme = "https"
 )
 
-type Config struct {
+type settings struct {
 	Server struct {
 		Host   string
 		Scheme Scheme
@@ -41,7 +41,7 @@ type Config struct {
 	}
 }
 
-func ReadConfiguration() {
+func readConfiguration(configPath string) {
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Cannot open config file by '%v' path\n", configPath)

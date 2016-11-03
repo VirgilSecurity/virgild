@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"github.com/go-xorm/xorm"
@@ -14,7 +14,7 @@ func getOrm() *xorm.Engine {
 	}
 	return orm
 }
-func MakeCardRepository() *database.CardRepository {
+func makeCardRepository() *database.CardRepository {
 	return &database.CardRepository{
 		Orm: getOrm(),
 	}
