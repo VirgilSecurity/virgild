@@ -7,17 +7,9 @@ import (
 	"os"
 )
 
-type Scheme string
-
-const (
-	HTTP  Scheme = "http"
-	HTTPS Scheme = "https"
-)
-
 type settings struct {
 	Server struct {
-		Host   string
-		Scheme Scheme
+		Host string
 	}
 	ServerHttps struct {
 		CertFilePath string
@@ -38,6 +30,11 @@ type settings struct {
 	LogFile     string
 	AuthService struct {
 		Token string
+	}
+	ServiceSigner struct {
+		Identity       string
+		PrivateKeyPath string
+		Password       string
 	}
 }
 

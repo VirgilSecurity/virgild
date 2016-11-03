@@ -72,6 +72,15 @@ func (s MockStorage) RevokeCard(id string, c *models.CardResponse) *models.Error
 	return er
 }
 
+type MockSigner struct {
+	mock.Mock
+}
+
+func (s *MockSigner) Sign(r *models.CardResponse) error {
+	args := s.Called(r)
+	return args.Error(0)
+}
+
 func MakeFakeCardResponse() *models.CardResponse {
 	return MakeFakeCardResponseWith("test")
 }
@@ -111,6 +120,7 @@ func Test_GetCard_StorageReturnErr_ReturnErr(t *testing.T) {
 		mStorage.On("GetCard", id).Return(nil, v)
 
 		c := Controller{
+			Signer:  &MockSigner{},
 			Storage: mStorage,
 		}
 		data, code := c.GetCard(id)
@@ -129,6 +139,7 @@ func Test_GetCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	mStorage.On("GetCard", id).Return(expected, nil)
 
 	c := Controller{
+		Signer:  &MockSigner{},
 		Storage: mStorage,
 	}
 	r, code := c.GetCard(id)
@@ -141,6 +152,7 @@ func Test_GetCard_StorageReturnNilValue_ReturnNilByte(t *testing.T) {
 	mStorage.On("GetCard", id).Return(nil, nil)
 
 	c := Controller{
+		Signer:  &MockSigner{},
 		Storage: mStorage,
 	}
 	r, code := c.GetCard(id)
@@ -153,6 +165,7 @@ func Test_SearchCards_BrokenRequestData_ReturnErr(t *testing.T) {
 	actual := new(models.ErrorResponse)
 	mStorage := MockStorage{}
 	c := Controller{
+		Signer:  &MockSigner{},
 		Storage: mStorage,
 	}
 	data, code := c.SearchCards([]byte("Test"))
@@ -180,6 +193,7 @@ func Test_SearchCards_StorageReturnErr_ReturnErr(t *testing.T) {
 		mStorage.On("SearchCards", criteria).Return([]models.CardResponse{}, v)
 
 		c := Controller{
+			Signer:  &MockSigner{},
 			Storage: mStorage,
 		}
 		data, code := c.SearchCards(data)
@@ -217,6 +231,7 @@ func Test_SearchCards_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	mStorage.On("SearchCards", restoredCriteria).Return(expected, nil)
 
 	c := Controller{
+		Signer:  &MockSigner{},
 		Storage: mStorage,
 	}
 	r, code := c.SearchCards(criteria)
@@ -233,6 +248,7 @@ func Test_CreateCard_BrokenRequestData_ReturnErr(t *testing.T) {
 	actual := new(models.ErrorResponse)
 	mStorage := MockStorage{}
 	c := Controller{
+		Signer:  &MockSigner{},
 		Storage: mStorage,
 	}
 	data, code := c.CreateCard([]byte("Test"))
@@ -256,8 +272,10 @@ func Test_CreateCard_StorageReturnErr_ReturnErr(t *testing.T) {
 
 		mStorage := MockStorage{}
 		mStorage.On("CreateCard", param).Return(nil, v)
-
+		signer := &MockSigner{}
+		signer.On("Sign", param).Return(nil)
 		c := Controller{
+			Signer:  signer,
 			Storage: mStorage,
 		}
 		data, code := c.CreateCard(data)
@@ -276,12 +294,34 @@ func Test_CreateCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	mStorage := MockStorage{}
 	mStorage.On("CreateCard", param).Return(expected, nil)
 
+	signer := &MockSigner{}
+	signer.On("Sign", param).Return(nil)
 	c := Controller{
+		Signer:  signer,
 		Storage: mStorage,
 	}
 	r, code := c.CreateCard(data)
 
 	AssertControllerRespose(t, expected, r, code)
+}
+
+func Test_CreateCard_StorageSignCard_SignerInvoked(t *testing.T) {
+	param := MakeFakeCardResponse()
+	data, _ := json.Marshal(param)
+
+	expected := MakeFakeCardResponseWith("expected")
+	mStorage := MockStorage{}
+	mStorage.On("CreateCard", param).Return(expected, nil)
+
+	signer := &MockSigner{}
+	signer.On("Sign", param).Return(nil).Once()
+	c := Controller{
+		Signer:  signer,
+		Storage: mStorage,
+	}
+	c.CreateCard(data)
+
+	signer.AssertExpectations(t)
 }
 
 func Test_RevokeCard_BrokenRequestData_ReturnErr(t *testing.T) {
@@ -290,6 +330,7 @@ func Test_RevokeCard_BrokenRequestData_ReturnErr(t *testing.T) {
 	actual := new(models.ErrorResponse)
 	mStorage := MockStorage{}
 	c := Controller{
+		Signer:  &MockSigner{},
 		Storage: mStorage,
 	}
 	data, code := c.RevokeCard(id, []byte("Test"))
@@ -316,6 +357,7 @@ func Test_RevokeCard_StorageReturnErr_ReturnErr(t *testing.T) {
 		mStorage.On("RevokeCard", id, param).Return(v)
 
 		c := Controller{
+			Signer:  &MockSigner{},
 			Storage: mStorage,
 		}
 		data, code := c.RevokeCard(id, data)
@@ -335,6 +377,7 @@ func Test_RevokeCard_StorageReturnNilErr_ReturnNil(t *testing.T) {
 	mStorage.On("RevokeCard", id, param).Return(nil)
 
 	c := Controller{
+		Signer:  &MockSigner{},
 		Storage: mStorage,
 	}
 	data, code := c.RevokeCard(id, data)

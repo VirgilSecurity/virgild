@@ -3,9 +3,13 @@ package app
 import (
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/auth"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/controllers"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols/http"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/signer"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/validators"
+	"gopkg.in/virgilsecurity/virgil-sdk-go.v4"
+	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/enums"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,18 +17,23 @@ import (
 
 var config settings
 var server protocols.Server
+var logger *log.Logger
 
 func Init(configPath string) {
 	readConfiguration(configPath)
+	logger = makeLogger()
 
 	storage := makeStorage()
+	serviceSigner := makeServiceSigner()
 
 	controller := &controllers.Controller{
 		Storage: storage,
+		Signer:  serviceSigner,
 	}
 	authHandler := &auth.AuthHander{
 		Token: config.AuthService.Token,
 	}
+
 	server = http.MakeServer(config.Server.Host, config.ServerHttps.CertFilePath, config.ServerHttps.KeyFilePath, controller, authHandler)
 }
 
@@ -55,4 +64,44 @@ func makeSignValidator() *validators.SignValidator {
 		}
 	}
 	return validators.MakeSignValidator(keys)
+}
+
+func makeServiceSigner() *signer.ServiceSigner {
+	crypto := virgil.Crypto()
+	pk, err := ioutil.ReadFile(config.ServiceSigner.PrivateKeyPath)
+	if err != nil {
+		logger.Println("Cannot read private key for service")
+		os.Exit(2)
+		return nil
+	}
+	private, err := crypto.ImportPrivateKey(pk, config.ServiceSigner.Password)
+	if err != nil {
+		logger.Println("Cannot import private key")
+		os.Exit(2)
+		return nil
+	}
+	pubKey, err := private.ExtractPublicKey()
+	if err != nil {
+		logger.Println("Cannot extract public key from private")
+		os.Exit(2)
+		return nil
+	}
+	r, err := virgil.NewCreateCardRequest("application", config.ServiceSigner.Identity, pubKey, enums.CardScope.Global, nil)
+	if err != nil {
+		logger.Println("Cannot create card request for service signer")
+		os.Exit(2)
+		return nil
+	}
+	requestSigner := &virgil.RequestSigner{}
+	requestSigner.SelfSign(r, private)
+
+	snapshot, _ := r.GetSnapshot()
+	s := makeLocalStorage()
+	s.CreateCard(&models.CardResponse{
+		Snapshot: snapshot,
+		Meta: models.ResponseMeta{
+			Signatures: r.Signatures,
+		},
+	})
+	return &signer.ServiceSigner{}
 }

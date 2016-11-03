@@ -13,8 +13,13 @@ type Storage interface {
 	RevokeCard(id string, c *models.CardResponse) *models.ErrorResponse
 }
 
+type ServiceSigner interface {
+	Sign(*models.CardResponse) error
+}
+
 type Controller struct {
 	Storage Storage
+	Signer  ServiceSigner
 }
 
 func (c *Controller) GetCard(id string) ([]byte, protocols.CodeResponse) {
@@ -52,6 +57,10 @@ func (c *Controller) CreateCard(data []byte) ([]byte, protocols.CodeResponse) {
 		return mapErrResponseToCodeResponse(models.MakeError(30000))
 	}
 
+	err = c.Signer.Sign(cr)
+	if err != nil {
+		return mapErrResponseToCodeResponse(models.MakeError(10000))
+	}
 	card, e := c.Storage.CreateCard(cr)
 	if e != nil {
 		return mapErrResponseToCodeResponse(e)

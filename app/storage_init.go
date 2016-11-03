@@ -5,28 +5,28 @@ import (
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/storage/local"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/storage/remote"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/storage/sync"
+	"os"
 )
 
 func makeStorage() controllers.Storage {
 	switch config.Mode {
 	case "local":
 		return makeLocalStorage()
-	case "remote":
-		return makeRemoteStorage()
 	case "sync":
 		return &sync.Sync{
 			Local:  makeLocalStorage(),
 			Remote: makeRemoteStorage(),
 		}
 	}
-	makeLogger().Fatal("Unknown mode type")
+	logger.Fatal("Unknown mode type.")
+	os.Exit(2)
 	return nil
 }
 
 func makeLocalStorage() controllers.Storage {
 	return &local.Local{
 		Repo:   makeCardRepository(),
-		Logger: makeLogger(),
+		Logger: logger,
 	}
 }
 

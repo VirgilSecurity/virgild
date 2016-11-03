@@ -9,7 +9,6 @@ var orm *xorm.Engine
 
 func getOrm() *xorm.Engine {
 	if orm == nil {
-
 		orm = database.MakeDatabase(config.DatabseConnection)
 	}
 	return orm
