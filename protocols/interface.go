@@ -3,10 +3,10 @@ package protocols
 type CodeResponse int
 
 const (
-	Ok           = iota
-	RequestError = iota
-	NotFound     = iota
-	ServerError  = iota
+	Ok           CodeResponse = iota
+	RequestError CodeResponse = iota
+	NotFound     CodeResponse = iota
+	ServerError  CodeResponse = iota
 )
 
 type Controller interface {
