@@ -62,7 +62,7 @@ func (s *Local) SearchCards(c models.Criteria) ([]models.CardResponse, *models.E
 	cs, err := s.Repo.Find(c)
 	if err != nil {
 		jc, _ := json.MarshalIndent(c, "", "\t")
-		s.Logger.Printf("Local storage [SearchCard(%s)]: %s", jc, err)
+		s.Logger.Printf("Local storage [SearchCard(%s)]: %s", string(jc[:]), err)
 		return nil, models.MakeError(10000)
 	}
 	for _, v := range cs {
@@ -83,7 +83,7 @@ func (s *Local) CreateCard(c *models.CardResponse) (*models.CardResponse, *model
 	err := json.Unmarshal(c.Snapshot, &cr)
 	if err != nil {
 		jc, _ := json.MarshalIndent(c, "", "\t")
-		s.Logger.Printf("Local storage [CreateCard(%s)]: %s", jc, err)
+		s.Logger.Printf("Local storage [CreateCard(%s)]: %s", string(jc[:]), err)
 		return nil, models.MakeError(30107)
 	}
 	id := c.ID
@@ -97,7 +97,7 @@ func (s *Local) CreateCard(c *models.CardResponse) (*models.CardResponse, *model
 	jCard, err := json.Marshal(c)
 	if err != nil {
 		jc, _ := json.MarshalIndent(c, "", "\t")
-		s.Logger.Printf("Local storage [CreateCard(%s)]: %s", jc, err)
+		s.Logger.Printf("Local storage [CreateCard(%s)]: %s", string(jc[:]), err)
 		return nil, models.MakeError(10000)
 	}
 	cs := CardSql{
@@ -110,7 +110,7 @@ func (s *Local) CreateCard(c *models.CardResponse) (*models.CardResponse, *model
 	err = s.Repo.Add(cs)
 	if err != nil {
 		jc, _ := json.MarshalIndent(c, "", "\t")
-		s.Logger.Printf("Local storage [CreateCard(%s)]: %s", jc, err)
+		s.Logger.Printf("Local storage [CreateCard(%s)]: %s", string(jc[:]), err)
 		return nil, models.MakeError(10000)
 	}
 	return c, nil
@@ -120,7 +120,7 @@ func (s *Local) RevokeCard(id string, c *models.CardResponse) *models.ErrorRespo
 	err := s.Repo.Delete(id)
 	if err != nil {
 		jc, _ := json.MarshalIndent(c, "", "\t")
-		s.Logger.Printf("Local storage [CreateCard(%v,%s)]: %s", id, jc, err)
+		s.Logger.Printf("Local storage [CreateCard(%v,%s)]: %s", id, string(jc[:]), err)
 		return models.MakeError(10000)
 	}
 	return nil

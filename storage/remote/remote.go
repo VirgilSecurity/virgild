@@ -2,7 +2,6 @@ package remote
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
 	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/enums"
@@ -35,13 +34,20 @@ func MakeRemoteStorage(token string, conf RemoteConfig) *Remote {
 	}
 }
 
+type Logger interface {
+	Println(...interface{})
+	Printf(string, ...interface{})
+}
+
 type Remote struct {
 	client virgil.VirgilClient
+	logger Logger
 }
 
 func (s *Remote) GetCard(id string) (*models.CardResponse, *models.ErrorResponse) {
 	card, err := s.client.GetCard(id)
 	if err != nil {
+		s.logger.Printf("Remote storage [GetCard(%s)]: %s", id, err)
 		return nil, models.MakeError(10000)
 	}
 	return mapCardToCardRequest(card), nil
@@ -63,6 +69,8 @@ func (s *Remote) SearchCards(c models.Criteria) ([]models.CardResponse, *models.
 	})
 
 	if err != nil {
+		jc, _ := json.MarshalIndent(c, "", "\t")
+		s.logger.Printf("Remote storage [SearchCarda(%s)]: %s", string(jc[:]), err)
 		return nil, models.MakeError(10000)
 	}
 
@@ -85,26 +93,27 @@ func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, *mode
 		Snapshot: c.Snapshot,
 	}
 	card, err := vrs.ToCard()
-	jCard, _ := json.MarshalIndent(card, "", "\t")
-	fmt.Println("Restored card:", string(jCard[:]))
 	if err != nil {
+		jc, _ := json.MarshalIndent(c, "", "\t")
+		s.logger.Printf("Remote storage [CreateCard(%s)]: %s", string(jc[:]), err)
 		return nil, models.MakeError(10000)
 	}
-	r := virgil.NewEmptyCreateCardRequest()
-	r.Data = card.Data
+
+	r, err := virgil.NewCreateCardRequest(card.IdentityType, card.Identity, card.PublicKey, card.Scope, card.Data)
+	if err != nil {
+		jc, _ := json.MarshalIndent(c, "", "\t")
+		s.logger.Printf("Remote storage [CreateCard(%s)]: %s", string(jc[:]), err)
+		return nil, models.MakeError(10000)
+	}
 	r.DeviceInfo = card.DeviceInfo
-	r.Identity = card.Identity
-	r.IdentityType = card.IdentityType
-	r.PublicKey, _ = card.PublicKey.Encode()
-	r.Scope = card.Scope
 	for k, v := range card.Signatures {
 		r.AppendSignature(k, v)
 	}
-	jR, _ := json.MarshalIndent(card, "", "\t")
-	fmt.Println("New Card request:", string(jR[:]))
 
 	card, err = s.client.CreateCard(r)
 	if err != nil {
+		jc, _ := json.MarshalIndent(c, "", "\t")
+		s.logger.Printf("Remote storage [CreateCard(%s)]: %s", string(jc[:]), err)
 		return nil, models.MakeError(10000)
 	}
 	return mapCardToCardRequest(card), nil
@@ -113,12 +122,19 @@ func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, *mode
 func (s *Remote) RevokeCard(id string, c *models.CardResponse) *models.ErrorResponse {
 	r := virgil.NewEmptyRevokeCardRequest()
 
-	json.Unmarshal(c.Snapshot, r)
+	err := json.Unmarshal(c.Snapshot, r)
+	if err != nil {
+		jc, _ := json.MarshalIndent(c, "", "\t")
+		s.logger.Printf("Remote storage [RevokeCard(%s,%s)]: %s", id, string(jc[:]), err)
+		return models.MakeError(10000)
+	}
 	for k, v := range c.Meta.Signatures {
 		r.AppendSignature(k, v)
 	}
-	err := s.client.RevokeCard(r)
+	err = s.client.RevokeCard(r)
 	if err != nil {
+		jc, _ := json.MarshalIndent(c, "", "\t")
+		s.logger.Printf("Remote storage [RevokeCard(%s,%s)]: %s", id, string(jc[:]), err)
 		return models.MakeError(10000)
 	} else {
 		return nil
