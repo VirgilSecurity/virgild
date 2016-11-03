@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+var errExpected = models.MakeError(30137)
+
 func Test_Validate_SignMiss_ReturnErr(t *testing.T) {
 	r := &models.CardResponse{
 		Snapshot: []byte(`Test`),
@@ -18,9 +20,7 @@ func Test_Validate_SignMiss_ReturnErr(t *testing.T) {
 		"id": pub,
 	})
 	err := v.Validate(r)
-	assert.NotNil(t, err)
-	assert.IsType(t, models.ErrorResponse{}, err)
-	assert.Equal(t, 30137, err.(models.ErrorResponse).Code)
+	assert.Equal(t, errExpected, err)
 }
 
 func Test_Validate_SignCorrect_ReturnNil(t *testing.T) {
@@ -60,7 +60,5 @@ func Test_Validate_SignIncorrect_ReturnErr(t *testing.T) {
 		"id": pub,
 	})
 	err := v.Validate(r)
-	assert.NotNil(t, err)
-	assert.IsType(t, models.ErrorResponse{}, err)
-	assert.Equal(t, 30137, err.(models.ErrorResponse).Code)
+	assert.Equal(t, errExpected, err)
 }

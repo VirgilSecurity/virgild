@@ -16,8 +16,7 @@ const (
 
 type Config struct {
 	Server struct {
-		IP     string
-		Port   int
+		Host   string
 		Scheme Scheme
 	}
 	ServerHttps struct {
@@ -36,7 +35,10 @@ type Config struct {
 		PublicKeyPath string
 		PublicKey     string
 	}
-	LogFile string
+	LogFile     string
+	AuthService struct {
+		Token string
+	}
 }
 
 func ReadConfiguration() {

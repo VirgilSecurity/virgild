@@ -14,10 +14,9 @@ func MakeStorage() controllers.Storage {
 	case "remote":
 		return makeRemoteStorage()
 	case "sync":
-		return sync.Sync{
+		return &sync.Sync{
 			Local:  makeLocalStorage(),
 			Remote: makeRemoteStorage(),
-			Logger: MakeLogger(),
 		}
 	}
 	MakeLogger().Fatal("Unknown mode type")
@@ -25,8 +24,9 @@ func MakeStorage() controllers.Storage {
 }
 
 func makeLocalStorage() controllers.Storage {
-	return local.Local{
-		Repo: MakeCardRepository(),
+	return &local.Local{
+		Repo:   MakeCardRepository(),
+		Logger: MakeLogger(),
 	}
 }
 
@@ -34,10 +34,6 @@ func makeRemoteStorage() controllers.Storage {
 	conf := remote.RemoteConfig{
 		CardsServiceAddress:         config.RemoteService.CardsServiceAddress,
 		ReadonlyCardsServiceAddress: config.RemoteService.ReadonlyCardsServiceAddress,
-		// PublicKey: []byte(`-----BEGIN PUBLIC KEY-----
-		// MCowBQYDK2VwAyEA5Fle51URZN2seVuToVQKSFZ8OkF051jlUjBuM9OZSHk=
-		// -----END PUBLIC KEY-----`),
-		// AppID: "d32b745ec2f3ab47add5d89a18f41f5076dc93ccfb5f3c6a575aef58506a24ec",
 	}
 	return remote.MakeRemoteStorage(config.RemoteService.Token, conf)
 }

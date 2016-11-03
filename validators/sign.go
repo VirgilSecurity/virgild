@@ -24,7 +24,7 @@ type SignValidator struct {
 	keys map[string]virgilcrypto.PublicKey
 }
 
-func (v *SignValidator) Validate(r *models.CardResponse) error {
+func (v *SignValidator) Validate(r *models.CardResponse) *models.ErrorResponse {
 	crypto := virgil.Crypto()
 	fp := crypto.CalculateFingerprint(r.Snapshot)
 	for id, key := range v.keys {

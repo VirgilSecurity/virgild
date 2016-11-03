@@ -39,15 +39,15 @@ type Remote struct {
 	client virgil.VirgilClient
 }
 
-func (s *Remote) GetCard(id string) (*models.CardResponse, error) {
+func (s *Remote) GetCard(id string) (*models.CardResponse, *models.ErrorResponse) {
 	card, err := s.client.GetCard(id)
 	if err != nil {
-		return nil, err
+		return nil, models.MakeError(10000)
 	}
 	return mapCardToCardRequest(card), nil
 }
 
-func (s *Remote) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
+func (s *Remote) SearchCards(c models.Criteria) ([]models.CardResponse, *models.ErrorResponse) {
 	var scope enums.VirgilEnum
 
 	if c.Scope == models.GlobalScope {
@@ -63,7 +63,7 @@ func (s *Remote) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, models.MakeError(10000)
 	}
 
 	res := []models.CardResponse{}
@@ -74,7 +74,7 @@ func (s *Remote) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
 	return res, nil
 }
 
-func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, error) {
+func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, *models.ErrorResponse) {
 	vrs := virgil.SignedResponse{
 		ID: c.ID,
 		Meta: virgil.ResponseMeta{
@@ -88,7 +88,7 @@ func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, error
 	jCard, _ := json.MarshalIndent(card, "", "\t")
 	fmt.Println("Restored card:", string(jCard[:]))
 	if err != nil {
-		return nil, err
+		return nil, models.MakeError(10000)
 	}
 	r := virgil.NewEmptyCreateCardRequest()
 	r.Data = card.Data
@@ -105,20 +105,24 @@ func (s *Remote) CreateCard(c *models.CardResponse) (*models.CardResponse, error
 
 	card, err = s.client.CreateCard(r)
 	if err != nil {
-		return nil, err
+		return nil, models.MakeError(10000)
 	}
 	return mapCardToCardRequest(card), nil
 }
 
-func (s *Remote) RevokeCard(id string, c *models.CardResponse) error {
+func (s *Remote) RevokeCard(id string, c *models.CardResponse) *models.ErrorResponse {
 	r := virgil.NewEmptyRevokeCardRequest()
 
 	json.Unmarshal(c.Snapshot, r)
 	for k, v := range c.Meta.Signatures {
 		r.AppendSignature(k, v)
 	}
-
-	return s.client.RevokeCard(r)
+	err := s.client.RevokeCard(r)
+	if err != nil {
+		return models.MakeError(10000)
+	} else {
+		return nil
+	}
 }
 
 func mapCardToCardRequest(card *virgil.Card) *models.CardResponse {

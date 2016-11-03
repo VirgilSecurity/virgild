@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/valyala/fasthttp"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/auth"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/controllers"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/http"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols/http"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/validators"
 	"io/ioutil"
 
@@ -27,12 +27,14 @@ func main() {
 	ReadConfiguration()
 	storage := MakeStorage()
 
-	router := http.MakeRouter(&controllers.Controller{
+	controller := &controllers.Controller{
 		Storage: storage,
-		// Validator: MakeSignValidator(),
-	}, MakeLogger())
-
-	fasthttp.ListenAndServe(":8081", router.GetHandleRequest())
+	}
+	authHandler := &auth.AuthHander{
+		Token: config.AuthService.Token,
+	}
+	server := http.MakeServer(config.Server.Host, controller, authHandler)
+	panic(server.Serve())
 }
 
 func MakeLogger() *log.Logger {

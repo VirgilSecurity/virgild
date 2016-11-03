@@ -1,10 +1,11 @@
 {
-	"Server": {
-		"IP":"",
-		"Port":8081,
-		"Scheme":"http"
-	},
-	"Mode":"local",
-	"DatabseConnection":"sqlite3:",
-	"LogFile":""
+  "Server": {
+    "Host": ":8081",
+    "Scheme": "http"
+  },
+  "Mode": "local",
+  "DatabseConnection": "sqlite3:",
+  "AuthService": {
+    "Token": "7e723a6b573c2c36524c79537964772f43762a2c66375a416e3b54246c"
+  }
 }
