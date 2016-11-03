@@ -40,9 +40,13 @@ func (c *MockController) CreateCard(data []byte) ([]byte, protocols.CodeResponse
 	}
 }
 
-func (c *MockController) RevokeCard(id string, data []byte) protocols.CodeResponse {
+func (c *MockController) RevokeCard(id string, data []byte) ([]byte, protocols.CodeResponse) {
 	args := c.Called(id, data)
-	return args.Get(0).(protocols.CodeResponse)
+	if d, ok := args.Get(0).([]byte); ok {
+		return d, args.Get(1).(protocols.CodeResponse)
+	} else {
+		return nil, args.Get(1).(protocols.CodeResponse)
+	}
 }
 
 type MockAuthHandler struct {
@@ -165,6 +169,7 @@ func Test_CeateCard_ControllerCheckMappingStatusCodeAndBody(t *testing.T) {
 		protocols.RequestError: 400,
 		protocols.Ok:           200,
 		protocols.ServerError:  500,
+		protocols.NotFound:     404,
 	}
 	for k, v := range testTable {
 		r, c, h := MakeRouter()
@@ -185,6 +190,7 @@ func Test_Search_ControllerCheckMappingStatusCodeAndBody(t *testing.T) {
 		protocols.RequestError: 400,
 		protocols.Ok:           200,
 		protocols.ServerError:  500,
+		protocols.NotFound:     404,
 	}
 	for k, v := range testTable {
 		r, c, h := MakeRouter()
@@ -198,21 +204,36 @@ func Test_Search_ControllerCheckMappingStatusCodeAndBody(t *testing.T) {
 	}
 }
 
+func Test_Delete_ControllerReturnOk_BodyEmpty(t *testing.T) {
+	id := "card id"
+	data := []byte(`some data`)
+	r, c, h := MakeRouter()
+	h.On("Auth", "test").Return(true, nil)
+	c.On("RevokeCard", id, data).Return(nil, protocols.Ok)
+	ctx := MakeContextWithBody("DELETE", "/v4/card/"+id, "test", data)
+	r.router.HandleRequest(ctx)
+
+	assert.Equal(t, 200, ctx.Response.StatusCode())
+	assert.Nil(t, ctx.Response.Body())
+}
+
 func Test_Delete_ControllerCheckMappingStatusCodeAndBody(t *testing.T) {
 	id := "card id"
 	data := []byte(`some data`)
+	expected := []byte(`expected result`)
 	testTable := map[protocols.CodeResponse]int{
 		protocols.RequestError: 400,
-		protocols.Ok:           200,
 		protocols.ServerError:  500,
+		protocols.NotFound:     404,
 	}
 	for k, v := range testTable {
 		r, c, h := MakeRouter()
 		h.On("Auth", "test").Return(true, nil)
-		c.On("RevokeCard", id, data).Return(k)
+		c.On("RevokeCard", id, data).Return(expected, k)
 		ctx := MakeContextWithBody("DELETE", "/v4/card/"+id, "test", data)
 		r.router.HandleRequest(ctx)
 
 		assert.Equal(t, v, ctx.Response.StatusCode())
+		assert.Equal(t, expected, ctx.Response.Body())
 	}
 }

@@ -13,7 +13,7 @@ type Controller interface {
 	GetCard(id string) ([]byte, CodeResponse)
 	SearchCards([]byte) ([]byte, CodeResponse)
 	CreateCard([]byte) ([]byte, CodeResponse)
-	RevokeCard(id string, data []byte) CodeResponse
+	RevokeCard(id string, data []byte) ([]byte, CodeResponse)
 }
 type AuthHandler interface {
 	Auth(string) (bool, []byte)

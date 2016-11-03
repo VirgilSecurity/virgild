@@ -85,8 +85,11 @@ func (r *router) search(ctx *routing.Context) error {
 func (r *router) delete(ctx *routing.Context) error {
 	data := ctx.PostBody()
 	id := ctx.Param("id")
-	code := r.controller.RevokeCard(id, data)
+	res, code := r.controller.RevokeCard(id, data)
 	setStatus(ctx, code)
+	if code != protocols.Ok {
+		ctx.Write(res)
+	}
 	return nil
 }
 
