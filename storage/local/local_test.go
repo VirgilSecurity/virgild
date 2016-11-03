@@ -1,12 +1,14 @@
 package local
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	. "github.com/virgilsecurity/virgil-apps-cards-cacher/database/sqlmodels"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"testing"
 )
 
@@ -246,6 +248,54 @@ func Test_CreateCard_AddVal_ActionInvoked(t *testing.T) {
 	jCr, _ := json.Marshal(cr)
 	expected := CardSql{
 		Id:           cr.ID,
+		Identity:     req.Identity,
+		IdentityType: req.IdentityType,
+		Scope:        req.Scope,
+		Card:         string(jCr[:]),
+	}
+	r := MockCardRepository{}
+	r.On("Add", expected).Return(nil).Once()
+	l := MockLogger{}
+	local := Local{
+		Repo:   &r,
+		Logger: &l,
+	}
+	local.CreateCard(cr)
+	r.AssertCalled(t, "Add", expected)
+}
+
+func Test_CreateCard_CardIdEmpty_CalcId(t *testing.T) {
+	req := CardRequest{
+		Identity:     "identity",
+		IdentityType: "application",
+		PublicKey:    []byte(`some value`),
+		Scope:        "global",
+		Data: map[string]string{
+			"test": "test",
+		},
+		DeviceInfo: DeviceInfo{
+			Device:     "iphone7",
+			DeviceName: "my",
+		},
+	}
+	jReq, _ := json.Marshal(req)
+	cr := &models.CardResponse{
+		ID:       "",
+		Snapshot: jReq,
+	}
+
+	crypto := virgil.Crypto()
+	fp := crypto.CalculateFingerprint(jReq)
+	id := hex.EncodeToString(fp)
+
+	ecr := &models.CardResponse{
+		ID:       id,
+		Snapshot: jReq,
+	}
+
+	jCr, _ := json.Marshal(ecr)
+	expected := CardSql{
+		Id:           id,
 		Identity:     req.Identity,
 		IdentityType: req.IdentityType,
 		Scope:        req.Scope,

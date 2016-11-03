@@ -1,9 +1,11 @@
 package local
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	. "github.com/virgilsecurity/virgil-apps-cards-cacher/database/sqlmodels"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 )
 
 type CardRepository interface {
@@ -84,6 +86,13 @@ func (s *Local) CreateCard(c *models.CardResponse) (*models.CardResponse, *model
 		s.Logger.Printf("Local storage [CreateCard(%s)]: %s", jc, err)
 		return nil, models.MakeError(30107)
 	}
+	id := c.ID
+	if id == "" {
+		crypto := virgil.Crypto()
+		fp := crypto.CalculateFingerprint(c.Snapshot)
+		id = hex.EncodeToString(fp)
+		c.ID = id
+	}
 
 	jCard, err := json.Marshal(c)
 	if err != nil {
@@ -92,7 +101,7 @@ func (s *Local) CreateCard(c *models.CardResponse) (*models.CardResponse, *model
 		return nil, models.MakeError(10000)
 	}
 	cs := CardSql{
-		Id:           c.ID,
+		Id:           id,
 		Identity:     cr.Identity,
 		IdentityType: cr.IdentityType,
 		Scope:        cr.Scope,

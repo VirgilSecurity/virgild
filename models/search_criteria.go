@@ -6,8 +6,8 @@ const (
 )
 
 type Criteria struct {
-	Scope        string   `json:"scope"`
-	IdentityType string   `json:"identity_type"`
+	Scope        string   `json:"scope,omitempty"`
+	IdentityType string   `json:"identity_type,omitempty"`
 	Identities   []string `json:"identities"`
 }
 
