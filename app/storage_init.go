@@ -35,5 +35,5 @@ func makeRemoteStorage() controllers.Storage {
 		CardsServiceAddress:         config.RemoteService.CardsServiceAddress,
 		ReadonlyCardsServiceAddress: config.RemoteService.ReadonlyCardsServiceAddress,
 	}
-	return remote.MakeRemoteStorage(config.RemoteService.Token, conf)
+	return remote.MakeRemoteStorage(config.RemoteService.Token, logger, conf)
 }

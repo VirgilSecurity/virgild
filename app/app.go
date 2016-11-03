@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/hex"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/auth"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/controllers"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
@@ -86,22 +87,36 @@ func makeServiceSigner() *signer.ServiceSigner {
 		os.Exit(2)
 		return nil
 	}
-	r, err := virgil.NewCreateCardRequest("application", config.ServiceSigner.Identity, pubKey, enums.CardScope.Global, nil)
+	vr, err := virgil.NewCreateCardRequest("application", config.ServiceSigner.Identity, pubKey, enums.CardScope.Global, nil)
 	if err != nil {
 		logger.Println("Cannot create card request for service signer")
 		os.Exit(2)
 		return nil
 	}
 	requestSigner := &virgil.RequestSigner{}
-	requestSigner.SelfSign(r, private)
+	requestSigner.SelfSign(vr, private)
 
-	snapshot, _ := r.GetSnapshot()
+	snapshot, _ := vr.GetSnapshot()
+	id := hex.EncodeToString(crypto.CalculateFingerprint(snapshot))
 	s := makeLocalStorage()
-	s.CreateCard(&models.CardResponse{
-		Snapshot: snapshot,
-		Meta: models.ResponseMeta{
-			Signatures: r.Signatures,
-		},
-	})
-	return &signer.ServiceSigner{}
+
+	r, errResp := s.GetCard(id)
+	if errResp != nil {
+		logger.Println("Cannot add self card into local storage")
+		os.Exit(2)
+		return nil
+	}
+	if r == nil {
+		s.CreateCard(&models.CardResponse{
+			Snapshot: snapshot,
+			Meta: models.ResponseMeta{
+				Signatures: vr.Signatures,
+			},
+		})
+	}
+
+	return &signer.ServiceSigner{
+		ID:         id,
+		PrivateKey: private,
+	}
 }
