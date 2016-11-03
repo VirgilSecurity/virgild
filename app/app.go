@@ -25,7 +25,7 @@ func Init(configPath string) {
 	authHandler := &auth.AuthHander{
 		Token: config.AuthService.Token,
 	}
-	server = http.MakeServer(config.Server.Host, controller, authHandler)
+	server = http.MakeServer(config.Server.Host, config.ServerHttps.CertFilePath, config.ServerHttps.KeyFilePath, controller, authHandler)
 }
 
 func Run() error {

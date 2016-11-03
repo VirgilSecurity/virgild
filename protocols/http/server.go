@@ -6,25 +6,33 @@ import (
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols"
 )
 
-func MakeServer(host string, c protocols.Controller, auth protocols.AuthHandler) protocols.Server {
+func MakeServer(host string, certFile, keyFile string, c protocols.Controller, auth protocols.AuthHandler) protocols.Server {
 	r := router{
 		controller:  c,
 		authHandler: auth,
 	}
 	r.init()
 	return &server{
-		router: r,
-		host:   host,
+		router:   r,
+		host:     host,
+		certFile: certFile,
+		keyFile:  keyFile,
 	}
 }
 
 type server struct {
-	host   string
-	router router
+	host     string
+	router   router
+	certFile string
+	keyFile  string
 }
 
 func (s *server) Serve() error {
-	return fasthttp.ListenAndServe(s.host, s.router.router.HandleRequest)
+	if s.certFile != "" {
+		return fasthttp.ListenAndServeTLS(s.host, s.certFile, s.keyFile, s.router.router.HandleRequest)
+	} else {
+		return fasthttp.ListenAndServe(s.host, s.router.router.HandleRequest)
+	}
 }
 
 type router struct {
