@@ -3,83 +3,85 @@ package controllers
 import (
 	"encoding/json"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols"
 )
 
 type Storage interface {
-	GetCard(id string) (*models.CardResponse, error)
-	SearchCards(models.Criteria) ([]models.CardResponse, error)
-	CreateCard(*models.CardResponse) (*models.CardResponse, error)
-	RevokeCard(id string, c *models.CardResponse) error
-}
-
-type Validator interface {
-	Validate(*models.CardResponse) error
+	GetCard(id string) (*models.CardResponse, *models.ErrorResponse)
+	SearchCards(models.Criteria) ([]models.CardResponse, *models.ErrorResponse)
+	CreateCard(*models.CardResponse) (*models.CardResponse, *models.ErrorResponse)
+	RevokeCard(id string, c *models.CardResponse) *models.ErrorResponse
 }
 
 type Controller struct {
-	Storage   Storage
-	Validator Validator
+	Storage Storage
 }
 
-func (c *Controller) GetCard(id string) ([]byte, error) {
+func (c *Controller) GetCard(id string) ([]byte, protocols.CodeResponse) {
 	card, err := c.Storage.GetCard(id)
 	if err != nil {
-		return nil, err
+		return mapErrResponseToCodeResponse(err)
 	}
 	if card == nil {
-		return nil, nil
+		return nil, protocols.NotFound
 	}
-	return json.Marshal(card)
+	jcard, _ := json.Marshal(card)
+	return jcard, protocols.Ok
 }
 
-func (c *Controller) SearchCards(data []byte) ([]byte, error) {
+func (c *Controller) SearchCards(data []byte) ([]byte, protocols.CodeResponse) {
 	var cr models.Criteria
 	err := json.Unmarshal(data, &cr)
 	if err != nil {
-		return nil, models.ErrorResponse{
-			Code: 30000,
-		}
+		return mapErrResponseToCodeResponse(models.MakeError(30000))
 	}
 
 	cr.Scope = models.ResolveScope(cr.Scope)
-	cards, err := c.Storage.SearchCards(cr)
-	if err != nil {
-		return nil, err
+	cards, e := c.Storage.SearchCards(cr)
+	if e != nil {
+		return mapErrResponseToCodeResponse(e)
 	}
-	return json.Marshal(cards)
+	jCards, _ := json.Marshal(cards)
+	return jCards, protocols.Ok
 }
 
-func (c *Controller) CreateCard(data []byte) ([]byte, error) {
+func (c *Controller) CreateCard(data []byte) ([]byte, protocols.CodeResponse) {
 	cr := new(models.CardResponse)
 	err := json.Unmarshal(data, cr)
 	if err != nil {
-		return nil, models.ErrorResponse{
-			Code: 30000,
-		}
+		return mapErrResponseToCodeResponse(models.MakeError(30000))
 	}
-	err = c.Validator.Validate(cr)
-	if err != nil {
-		return nil, err
+
+	card, e := c.Storage.CreateCard(cr)
+	if e != nil {
+		return mapErrResponseToCodeResponse(e)
 	}
-	card, err := c.Storage.CreateCard(cr)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(card)
+	jCard, _ := json.Marshal(card)
+	return jCard, protocols.Ok
 }
 
-func (c *Controller) RevokeCard(id string, data []byte) error {
+func (c *Controller) RevokeCard(id string, data []byte) ([]byte, protocols.CodeResponse) {
 	cr := new(models.CardResponse)
 	err := json.Unmarshal(data, cr)
 	if err != nil {
-		return models.ErrorResponse{
-			Code: 30000,
-		}
+		return mapErrResponseToCodeResponse(models.MakeError(30000))
 	}
+	e := c.Storage.RevokeCard(id, cr)
+	if e != nil {
+		return mapErrResponseToCodeResponse(e)
+	}
+	return nil, protocols.Ok
+}
 
-	err = c.Validator.Validate(cr)
-	if err != nil {
-		return err
+// You can find list of actial code response by the following link
+// https://virgilsecurity.com/docs/services/cards/v4.0(latest)/cards-service#appendix-a-response-codes
+func mapErrResponseToCodeResponse(err *models.ErrorResponse) ([]byte, protocols.CodeResponse) {
+	switch err.Code {
+	case 10000:
+		r, _ := json.Marshal(err)
+		return r, protocols.ServerError
+	default:
+		r, _ := json.Marshal(err)
+		return r, protocols.RequestError
 	}
-	return c.Storage.RevokeCard(id, cr)
 }

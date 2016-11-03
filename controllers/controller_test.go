@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols"
 	"testing"
 )
 
@@ -13,33 +13,63 @@ type MockStorage struct {
 	mock.Mock
 }
 
-func (s MockStorage) GetCard(id string) (*models.CardResponse, error) {
+func (s MockStorage) GetCard(id string) (*models.CardResponse, *models.ErrorResponse) {
 	args := s.Called(id)
-	v, ok := args.Get(0).(*models.CardResponse)
-	if ok {
-		return v, args.Error(1)
-	} else {
-		return nil, args.Error(1)
+	var (
+		cr *models.CardResponse
+		er *models.ErrorResponse
+		ok bool
+	)
+	if cr, ok = args.Get(0).(*models.CardResponse); !ok {
+		cr = nil
 	}
+	if er, ok = args.Get(1).(*models.ErrorResponse); !ok {
+		er = nil
+	}
+	return cr, er
 }
-func (s MockStorage) SearchCards(c models.Criteria) ([]models.CardResponse, error) {
+func (s MockStorage) SearchCards(c models.Criteria) ([]models.CardResponse, *models.ErrorResponse) {
 	args := s.Called(c)
-	return args.Get(0).([]models.CardResponse), args.Error(1)
+	var (
+		cr []models.CardResponse
+		er *models.ErrorResponse
+		ok bool
+	)
+	if cr, ok = args.Get(0).([]models.CardResponse); !ok {
+		cr = nil
+	}
+	if er, ok = args.Get(1).(*models.ErrorResponse); !ok {
+		er = nil
+	}
+	return cr, er
 }
 
-func (s MockStorage) CreateCard(c *models.CardResponse) (*models.CardResponse, error) {
+func (s MockStorage) CreateCard(c *models.CardResponse) (*models.CardResponse, *models.ErrorResponse) {
 	args := s.Called(c)
-	v, ok := args.Get(0).(*models.CardResponse)
-	if ok {
-		return v, args.Error(1)
-	} else {
-		return nil, args.Error(1)
+	var (
+		cr *models.CardResponse
+		er *models.ErrorResponse
+		ok bool
+	)
+	if cr, ok = args.Get(0).(*models.CardResponse); !ok {
+		cr = nil
 	}
+	if er, ok = args.Get(1).(*models.ErrorResponse); !ok {
+		er = nil
+	}
+	return cr, er
 }
 
-func (s MockStorage) RevokeCard(id string, c *models.CardResponse) error {
+func (s MockStorage) RevokeCard(id string, c *models.CardResponse) *models.ErrorResponse {
 	args := s.Called(id, c)
-	return args.Error(0)
+	var (
+		er *models.ErrorResponse
+		ok bool
+	)
+	if er, ok = args.Get(0).(*models.ErrorResponse); !ok {
+		er = nil
+	}
+	return er
 }
 
 func MakeFakeCardResponse() *models.CardResponse {
@@ -59,27 +89,37 @@ func MakeFakeCardResponseWith(text string) *models.CardResponse {
 	}
 }
 
-func AssertControllerRespose(t *testing.T, expected *models.CardResponse, r []byte, e error) {
-	assert.Nil(t, e)
+func AssertControllerRespose(t *testing.T, expected *models.CardResponse, r []byte, e protocols.CodeResponse) {
+	assert.Equal(t, protocols.Ok, e)
 
 	actial := new(models.CardResponse)
-	e = json.Unmarshal(r, actial)
-	assert.Nil(t, e, "Cannot restore object from response")
+	assert.Nil(t, json.Unmarshal(r, actial), "Cannot restore object from response")
 	assert.Equal(t, expected, actial)
 }
 
 func Test_GetCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	id := "test"
-	errText := "Some error"
-	mStorage := MockStorage{}
-	mStorage.On("GetCard", id).Return(new(models.CardResponse), errors.New(errText))
-
-	c := Controller{
-		Storage: mStorage,
+	testTable := map[protocols.CodeResponse]*models.ErrorResponse{
+		protocols.ServerError:  models.MakeError(10000),
+		protocols.RequestError: models.MakeError(12344), // any other code
 	}
-	_, err := c.GetCard(id)
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, errText)
+
+	for k, v := range testTable {
+		actual := new(models.ErrorResponse)
+
+		mStorage := MockStorage{}
+		mStorage.On("GetCard", id).Return(nil, v)
+
+		c := Controller{
+			Storage: mStorage,
+		}
+		data, code := c.GetCard(id)
+
+		assert.Equal(t, k, code)
+		assert.Nil(t, json.Unmarshal(data, actual), "Cannot restore object from response")
+		assert.Equal(t, v, actual)
+	}
+
 }
 
 func Test_GetCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
@@ -91,8 +131,8 @@ func Test_GetCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	c := Controller{
 		Storage: mStorage,
 	}
-	r, err := c.GetCard(id)
-	AssertControllerRespose(t, expected, r, err)
+	r, code := c.GetCard(id)
+	AssertControllerRespose(t, expected, r, code)
 }
 
 func Test_GetCard_StorageReturnNilValue_ReturnNilByte(t *testing.T) {
@@ -103,20 +143,23 @@ func Test_GetCard_StorageReturnNilValue_ReturnNilByte(t *testing.T) {
 	c := Controller{
 		Storage: mStorage,
 	}
-	r, err := c.GetCard(id)
-	assert.Nil(t, err)
+	r, code := c.GetCard(id)
+	assert.Equal(t, protocols.NotFound, code)
 	assert.Nil(t, r)
 }
 
 func Test_SearchCards_BrokenRequestData_ReturnErr(t *testing.T) {
+	expected := models.MakeError(30000)
+	actual := new(models.ErrorResponse)
 	mStorage := MockStorage{}
 	c := Controller{
 		Storage: mStorage,
 	}
-	_, err := c.SearchCards([]byte("Test"))
-	assert.NotNil(t, err)
-	assert.IsType(t, models.ErrorResponse{}, err)
-	assert.Equal(t, 30000, err.(models.ErrorResponse).Code)
+	data, code := c.SearchCards([]byte("Test"))
+
+	assert.Equal(t, protocols.RequestError, code)
+	assert.Nil(t, json.Unmarshal(data, actual), "Cannot restore object from response")
+	assert.Equal(t, expected, actual)
 }
 
 func Test_SearchCards_StorageReturnErr_ReturnErr(t *testing.T) {
@@ -125,16 +168,26 @@ func Test_SearchCards_StorageReturnErr_ReturnErr(t *testing.T) {
 	}
 	data, _ := json.Marshal(&criteria)
 
-	errText := "Some error"
-	mStorage := MockStorage{}
-	mStorage.On("SearchCards", criteria).Return([]models.CardResponse{}, errors.New(errText))
-
-	c := Controller{
-		Storage: mStorage,
+	testTable := map[protocols.CodeResponse]*models.ErrorResponse{
+		protocols.ServerError:  models.MakeError(10000),
+		protocols.RequestError: models.MakeError(12344), // any other code
 	}
-	_, err := c.SearchCards(data)
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, errText)
+
+	for k, v := range testTable {
+		actual := new(models.ErrorResponse)
+
+		mStorage := MockStorage{}
+		mStorage.On("SearchCards", criteria).Return([]models.CardResponse{}, v)
+
+		c := Controller{
+			Storage: mStorage,
+		}
+		data, code := c.SearchCards(data)
+
+		assert.Equal(t, k, code)
+		assert.Nil(t, json.Unmarshal(data, actual), "Cannot restore object from response")
+		assert.Equal(t, v, actual)
+	}
 }
 
 func Test_SearchCards_StorageReturnVal_ReturnJsonByte(t *testing.T) {
@@ -166,41 +219,53 @@ func Test_SearchCards_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	c := Controller{
 		Storage: mStorage,
 	}
-	r, err := c.SearchCards(criteria)
+	r, code := c.SearchCards(criteria)
 
-	assert.Nil(t, err)
+	assert.Equal(t, protocols.Ok, code)
 
 	var actial []models.CardResponse
-	err = json.Unmarshal(r, &actial)
-	assert.Nil(t, err, "Cannot restore object from response")
+	assert.Nil(t, json.Unmarshal(r, &actial), "Cannot restore object from response")
 	assert.Equal(t, expected, actial)
 }
 
 func Test_CreateCard_BrokenRequestData_ReturnErr(t *testing.T) {
+	expected := models.MakeError(30000)
+	actual := new(models.ErrorResponse)
 	mStorage := MockStorage{}
 	c := Controller{
 		Storage: mStorage,
 	}
-	_, err := c.CreateCard([]byte("Test"))
-	assert.NotNil(t, err)
-	assert.IsType(t, models.ErrorResponse{}, err)
-	assert.Equal(t, 30000, err.(models.ErrorResponse).Code)
+	data, code := c.CreateCard([]byte("Test"))
+
+	assert.Equal(t, protocols.RequestError, code)
+	assert.Nil(t, json.Unmarshal(data, actual), "Cannot restore object from response")
+	assert.Equal(t, expected, actual)
 }
 
 func Test_CreateCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	param := MakeFakeCardResponse()
 	data, _ := json.Marshal(param)
 
-	errText := "Some error"
-	mStorage := MockStorage{}
-	mStorage.On("CreateCard", param).Return(nil, errors.New(errText))
-
-	c := Controller{
-		Storage: mStorage,
+	testTable := map[protocols.CodeResponse]*models.ErrorResponse{
+		protocols.ServerError:  models.MakeError(10000),
+		protocols.RequestError: models.MakeError(12344), // any other code
 	}
-	_, err := c.CreateCard(data)
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, errText)
+
+	for k, v := range testTable {
+		actual := new(models.ErrorResponse)
+
+		mStorage := MockStorage{}
+		mStorage.On("CreateCard", param).Return(nil, v)
+
+		c := Controller{
+			Storage: mStorage,
+		}
+		data, code := c.CreateCard(data)
+
+		assert.Equal(t, k, code)
+		assert.Nil(t, json.Unmarshal(data, actual), "Cannot restore object from response")
+		assert.Equal(t, v, actual)
+	}
 }
 
 func Test_CreateCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
@@ -214,21 +279,24 @@ func Test_CreateCard_StorageReturnVal_ReturnJsonByte(t *testing.T) {
 	c := Controller{
 		Storage: mStorage,
 	}
-	r, err := c.CreateCard(data)
+	r, code := c.CreateCard(data)
 
-	AssertControllerRespose(t, expected, r, err)
+	AssertControllerRespose(t, expected, r, code)
 }
 
 func Test_RevokeCard_BrokenRequestData_ReturnErr(t *testing.T) {
 	id := "test"
+	expected := models.MakeError(30000)
+	actual := new(models.ErrorResponse)
 	mStorage := MockStorage{}
 	c := Controller{
 		Storage: mStorage,
 	}
-	err := c.RevokeCard(id, []byte("Test"))
-	assert.NotNil(t, err)
-	assert.IsType(t, models.ErrorResponse{}, err)
-	assert.Equal(t, 30000, err.(models.ErrorResponse).Code)
+	data, code := c.RevokeCard(id, []byte("Test"))
+
+	assert.Equal(t, protocols.RequestError, code)
+	assert.Nil(t, json.Unmarshal(data, actual), "Cannot restore object from response")
+	assert.Equal(t, expected, actual)
 }
 
 func Test_RevokeCard_StorageReturnErr_ReturnErr(t *testing.T) {
@@ -236,16 +304,26 @@ func Test_RevokeCard_StorageReturnErr_ReturnErr(t *testing.T) {
 	param := MakeFakeCardResponse()
 	data, _ := json.Marshal(param)
 
-	errText := "Some error"
-	mStorage := MockStorage{}
-	mStorage.On("RevokeCard", id, param).Return(errors.New(errText))
-
-	c := Controller{
-		Storage: mStorage,
+	testTable := map[protocols.CodeResponse]*models.ErrorResponse{
+		protocols.ServerError:  models.MakeError(10000),
+		protocols.RequestError: models.MakeError(12344), // any other code
 	}
-	err := c.RevokeCard(id, data)
-	assert.NotNil(t, err)
-	assert.EqualError(t, err, errText)
+
+	for k, v := range testTable {
+		actual := new(models.ErrorResponse)
+
+		mStorage := MockStorage{}
+		mStorage.On("RevokeCard", id, param).Return(v)
+
+		c := Controller{
+			Storage: mStorage,
+		}
+		data, code := c.RevokeCard(id, data)
+
+		assert.Equal(t, k, code)
+		assert.Nil(t, json.Unmarshal(data, actual), "Cannot restore object from response")
+		assert.Equal(t, v, actual)
+	}
 }
 
 func Test_RevokeCard_StorageReturnNilErr_ReturnNil(t *testing.T) {
@@ -259,6 +337,7 @@ func Test_RevokeCard_StorageReturnNilErr_ReturnNil(t *testing.T) {
 	c := Controller{
 		Storage: mStorage,
 	}
-	err := c.RevokeCard(id, data)
-	assert.Nil(t, err)
+	data, code := c.RevokeCard(id, data)
+	assert.Equal(t, protocols.Ok, code)
+	assert.Nil(t, data)
 }

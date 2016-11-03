@@ -28,8 +28,8 @@ func main() {
 	storage := MakeStorage()
 
 	router := http.MakeRouter(&controllers.Controller{
-		Storage:   storage,
-		Validator: MakeSignValidator(),
+		Storage: storage,
+		// Validator: MakeSignValidator(),
 	}, MakeLogger())
 
 	fasthttp.ListenAndServe(":8081", router.GetHandleRequest())
