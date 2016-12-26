@@ -3,7 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgild/models"
 	"testing"
 )
 

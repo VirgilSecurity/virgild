@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/app"
+	"github.com/virgilsecurity/virgild/app"
 )
 
 var (

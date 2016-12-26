@@ -1,10 +1,10 @@
 package app
 
 import (
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/controllers"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/storage/local"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/storage/remote"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/storage/sync"
+	"github.com/virgilsecurity/virgild/controllers"
+	"github.com/virgilsecurity/virgild/storage/local"
+	"github.com/virgilsecurity/virgild/storage/remote"
+	"github.com/virgilsecurity/virgild/storage/sync"
 	"os"
 )
 

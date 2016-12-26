@@ -4,7 +4,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/valyala/fasthttp"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols"
+	"github.com/virgilsecurity/virgild/protocols"
 	"testing"
 )
 

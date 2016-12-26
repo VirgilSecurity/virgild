@@ -3,8 +3,8 @@ package local
 import (
 	"encoding/hex"
 	"encoding/json"
-	. "github.com/virgilsecurity/virgil-apps-cards-cacher/database/sqlmodels"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	. "github.com/virgilsecurity/virgild/database/sqlmodels"
+	"github.com/virgilsecurity/virgild/models"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 )
 

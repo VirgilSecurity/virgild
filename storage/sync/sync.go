@@ -1,7 +1,7 @@
 package sync
 
 import (
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgild/models"
 )
 
 type Storage interface {

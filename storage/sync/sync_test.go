@@ -3,7 +3,7 @@ package sync
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgild/models"
 	"testing"
 )
 

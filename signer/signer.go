@@ -1,7 +1,7 @@
 package signer
 
 import (
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgild/models"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/virgilcrypto"
 )

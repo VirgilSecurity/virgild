@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols"
+	"github.com/virgilsecurity/virgild/models"
+	"github.com/virgilsecurity/virgild/protocols"
 )
 
 type Storage interface {

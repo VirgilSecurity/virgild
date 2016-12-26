@@ -2,7 +2,7 @@ package validators
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgild/models"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"testing"
 )

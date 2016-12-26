@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/go-xorm/xorm"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/database"
+	"github.com/virgilsecurity/virgild/database"
 )
 
 var orm *xorm.Engine

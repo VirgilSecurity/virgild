@@ -2,7 +2,7 @@ package remote
 
 import (
 	"encoding/json"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	"github.com/virgilsecurity/virgild/models"
 	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/enums"
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/search"

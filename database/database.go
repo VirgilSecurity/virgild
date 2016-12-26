@@ -3,7 +3,7 @@ package database
 import (
 	"github.com/go-xorm/xorm"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/database/sqlmodels"
+	"github.com/virgilsecurity/virgild/database/sqlmodels"
 	"strings"
 )
 

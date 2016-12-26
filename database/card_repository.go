@@ -2,8 +2,8 @@ package database
 
 import (
 	"github.com/go-xorm/xorm"
-	. "github.com/virgilsecurity/virgil-apps-cards-cacher/database/sqlmodels"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/models"
+	. "github.com/virgilsecurity/virgild/database/sqlmodels"
+	"github.com/virgilsecurity/virgild/models"
 )
 
 type CardRepository struct {

@@ -3,7 +3,7 @@ package http
 import (
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
-	"github.com/virgilsecurity/virgil-apps-cards-cacher/protocols"
+	"github.com/virgilsecurity/virgild/protocols"
 )
 
 func MakeServer(host string, certFile, keyFile string, c protocols.Controller, auth protocols.AuthHandler) protocols.Server {
