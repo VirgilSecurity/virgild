@@ -1,11 +1,21 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
+	"strings"
+	"time"
+
+	"github.com/go-xorm/xorm"
 
 	"gopkg.in/virgilsecurity/virgil-sdk-go.v4"
+	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/transport/virgilhttp"
+	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/virgilcrypto"
 )
 
 type SignerConf struct {
@@ -25,10 +35,10 @@ type RemoteTrustConf struct {
 }
 
 type RemoteConf struct {
-	Token         string          `json:"token,omitempty"`
-	CacheDuration int             `json:"cache_duration,omitempty"`
-	Services      ServicesConf    `json:"services,omitempty"`
-	Trust         RemoteTrustConf `json:"trust,omitempty"`
+	Token    string          `json:"token,omitempty"`
+	Cache    int             `json:"cache,omitempty"`
+	Services ServicesConf    `json:"services,omitempty"`
+	Trust    RemoteTrustConf `json:"trust,omitempty"`
 }
 
 type Config struct {
@@ -37,18 +47,57 @@ type Config struct {
 	Remote *RemoteConf `json:"remote,omitempty"`
 }
 
+type SignerConfig struct {
+	CardID     string
+	PrivateKey virgilcrypto.PrivateKey
+}
+type RemoteConfig struct {
+	Token  string
+	Cache  time.Duration
+	Client *virgil.Client
+}
+type AppConfig struct {
+	Orm        *xorm.Engine
+	Logger     *log.Logger
+	Crypto     virgilcrypto.Crypto
+	Signer     SignerConfig
+	Remote     *RemoteConfig
+	ConfigPath string
+	Config     *Config
+}
+
+var (
+	app AppConfig
+)
+
+func loadAppConfig(configPath string) *AppConfig {
+	app = AppConfig{
+		Logger:     log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile),
+		Crypto:     virgil.Crypto(),
+		ConfigPath: configPath,
+	}
+	loadConfig()
+	setupDB()
+	setupSigner()
+	setupRemote()
+
+	saveConfig(*app.Config, app.ConfigPath)
+
+	return &app
+}
+
 func loadConfig() {
-	config = &Config{
+	config := &Config{
 		DB: "sqlite3:./virgild.db",
 	}
-	if _, err := os.Stat(configPath); err == nil {
-		d, err := ioutil.ReadFile(configPath)
+	if _, err := os.Stat(app.ConfigPath); err == nil {
+		d, err := ioutil.ReadFile(app.ConfigPath)
 		if err != nil {
-			logger.Fatalf("Cannot read configuration: %v", err)
+			app.Logger.Fatalf("Cannot read configuration: %v", err)
 		}
 		err = json.Unmarshal(d, config)
 		if err != nil {
-			logger.Fatalf("Cannot load configuration: %v", err)
+			app.Logger.Fatalf("Cannot load configuration: %v", err)
 		}
 	}
 
@@ -56,57 +105,175 @@ func loadConfig() {
 		config.Signer.PrivateKey = "./private.key"
 	}
 	if _, err := os.Stat(config.Signer.PrivateKey); os.IsNotExist(err) {
-		kp, err := virgil.Crypto().GenerateKeypair()
+		kp, err := app.Crypto.GenerateKeypair()
 		if err != nil {
-			logger.Fatalf("Cannot generate private key: %v", err)
+			app.Logger.Fatalf("Cannot generate private key: %v", err)
 		}
 		d, err := kp.PrivateKey().Encode([]byte(""))
 		if err != nil {
-			logger.Fatalf("Cannot generate private key: %v", err)
+			app.Logger.Fatalf("Cannot generate private key: %v", err)
 		}
 		err = ioutil.WriteFile(config.Signer.PrivateKey, d, 400)
 		if err != nil {
-			logger.Fatalf("Cannot save private key: %v", err)
+			app.Logger.Fatalf("Cannot save private key: %v", err)
 		}
 	}
+	app.Config = config
 }
 
-func saveConfig() {
-	d, err := json.MarshalIndent(config, "", "\t")
+func setupDB() {
+	db := app.Config.DB
+	index := strings.Index(db, ":")
+	if index == -1 {
+		app.Logger.Fatalf("Database connection string incorrect. Expected {provider}:{connection_string} actual: %v", db)
+	}
+
+	driver, conn := db[:index], db[index+1:]
+	orm, err := xorm.NewEngine(driver, conn)
 	if err != nil {
-		logger.Fatalf("Cannot serialaze configuration: %v", err)
+		app.Logger.Fatalf("Cannot connect to db (Provider: %v Connection: %v): %v", driver, conn, err)
 	}
-	if err = ioutil.WriteFile(configPath, d, 400); err != nil {
-		logger.Fatalf("Cannot save configuration: %v", err)
+	if err = Sync(orm); err != nil {
+		app.Logger.Fatalf("Cannot sync tabls: %v", err)
 	}
+	app.Orm = orm
 }
 
-func setupRemoteConf() {
-	if len(config.Remote.Token) == 0 {
-		logger.Fatalf("Remote connection requared set token")
+func setupSigner() {
+	d, err := ioutil.ReadFile(app.Config.Signer.PrivateKey)
+	if err != nil {
+		app.Logger.Fatalf("Cannot load private key : %+v", err)
 	}
-	if len(config.Remote.Services.Cards) == 0 {
-		config.Remote.Services.Cards = "https://cards.virgilsecurity.com"
+	privateKey, err := app.Crypto.ImportPrivateKey(d, "")
+	if err != nil {
+		app.Logger.Fatalf("Unsupporetd format of private key: %v", err)
 	}
-	if len(config.Remote.Services.CardsRO) == 0 {
-		config.Remote.Services.CardsRO = "https://cards-ro.virgilsecurity.com"
+
+	if len(app.Config.Signer.CardID) == 0 {
+		app.Config.Signer.CardID = createCard(privateKey)
 	}
-	if len(config.Remote.Services.Identity) == 0 {
-		config.Remote.Services.Identity = "https://identity.virgilsecurity.com"
+	app.Signer.CardID = app.Config.Signer.CardID
+	app.Signer.PrivateKey = privateKey
+}
+
+func createCard(key virgilcrypto.PrivateKey) string {
+	pub, err := key.ExtractPublicKey()
+	if err != nil {
+		app.Logger.Fatalf("Cannot extract public key: %v", err)
 	}
-	if config.Remote.CacheDuration == 0 {
-		config.Remote.CacheDuration = 3600 // 1 hour
+
+	info := virgil.CreateCardRequest{
+		Identity:     "virgild",
+		IdentityType: "card service",
+		Scope:        virgil.CardScope.Application,
 	}
-	if len(config.Remote.Trust.PublicKey) == 0 {
-		config.Remote.Trust.PublicKey = "./trust.pub"
+	req, err := virgil.NewCreateCardRequest(info.Identity, info.IdentityType, pub, virgil.CardInfo{
+		Scope: info.Scope,
+	})
+	if err != nil {
+		app.Logger.Fatalf("Cannot create card for virgild: %+v", err)
 	}
-	if _, err := os.Stat(config.Remote.Trust.PublicKey); err != nil {
-		err = ioutil.WriteFile(config.Remote.Trust.PublicKey, []byte(`-----BEGIN PUBLIC KEY-----
+	id := hex.EncodeToString(app.Crypto.CalculateFingerprint(req.Snapshot))
+	epub, err := pub.Encode()
+	if err != nil {
+		app.Logger.Fatalf("Cannot encode public key: %v", err)
+	}
+	fmt.Println("Public Key:", base64.StdEncoding.EncodeToString(epub))
+	fmt.Println("ID:", id)
+
+	h := DefaultModeCardHandler{
+		Repo: &ImpSqlCardRepository{
+			Orm: app.Orm,
+		},
+		Fingerprint: &ImpFingerprint{
+			Crypto: app.Crypto,
+		},
+		Signer: &ImpRequestSigner{
+			CardId:     id,
+			PrivateKey: key,
+			Crypto:     app.Crypto,
+		},
+		Validator: &RequestValidator{
+			CreateCardValidators: make([]func(req *CreateCardRequest) (bool, error), 0),
+		},
+	}
+
+	_, err = h.Create(&CreateCardRequest{
+		Info:    info,
+		Request: *req,
+	})
+	if err != nil {
+		app.Logger.Fatalf("Cannot store virgild card: %+v", err)
+	}
+	return id
+}
+
+func setupRemote() {
+	if app.Config.Remote == nil {
+		return
+	}
+
+	if len(app.Config.Remote.Token) == 0 {
+		app.Logger.Fatalf("Remote connection requared set token")
+	}
+	if len(app.Config.Remote.Services.Cards) == 0 {
+		app.Config.Remote.Services.Cards = "https://cards.virgilsecurity.com"
+	}
+	if len(app.Config.Remote.Services.CardsRO) == 0 {
+		app.Config.Remote.Services.CardsRO = "https://cards-ro.virgilsecurity.com"
+	}
+	if len(app.Config.Remote.Services.Identity) == 0 {
+		app.Config.Remote.Services.Identity = "https://identity.virgilsecurity.com"
+	}
+	if app.Config.Remote.Cache == 0 {
+		app.Config.Remote.Cache = 3600 // 1 hour
+	}
+	if len(app.Config.Remote.Trust.PublicKey) == 0 {
+		app.Config.Remote.Trust.PublicKey = "./trust.pub"
+	}
+	if _, err := os.Stat(app.Config.Remote.Trust.PublicKey); err != nil {
+		err = ioutil.WriteFile(app.Config.Remote.Trust.PublicKey, []byte(`-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEA8jJqWY5hm4tvmnM6QXFdFCErRCnoYdhVNjFggffSCoc=
 -----END PUBLIC KEY-----`), 700)
 		if err != nil {
-			logger.Fatalf("Cannot save trust service public key: %+v", err)
+			app.Logger.Fatalf("Cannot save trust service public key: %+v", err)
 		}
-		config.Remote.Trust.CardID = "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853"
+		app.Config.Remote.Trust.CardID = "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853"
+	}
+
+	customValidator := virgil.NewCardsValidator()
+	d, err := ioutil.ReadFile(app.Config.Remote.Trust.PublicKey)
+	if err != nil {
+		app.Logger.Fatalf("Cannot load public key of trust service: %+v", err)
+	}
+	cardsServicePublic, err := app.Crypto.ImportPublicKey(d)
+	if err != nil {
+		app.Logger.Fatalf("Cannot import public key: %v", err)
+	}
+	customValidator.AddVerifier(app.Config.Remote.Trust.CardID, cardsServicePublic)
+	//""
+
+	vclient, err := virgil.NewClient(app.Config.Remote.Token,
+		virgil.ClientTransport(
+			virgilhttp.NewTransportClient(
+				app.Config.Remote.Services.Cards,
+				app.Config.Remote.Services.CardsRO,
+				app.Config.Remote.Services.Identity)),
+		virgil.ClientCardsValidator(customValidator))
+
+	app.Remote = &RemoteConfig{
+		Token:  app.Config.Remote.Token,
+		Client: vclient,
+		Cache:  time.Duration(app.Config.Remote.Cache) * time.Second,
+	}
+}
+
+func saveConfig(config Config, configPath string) {
+	d, err := json.MarshalIndent(config, "", "\t")
+	if err != nil {
+		app.Logger.Fatalf("Cannot serialaze configuration: %v", err)
+	}
+	if err = ioutil.WriteFile(configPath, d, 400); err != nil {
+		app.Logger.Fatalf("Cannot save configuration: %v", err)
 	}
 }

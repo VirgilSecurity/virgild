@@ -6,6 +6,28 @@ import (
 	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
 )
 
+func MakeRequestValidation() Validator {
+	return &RequestValidator{
+		SearchValidators: []func(criteria *virgil.Criteria) (bool, error){
+			ScopeMustGlobalOrApplication,
+			SearchIdentitiesNotEmpty,
+		},
+		CreateCardValidators: []func(req *CreateCardRequest) (bool, error){
+			CardIdentityIsEmpty,
+			CardPublicKeyLengthInvalid,
+			CreateCardRequestSignsEmpty,
+			CardDataEntries,
+			CardDataValueExceed256,
+			CardInfoValueExceed256,
+			GlobalCardIdentityTypeMustBeEmail,
+		},
+		RevokeCardValidators: []func(req *RevokeCardRequest) (bool, error){
+			//		RevokeCardRequestSignsEmpty,
+			RevocationReasonIsInvalide,
+		},
+	}
+}
+
 type RequestValidator struct {
 	SearchValidators     []func(criteria *virgil.Criteria) (bool, error)
 	CreateCardValidators []func(req *CreateCardRequest) (bool, error)
