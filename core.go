@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
+	virgil "gopkg.in/virgil.v4"
 )
 
 type RequestSigner interface {
@@ -70,6 +70,9 @@ const (
 	// 500
 	ErrorInernalApplication ResponseErrorCode = 10000
 
+	// 401
+	ErrorAuthHeaderInvalid ResponseErrorCode = 20300
+
 	// 403
 	ErrorForbidden ResponseErrorCode = 20500
 
@@ -117,7 +120,7 @@ type CardHandler interface {
 }
 
 type CreateCardRequest struct {
-	Info    virgil.CreateCardRequest
+	Info    virgil.CardModel
 	Request virgil.SignableRequest
 }
 

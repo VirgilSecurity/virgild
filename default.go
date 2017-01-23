@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
+	virgil "gopkg.in/virgil.v4"
 )
 
 type DefaultModeCardHandler struct {
@@ -48,7 +48,7 @@ func (h *DefaultModeCardHandler) Create(req *CreateCardRequest) (interface{}, er
 		Scope:        req.Info.Scope,
 		CreatedAt:    time.Now().Format(time.RFC3339),
 		CardVersion:  "v4",
-		Signatures:   req.Request.Signatures,
+		Signatures:   req.Request.Meta.Signatures,
 		Data:         req.Info.Data,
 		DeviceInfo:   req.Info.DeviceInfo,
 	}

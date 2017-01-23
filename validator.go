@@ -3,11 +3,12 @@ package main
 import (
 	"strings"
 
-	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
+	virgil "gopkg.in/virgil.v4"
+	"gopkg.in/virgil.v4/virgilcrypto"
 )
 
-func MakeRequestValidation() Validator {
-	return &RequestValidator{
+func MakeRequestValidation(app *AppConfig) Validator {
+	v := &RequestValidator{
 		SearchValidators: []func(criteria *virgil.Criteria) (bool, error){
 			ScopeMustGlobalOrApplication,
 			SearchIdentitiesNotEmpty,
@@ -26,6 +27,11 @@ func MakeRequestValidation() Validator {
 			RevocationReasonIsInvalide,
 		},
 	}
+	if app.VRA != nil {
+		v.CreateCardValidators = append(v.CreateCardValidators, ValidateVRASignCreate(app.VRA.CardID, app.VRA.PublicKey, app.Crypto))
+		v.RevokeCardValidators = append(v.RevokeCardValidators, ValidateVRASignRevoke(app.VRA.CardID, app.VRA.PublicKey, app.Crypto))
+	}
+	return v
 }
 
 type RequestValidator struct {
@@ -90,7 +96,7 @@ func CardPublicKeyLengthInvalid(req *CreateCardRequest) (bool, error) {
 }
 
 func CreateCardRequestSignsEmpty(req *CreateCardRequest) (bool, error) {
-	if len(req.Request.Signatures) == 0 {
+	if len(req.Request.Meta.Signatures) == 0 {
 		return false, ErrorSignsIsEmpty
 	}
 	return true, nil
@@ -128,8 +134,22 @@ func GlobalCardIdentityTypeMustBeEmail(req *CreateCardRequest) (bool, error) {
 	return true, nil
 }
 
+func ValidateVRASignCreate(id string, pub virgilcrypto.PublicKey, crypto virgilcrypto.Crypto) func(req *CreateCardRequest) (bool, error) {
+	return func(req *CreateCardRequest) (bool, error) {
+		sign, ok := req.Request.Meta.Signatures[id]
+		if !ok {
+			return false, ErrorMissVRASign
+		}
+		ok, err := crypto.Verify(req.Request.Snapshot, sign, pub)
+		if err != nil {
+			return false, err
+		}
+		return ok, nil
+	}
+}
+
 func RevokeCardRequestSignsEmpty(req *RevokeCardRequest) (bool, error) {
-	if len(req.Request.Signatures) == 0 {
+	if len(req.Request.Meta.Signatures) == 0 {
 		return false, ErrorSignsIsEmpty
 	}
 	return true, nil
@@ -140,4 +160,18 @@ func RevocationReasonIsInvalide(req *RevokeCardRequest) (bool, error) {
 		return false, ErrorRevocationReasonIsEmpty
 	}
 	return true, nil
+}
+
+func ValidateVRASignRevoke(id string, pub virgilcrypto.PublicKey, crypto virgilcrypto.Crypto) func(req *RevokeCardRequest) (bool, error) {
+	return func(req *RevokeCardRequest) (bool, error) {
+		sign, ok := req.Request.Meta.Signatures[id]
+		if !ok {
+			return false, ErrorMissVRASign
+		}
+		ok, err := crypto.Verify(req.Request.Snapshot, sign, pub)
+		if err != nil {
+			return false, err
+		}
+		return ok, nil
+	}
 }

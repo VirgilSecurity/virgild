@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"time"
 
-	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
-
-	"github.com/pkg/errors"
+	virgil "gopkg.in/virgil.v4"
+	"gopkg.in/virgil.v4/errors"
 )
 
 func vcard2SqlCard(vcard *virgil.Card) (*cardSql, error) {
 	card := vcard2Card(vcard)
 	jcard, err := json.Marshal(card)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, "")
 	}
 
 	return &cardSql{
@@ -44,7 +43,7 @@ func sqlCard2Card(sql *cardSql) (*Card, error) {
 	card := new(Card)
 	err := json.Unmarshal(sql.Card, card)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, "")
 	}
 	return card, nil
 }
@@ -74,10 +73,10 @@ type AppModeCardHandler struct {
 func (h *AppModeCardHandler) remoteGet(id string) (interface{}, error) {
 	vc, err := h.Remote.GetCard(id)
 	if err != nil {
-		verr, ok := virgil.ToSdkError(err)
+		verr, ok := errors.ToSdkError(err)
 		if ok {
-			code := verr.ServiceStatusCode()
-			if verr.TransportStatusCode() == 404 {
+			code := verr.ServiceErrorCode()
+			if verr.HTTPErrorCode() == 404 {
 				code = int(ErrorEntityNotFound)
 			}
 			h.Repo.Add(cardSql{
@@ -85,7 +84,7 @@ func (h *AppModeCardHandler) remoteGet(id string) (interface{}, error) {
 				ErrorCode: code,
 			})
 		}
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, "")
 	}
 	sqlCard, err := vcard2SqlCard(vc)
 	if err != nil {
@@ -114,18 +113,18 @@ func (h *AppModeCardHandler) Get(id string) (interface{}, error) {
 func (h *AppModeCardHandler) remoteSearch(criteria *virgil.Criteria) (interface{}, error) {
 	vcards, err := h.Remote.SearchCards(*criteria)
 	if err != nil {
-		verr, ok := virgil.ToSdkError(err)
+		verr, ok := errors.ToSdkError(err)
 		if ok {
 			for k, _ := range criteria.Identities {
 				h.Repo.Add(cardSql{
 					Identity:     criteria.Identities[k],
 					IdentityType: criteria.IdentityType,
 					Scope:        string(criteria.Scope),
-					ErrorCode:    verr.ServiceStatusCode(),
+					ErrorCode:    verr.ServiceErrorCode(),
 				})
 			}
 		}
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, "")
 	}
 
 	cards := make([]*Card, 0)

@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/hex"
 
-	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
-	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/virgilcrypto"
+	virgil "gopkg.in/virgil.v4"
+	"gopkg.in/virgil.v4/virgilcrypto"
 )
 
 type ImpFingerprint struct {

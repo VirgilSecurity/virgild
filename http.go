@@ -4,10 +4,14 @@ import (
 	"encoding/json"
 
 	"github.com/buaazp/fasthttprouter"
-	"github.com/pkg/errors"
 	"github.com/valyala/fasthttp"
-	virgil "gopkg.in/virgilsecurity/virgil-sdk-go.v4"
+	virgil "gopkg.in/virgil.v4"
+	"gopkg.in/virgil.v4/errors"
 )
+
+type Logger interface {
+	Printf(format string, args ...interface{})
+}
 
 type response struct {
 	ctx    *fasthttp.RequestCtx
@@ -38,16 +42,26 @@ func (r *response) Error(err error) {
 
 	initErr := errors.Cause(err)
 	switch e := initErr.(type) {
-	case virgil.SDKError:
-		respStatus := e.TransportStatusCode()
-		r.ctx.SetStatusCode(respStatus)
-		if respStatus == fasthttp.StatusNotFound {
+	case *errors.SDKError:
+		if e.IsServiceError() {
+			respStatus := e.HTTPErrorCode()
+			r.ctx.SetStatusCode(respStatus)
+			if respStatus == fasthttp.StatusNotFound {
+				return
+			}
+			code := ResponseErrorCode(e.ServiceErrorCode())
+			json.NewEncoder(r.ctx).Encode(responseError{
+				Code:    code,
+				Message: mapCode2Msg(code),
+			})
 			return
 		}
-		code := ResponseErrorCode(e.ServiceStatusCode())
+		r.logger.Printf("Intrenal error: %+v", err)
+
+		r.ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		json.NewEncoder(r.ctx).Encode(responseError{
-			Code:    code,
-			Message: mapCode2Msg(code),
+			Code:    ResponseErrorCode(ErrorInernalApplication),
+			Message: mapCode2Msg(ErrorInernalApplication),
 		})
 	case ResponseErrorCode:
 		if e == ErrorEntityNotFound {
@@ -89,6 +103,17 @@ func (r *response) Response(seccess interface{}, err error) {
 	}
 }
 
+type ResponseFunc func(seccess interface{}, err error)
+type MakeResponseFunc func(ctx *fasthttp.RequestCtx) ResponseFunc
+
+func MakeResponse(logger Logger) MakeResponseFunc {
+	resp := &response{logger: logger}
+	return func(ctx *fasthttp.RequestCtx) ResponseFunc {
+		resp.ctx = ctx
+		return resp.Response
+	}
+}
+
 type signableRequest struct {
 	Meta struct {
 		Signatures map[string][]byte `json:"signs"`
@@ -96,88 +121,88 @@ type signableRequest struct {
 	Snapshot []byte `json:"content_snapshot"`
 }
 
-type Logger interface {
-	Printf(format string, args ...interface{})
-}
-
 type CardController struct {
-	Card   CardHandler
-	Logger Logger
+	Card         CardHandler
+	MakeResponse MakeResponseFunc
 }
 
 func (h *CardController) Get(ctx *fasthttp.RequestCtx) {
-	resp := &response{ctx: ctx, logger: h.Logger}
+	resp := h.MakeResponse(ctx)
 
 	id := ctx.UserValue("id").(string)
-	resp.Response(h.Card.Get(id))
+	resp(h.Card.Get(id))
 }
 
 func (h *CardController) Create(ctx *fasthttp.RequestCtx) {
-	resp := &response{ctx: ctx, logger: h.Logger}
+	resp := h.MakeResponse(ctx)
 
 	req := new(signableRequest)
 	err := json.Unmarshal(ctx.PostBody(), req)
 	if err != nil {
-		resp.Error(ErrorJSONIsInvalid)
+		resp(nil, ErrorJSONIsInvalid)
 		return
 	}
-	creq := new(virgil.CreateCardRequest)
+	creq := new(virgil.CardModel)
 	err = json.Unmarshal(req.Snapshot, creq)
 	if err != nil {
-		resp.Error(ErrorSnapshotIncorrect)
+		resp(nil, ErrorSnapshotIncorrect)
 		return
 	}
 
 	s, err := h.Card.Create(&CreateCardRequest{
 		Info: *creq,
 		Request: virgil.SignableRequest{
-			Snapshot:   req.Snapshot,
-			Signatures: req.Meta.Signatures,
+			Snapshot: req.Snapshot,
+			Meta: virgil.RequestMeta{
+				Signatures: req.Meta.Signatures,
+			},
 		}})
 
-	resp.Response(s, err)
+	resp(s, err)
 }
 
 func (h *CardController) Revoke(ctx *fasthttp.RequestCtx) {
-	resp := &response{ctx: ctx, logger: h.Logger}
+	resp := h.MakeResponse(ctx)
 
 	req := new(signableRequest)
 	err := json.Unmarshal(ctx.PostBody(), req)
 	if err != nil {
-		resp.Error(ErrorJSONIsInvalid)
+		resp(nil, ErrorJSONIsInvalid)
 		return
 	}
 
 	creq := virgil.RevokeCardRequest{}
 	err = json.Unmarshal(req.Snapshot, &creq)
 	if err != nil {
-		resp.Error(ErrorSnapshotIncorrect)
+		resp(nil, ErrorSnapshotIncorrect)
 		return
 	}
 
 	s, err := h.Card.Revoke(&RevokeCardRequest{
 		Info: creq,
 		Request: virgil.SignableRequest{
-			Snapshot:   req.Snapshot,
-			Signatures: req.Meta.Signatures,
+			Snapshot: req.Snapshot,
+			Meta: virgil.RequestMeta{
+				Signatures: req.Meta.Signatures,
+			},
 		}})
-	resp.Response(s, err)
+	resp(s, err)
 }
 
 func (h *CardController) Search(ctx *fasthttp.RequestCtx) {
-	resp := &response{ctx: ctx, logger: h.Logger}
+	resp := h.MakeResponse(ctx)
 
 	c := new(virgil.Criteria)
 	err := json.Unmarshal(ctx.PostBody(), c)
 	if err != nil {
-		resp.Error(ErrorJSONIsInvalid)
+		resp(nil, ErrorJSONIsInvalid)
 		return
 	}
 	if c.Scope == "" {
 		c.Scope = virgil.CardScope.Application
 	}
 
-	resp.Response(h.Card.Search(c))
+	resp(h.Card.Search(c))
 }
 
 type Router struct {

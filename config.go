@@ -13,14 +13,19 @@ import (
 
 	"github.com/go-xorm/xorm"
 
-	"gopkg.in/virgilsecurity/virgil-sdk-go.v4"
-	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/transport/virgilhttp"
-	"gopkg.in/virgilsecurity/virgil-sdk-go.v4/virgilcrypto"
+	"gopkg.in/virgil.v4"
+	"gopkg.in/virgil.v4/transport/virgilhttp"
+	"gopkg.in/virgil.v4/virgilcrypto"
 )
 
 type SignerConf struct {
 	CardID     string `json:"card_id"`
 	PrivateKey string `json:"private_key"`
+}
+
+type VRAConf struct {
+	CardID    string `json:"card_id"`
+	PublicKey string `json:"public_key"`
 }
 
 type ServicesConf struct {
@@ -42,15 +47,22 @@ type RemoteConf struct {
 }
 
 type Config struct {
-	DB     string      `json:"db"`
-	Signer SignerConf  `json:"signer"`
-	Remote *RemoteConf `json:"remote,omitempty"`
+	DB      string      `json:"db"`
+	Signer  SignerConf  `json:"signer"`
+	VRAConf *VRAConf    `json:"vra,omitempty"`
+	Remote  *RemoteConf `json:"remote,omitempty"`
 }
 
 type SignerConfig struct {
 	CardID     string
 	PrivateKey virgilcrypto.PrivateKey
 }
+
+type VRAConfig struct {
+	CardID    string
+	PublicKey virgilcrypto.PublicKey
+}
+
 type RemoteConfig struct {
 	Token  string
 	Cache  time.Duration
@@ -62,8 +74,9 @@ type AppConfig struct {
 	Crypto     virgilcrypto.Crypto
 	Signer     SignerConfig
 	Remote     *RemoteConfig
+	VRA        *VRAConfig
 	ConfigPath string
-	Config     *Config
+	Config     Config
 }
 
 var (
@@ -71,40 +84,51 @@ var (
 )
 
 func loadAppConfig(configPath string) *AppConfig {
+	// virgilcrypto.DefaultCrypto = &crypto.NativeCrypto{}
 	app = AppConfig{
 		Logger:     log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile),
 		Crypto:     virgil.Crypto(),
 		ConfigPath: configPath,
 	}
-	loadConfig()
+	oldConf := loadFromFile()
+	app.Config = oldConf
+	setupConfig()
 	setupDB()
 	setupSigner()
 	setupRemote()
+	setupVRA()
 
-	saveConfig(*app.Config, app.ConfigPath)
+	if oldConf != app.Config {
+		saveConfig(app.Config, app.ConfigPath)
+	}
 
 	return &app
 }
 
-func loadConfig() {
-	config := &Config{
-		DB: "sqlite3:./virgild.db",
-	}
+func loadFromFile() Config {
+	config := Config{}
 	if _, err := os.Stat(app.ConfigPath); err == nil {
 		d, err := ioutil.ReadFile(app.ConfigPath)
 		if err != nil {
 			app.Logger.Fatalf("Cannot read configuration: %v", err)
 		}
-		err = json.Unmarshal(d, config)
+		err = json.Unmarshal(d, &config)
 		if err != nil {
 			app.Logger.Fatalf("Cannot load configuration: %v", err)
 		}
 	}
+	return config
+}
 
-	if len(config.Signer.PrivateKey) == 0 {
-		config.Signer.PrivateKey = "./private.key"
+func setupConfig() {
+	if len(app.Config.DB) == 0 {
+		app.Config.DB = "sqlite3:./virgild.db"
 	}
-	if _, err := os.Stat(config.Signer.PrivateKey); os.IsNotExist(err) {
+
+	if len(app.Config.Signer.PrivateKey) == 0 {
+		app.Config.Signer.PrivateKey = "./private.key"
+	}
+	if _, err := os.Stat(app.Config.Signer.PrivateKey); os.IsNotExist(err) {
 		kp, err := app.Crypto.GenerateKeypair()
 		if err != nil {
 			app.Logger.Fatalf("Cannot generate private key: %v", err)
@@ -113,12 +137,11 @@ func loadConfig() {
 		if err != nil {
 			app.Logger.Fatalf("Cannot generate private key: %v", err)
 		}
-		err = ioutil.WriteFile(config.Signer.PrivateKey, d, 400)
+		err = ioutil.WriteFile(app.Config.Signer.PrivateKey, d, 400)
 		if err != nil {
 			app.Logger.Fatalf("Cannot save private key: %v", err)
 		}
 	}
-	app.Config = config
 }
 
 func setupDB() {
@@ -162,12 +185,12 @@ func createCard(key virgilcrypto.PrivateKey) string {
 		app.Logger.Fatalf("Cannot extract public key: %v", err)
 	}
 
-	info := virgil.CreateCardRequest{
+	info := virgil.CardModel{
 		Identity:     "virgild",
 		IdentityType: "card service",
 		Scope:        virgil.CardScope.Application,
 	}
-	req, err := virgil.NewCreateCardRequest(info.Identity, info.IdentityType, pub, virgil.CardInfo{
+	req, err := virgil.NewCreateCardRequest(info.Identity, info.IdentityType, pub, virgil.CardParams{
 		Scope: info.Scope,
 	})
 	if err != nil {
@@ -258,7 +281,8 @@ MCowBQYDK2VwAyEA8jJqWY5hm4tvmnM6QXFdFCErRCnoYdhVNjFggffSCoc=
 			virgilhttp.NewTransportClient(
 				app.Config.Remote.Services.Cards,
 				app.Config.Remote.Services.CardsRO,
-				app.Config.Remote.Services.Identity)),
+				app.Config.Remote.Services.Identity,
+				app.Config.Remote.Services.Identity)), // VRA
 		virgil.ClientCardsValidator(customValidator))
 
 	app.Remote = &RemoteConfig{
@@ -275,5 +299,28 @@ func saveConfig(config Config, configPath string) {
 	}
 	if err = ioutil.WriteFile(configPath, d, 400); err != nil {
 		app.Logger.Fatalf("Cannot save configuration: %v", err)
+	}
+}
+
+func setupVRA() {
+	if app.Config.VRAConf == nil {
+		return
+	}
+	if len(app.Config.VRAConf.CardID) == 0 {
+		app.Logger.Fatalf("VRA card id is not set")
+	}
+
+	d, err := ioutil.ReadFile(app.Config.VRAConf.PublicKey)
+	if err != nil {
+		app.Logger.Fatalf("Cannot load public key of VRA service: %+v", err)
+	}
+	vraPubKey, err := app.Crypto.ImportPublicKey(d)
+	if err != nil {
+		app.Logger.Fatalf("Cannot import VRA public key: %v", err)
+	}
+
+	app.VRA = &VRAConfig{
+		CardID:    app.Config.VRAConf.CardID,
+		PublicKey: vraPubKey,
 	}
 }

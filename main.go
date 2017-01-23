@@ -20,8 +20,8 @@ func main() {
 
 	router := Router{
 		Card: &CardController{
-			Logger: appConfig.Logger,
-			Card:   getCardHandler(appConfig),
+			MakeResponse: MakeResponse(appConfig.Logger),
+			Card:         getCardHandler(appConfig),
 		},
 	}
 
@@ -43,23 +43,22 @@ func getCardHandler(appConfig *AppConfig) CardHandler {
 				PrivateKey: appConfig.Signer.PrivateKey,
 				Crypto:     appConfig.Crypto,
 			},
-			Validator: MakeRequestValidation(),
+			Validator: MakeRequestValidation(appConfig),
 			Remote:    appConfig.Remote.Client,
 		}
-	} else {
-		return &DefaultModeCardHandler{
-			Repo: &ImpSqlCardRepository{
-				Orm: appConfig.Orm,
-			},
-			Fingerprint: &ImpFingerprint{
-				Crypto: appConfig.Crypto,
-			},
-			Signer: &ImpRequestSigner{
-				CardId:     appConfig.Signer.CardID,
-				PrivateKey: appConfig.Signer.PrivateKey,
-				Crypto:     appConfig.Crypto,
-			},
-			Validator: MakeRequestValidation(),
-		}
+	}
+	return &DefaultModeCardHandler{
+		Repo: &ImpSqlCardRepository{
+			Orm: appConfig.Orm,
+		},
+		Fingerprint: &ImpFingerprint{
+			Crypto: appConfig.Crypto,
+		},
+		Signer: &ImpRequestSigner{
+			CardId:     appConfig.Signer.CardID,
+			PrivateKey: appConfig.Signer.PrivateKey,
+			Crypto:     appConfig.Crypto,
+		},
+		Validator: MakeRequestValidation(appConfig),
 	}
 }
