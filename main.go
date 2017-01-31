@@ -1,64 +1,45 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 
+	"github.com/VirgilSecurity/virgild/config"
+	"github.com/VirgilSecurity/virgild/modules/admin"
+	"github.com/VirgilSecurity/virgild/modules/cards"
+	"github.com/VirgilSecurity/virgild/modules/statistics"
+	"github.com/buaazp/fasthttprouter"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/valyala/fasthttp"
 )
 
-var (
-	configPath string
-)
-
-func init() {
-	flag.StringVar(&configPath, "config", "./virgild.conf", "Configuration file")
-}
-
 func main() {
-	flag.Parse()
-	appConfig := loadAppConfig(configPath)
+	conf := config.Init("virgild.conf")
 
-	router := Router{
-		Card: &CardController{
-			MakeResponse: MakeResponse(appConfig.Logger),
-			Card:         getCardHandler(appConfig),
-		},
-	}
+	fmt.Println("VirgilD CardID:", conf.Site.VirgilD.CardID)
+	fmt.Println("VirgilD PubKey:", conf.Site.VirgilD.PublicKey)
 
-	err := fasthttp.ListenAndServe(":3001", router.Handler())
-	if err != nil {
-		app.Logger.Fatalln(err)
-	}
-}
+	c := cards.Init(conf)
+	s := statistics.Init(conf)
+	a := admin.Init(conf)
 
-func getCardHandler(appConfig *AppConfig) CardHandler {
-	if appConfig.Remote != nil {
-		return &AppModeCardHandler{
-			Repo: &ImpSqlCardRepository{
-				Cache: appConfig.Remote.Cache,
-				Orm:   appConfig.Orm,
-			},
-			Signer: &ImpRequestSigner{
-				CardId:     appConfig.Signer.CardID,
-				PrivateKey: appConfig.Signer.PrivateKey,
-				Crypto:     appConfig.Crypto,
-			},
-			Validator: MakeRequestValidation(appConfig),
-			Remote:    appConfig.Remote.Client,
-		}
-	}
-	return &DefaultModeCardHandler{
-		Repo: &ImpSqlCardRepository{
-			Orm: appConfig.Orm,
-		},
-		Fingerprint: &ImpFingerprint{
-			Crypto: appConfig.Crypto,
-		},
-		Signer: &ImpRequestSigner{
-			CardId:     appConfig.Signer.CardID,
-			PrivateKey: appConfig.Signer.PrivateKey,
-			Crypto:     appConfig.Crypto,
-		},
-		Validator: MakeRequestValidation(appConfig),
-	}
+	r := fasthttprouter.New()
+
+	// Cards
+	r.GET("/v4/card/:id", s.Middleware(c.GetCard))
+	r.POST("/v4/card", s.Middleware(c.CreateCard))
+	r.POST("/v1/card", s.Middleware(c.CreateCard))
+	r.POST("/v4/card/actions/search", s.Middleware(c.SearchCards))
+	r.DELETE("/v4/card/:id", s.Middleware(c.RevokeCard))
+	r.DELETE("/v1/card/:id", s.Middleware(c.RevokeCard))
+	r.GET("/api/cards/count", c.CountCards)
+
+	// Statistics
+	r.GET("/api/statistics", s.GetStatistic)
+	r.GET("/api/statistics/last", s.LastActions)
+
+	// Admin
+	r.ServeFiles("/public/*filepath", "./public")
+	r.GET("/", a.Index)
+
+	fasthttp.ListenAndServe(":8080", r.Handler)
 }
