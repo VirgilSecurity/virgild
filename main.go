@@ -8,7 +8,7 @@ import (
 	"github.com/VirgilSecurity/virgild/modules/cards"
 	"github.com/VirgilSecurity/virgild/modules/statistics"
 	"github.com/buaazp/fasthttprouter"
-	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/valyala/fasthttp"
 )
 
