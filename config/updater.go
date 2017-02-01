@@ -36,8 +36,10 @@ func (u *Updater) Update(conf Config) error {
 	cmd.Stdout = os.Stdout
 	go cmd.Run()
 
-	time.Sleep(5 * time.Second)
-	os.Exit(0)
+	go func() {
+		time.Sleep(5 * time.Second)
+		os.Exit(0)
+	}()
 
 	return nil
 }

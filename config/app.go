@@ -45,8 +45,8 @@ type SiteAdmin struct {
 }
 
 type VirgilDCard struct {
-	CardID    string
-	PublicKey string
+	CardID    string `json:"card_id"`
+	PublicKey string `json:"public_key"`
 }
 type Site struct {
 	Admin   SiteAdmin
