@@ -26,12 +26,7 @@ func SignRevokeRequest(signer func(req *virgil.SignableRequest) error, next core
 	}
 }
 
-type Crypto interface {
-	Sign(data []byte, signer virgilcrypto.PrivateKey) ([]byte, error)
-	CalculateFingerprint(data []byte) []byte
-}
-
-func MakeSigner(cardID string, crypto Crypto, priv virgilcrypto.PrivateKey) func(req *virgil.SignableRequest) error {
+func MakeSigner(cardID string, priv virgilcrypto.PrivateKey) func(req *virgil.SignableRequest) error {
 	signer := virgil.RequestSigner{}
 	return func(req *virgil.SignableRequest) error {
 		err := signer.AuthoritySign(req, cardID, priv)

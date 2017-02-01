@@ -33,7 +33,7 @@ func Init(conf *config.App) *CardsHandlers {
 
 	respWrap := http.MakeResponseWrapper(conf.Common.Logger)
 	mode := makeCardMode(conf)
-	signer := middleware.MakeSigner(conf.Cards.Signer.CardID, virgil.Crypto(), conf.Cards.Signer.PrivateKey)
+	signer := middleware.MakeSigner(conf.Cards.Signer.CardID, conf.Cards.Signer.PrivateKey)
 
 	if conf.Cards.Signer.Card != nil { // first run
 		card := conf.Cards.Signer.Card
