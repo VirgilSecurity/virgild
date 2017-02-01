@@ -66,20 +66,22 @@ func main() {
 	fmt.Println(card.Identity)
 	fmt.Println(card.CreatedAt)
 
-	appCard, err := client.GetCard(cardServiceID)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("App card:", appCard.Identity)
-
-	// cards, err := client.SearchCards(virgil.SearchCriteriaByAppBundle("com.gibsonmic.ed255app"))
+	// appCard, err := client.GetCard(cardServiceID)
 	// if err != nil {
-	// 	fmt.Println(err)
+	// 	panic(err)
 	// }
-	// appCard := cards[0]
-	// fmt.Println("appCard:", appCard.ID)
+	// fmt.Println("App card:", appCard.Identity)
 
-	cards, err := client.SearchCards(virgil.Criteria{
+	cards, err := client.SearchCards(virgil.SearchCriteriaByAppBundle("com.gibsonmic.ed255app"))
+	if err != nil {
+		fmt.Println(err)
+	}
+	if len(cards) != 0 {
+		fmt.Println("Find global card")
+		fmt.Println("appCard:", cards[0].ID)
+	}
+
+	cards, err = client.SearchCards(virgil.Criteria{
 		IdentityType: "Smart Iot Device",
 		Identities: []string{
 			"Device #1",

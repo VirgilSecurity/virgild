@@ -39,7 +39,10 @@ func main() {
 
 	// Admin
 	r.ServeFiles("/public/*filepath", "./public")
+	r.GET("/api/card", a.CardInfo)
+	r.GET("/api/config", a.GetConfig)
+	r.POST("/api/config", a.UpdateConfig)
 	r.GET("/", a.Index)
 
-	fasthttp.ListenAndServe(":8080", r.Handler)
+	panic(fasthttp.ListenAndServe(":8080", r.Handler))
 }

@@ -57,10 +57,10 @@ func (r *StatisticRepository) Search(from, to int64, group core.StatisticDayGrou
 func setGroupByDate(group core.StatisticDayGroup) string {
 	switch group {
 	case core.Hour:
-		round := time.Hour / time.Second
+		round := int64(time.Hour / time.Second)
 		return fmt.Sprintf("date/%v*%v", round, round)
 	case core.Day:
-		round := 24 * time.Hour / time.Second
+		round := int64(24 * time.Hour / time.Second)
 		return fmt.Sprintf("date/%v*%v", round, round)
 	default: // Month
 		return "date_month"
