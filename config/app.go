@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-xorm/xorm"
+	_ "github.com/mattn/go-sqlite3"
 	virgil "gopkg.in/virgil.v4"
 	"gopkg.in/virgil.v4/transport/virgilhttp"
 	"gopkg.in/virgil.v4/virgilcrypto"

@@ -122,11 +122,11 @@ func initDefault(conf Config) Config {
 			conf.Cards.Remote.Services.Identity = "https://identity.virgilsecurity.com"
 		}
 		if conf.Cards.Remote.Services.VRA == "" {
-			conf.Cards.Remote.Services.VRA = "https://vra.virgilsecurity.com"
+			conf.Cards.Remote.Services.VRA = "https://ra.virgilsecurity.com"
 		}
 		if conf.Cards.Remote.Authority.CardID == "" || conf.Cards.Remote.Authority.PublicKey == "" {
 			conf.Cards.Remote.Authority.CardID = "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853"
-			conf.Cards.Remote.Authority.PublicKey = "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG"
+			conf.Cards.Remote.Authority.PublicKey = "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs="
 		}
 		if conf.Cards.Remote.Cache == 0 {
 			conf.Cards.Remote.Cache = 3600
