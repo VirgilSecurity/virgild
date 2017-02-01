@@ -32,20 +32,21 @@ func (r *StatisticRepository) Search(from, to int64, group core.StatisticDayGrou
 	err := q.GroupBy(fmt.Sprintf(`token, %v,
 	case
 		when method = 'GET' and resource like '/v4/card/%%' then 1
-		when method = 'DELETE' and resource like '/v4/card/%%' then 2
-		when method = 'POST' and resource = '/v4/card/actions/search' then 3
-		when method = 'POST' and resource = '/v4/card' then 4
+		when method = 'POST' and resource = '/v4/card/actions/search' then 2
+		when method = 'POST' and resource = '/v4/card' then 3
+		when method = 'DELETE' and resource like '/v4/card/%%' then 4
 		else 0
 	end `, dGroup)).
 		Select(fmt.Sprintf(`%v as date, count(*) as count,token,
 	case
 		when method = 'GET' and resource like '/v4/card/%%' then 1
-		when method = 'DELETE' and resource like '/v4/card/%%' then 2
-		when method = 'POST' and resource = '/v4/card/actions/search' then 3
-		when method = 'POST' and resource = '/v4/card' then 4
+		when method = 'POST' and resource = '/v4/card/actions/search' then 2
+		when method = 'POST' and resource = '/v4/card' then 3
+		when method = 'DELETE' and resource like '/v4/card/%%' then 4
 		else 0
 	end as endpoint`, dGroup)).
 		Table(new(core.RequestStatistics)).
+		OrderBy("date,endpoint").
 		Find(&result)
 
 	if err != nil {
@@ -67,10 +68,10 @@ func setGroupByDate(group core.StatisticDayGroup) string {
 	}
 }
 
-func (r *StatisticRepository) Get(until int64) ([]core.RequestStatistics, error) {
+func (r *StatisticRepository) Get(until int64, count int) ([]core.RequestStatistics, error) {
 	var result []core.RequestStatistics
-	q := r.Orm.Limit(50)
-	if until != 0 {
+	q := r.Orm.Limit(count)
+	if until > 0 {
 		q.Where("id<?", until)
 	}
 	err := q.OrderBy("id desc").Find(&result)

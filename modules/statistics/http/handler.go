@@ -38,7 +38,7 @@ func GetStatistic(searcher StatisticRepoSearch, logger Logger) fasthttp.RequestH
 		g := string(args.Peek("group"))
 		switch g {
 		case "month":
-			group = core.Hour
+			group = core.Day
 			from = to.AddDate(0, -1, 0)
 		case "last_3_months":
 			group = core.Day
@@ -75,8 +75,10 @@ func GetStatistic(searcher StatisticRepoSearch, logger Logger) fasthttp.RequestH
 }
 
 type LastActionsRepo interface {
-	Get(until int64) ([]core.RequestStatistics, error)
+	Get(until int64, count int) ([]core.RequestStatistics, error)
 }
+
+const COUNT_LAST_ACTIONS = 50
 
 func LastActions(repo LastActionsRepo, logger Logger) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
@@ -91,7 +93,7 @@ func LastActions(repo LastActionsRepo, logger Logger) fasthttp.RequestHandler {
 			}
 		}
 
-		r, err := repo.Get(until)
+		r, err := repo.Get(until, COUNT_LAST_ACTIONS)
 		if err != nil {
 			logger.Printf("Last actions statistic info: %+v", err)
 			ctx.Error("", fasthttp.StatusInternalServerError)
