@@ -37,7 +37,12 @@ func mainPage(path string) fasthttp.RequestHandler {
 	}
 }
 
-func getConf(updater *config.Updater) fasthttp.RequestHandler {
+type configRepo interface {
+	Config() config.Config
+	Update(conf config.Config) error
+}
+
+func getConf(updater configRepo) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		b, err := json.Marshal(updater.Config())
 		if err != nil {
@@ -49,18 +54,18 @@ func getConf(updater *config.Updater) fasthttp.RequestHandler {
 	}
 }
 
-func updateConf(updater *config.Updater) fasthttp.RequestHandler {
+func updateConf(updater configRepo) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
 		ctx.SetContentType("application/json")
 		conf := new(config.Config)
 		err := json.Unmarshal(ctx.PostBody(), conf)
 		if err != nil {
-			ctx.Error("{'message':'JSON invalid'}", fasthttp.StatusBadRequest)
+			ctx.Error(`{"message":"JSON invalid"}`, fasthttp.StatusBadRequest)
 			return
 		}
 		err = updater.Update(*conf)
 		if err != nil {
-			ctx.Error(fmt.Sprintf("{'message':'%v'}", err), fasthttp.StatusBadRequest)
+			ctx.Error(fmt.Sprintf(`{"message":"%v"}`, err), fasthttp.StatusBadRequest)
 		}
 	}
 }
