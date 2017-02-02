@@ -95,29 +95,3 @@ func GetCountCards(repo CardsRepository) Response {
 		return CardsCountModel{c}, nil
 	}
 }
-
-type RequestStatisticRepository interface {
-	Search(from int64, to int64, token string) ([]core.RequestStatistics, error)
-}
-
-func GetRequestStatistic(repo RequestStatisticRepository) Response {
-	type RequestStatistic struct {
-		Data     int64  `json:"data"`
-		Token    string `json:"token"`
-		Method   string `json:"method"`
-		Resource string `Json:"resource"`
-	}
-	type FilterRequestStatistic struct {
-		From  int64  `json:"from,omitempty"`
-		To    int64  `json:"to,omitempty"`
-		Toekn string `json:"token,omitempty"`
-	}
-	return func(ctx *fasthttp.RequestCtx) (interface{}, error) {
-		filter := new(FilterRequestStatistic)
-		err := json.Unmarshal(ctx.PostBody(), filter)
-		if err != nil {
-			return nil, err
-		}
-		return repo.Search(filter.From, filter.To, filter.Toekn)
-	}
-}

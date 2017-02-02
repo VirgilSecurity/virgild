@@ -50,6 +50,6 @@ const (
 	ErrorRevocationReasonIsEmpty                 ResponseErrorCode = 30139
 	ErrorSignInvalid                             ResponseErrorCode = 30140 // miss
 	ErrorSignerIsNotFound                        ResponseErrorCode = 30141 // miss
-	ErrorSignItemIsInvalid                       ResponseErrorCode = 30142 // ErrorSignInvalid
-	ErrorMissVRASign                             ResponseErrorCode = 30143 // miss
+	ErrorSignItemInvalidForClient                ResponseErrorCode = 30142
+	ErrorVRASignInvalid                          ResponseErrorCode = 30143 // miss
 )

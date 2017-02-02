@@ -47,9 +47,9 @@ func (r *CardRepository) Find(identitis []string, identityType string, scope str
 
 func (r *CardRepository) Add(cs core.SqlCard) error {
 	if cs.Scope == "global" || len(cs.Card) == 0 {
-		cs.ExpireAt = time.Now().UTC().Add(r.Cache)
+		cs.ExpireAt = time.Now().UTC().Add(r.Cache).Unix()
 	} else {
-		cs.ExpireAt = time.Date(2999, 1, 1, 0, 0, 0, 0, time.UTC)
+		cs.ExpireAt = time.Date(2999, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 	}
 	_, err := r.Orm.InsertOne(cs)
 	return err
@@ -73,7 +73,8 @@ func (r *CardRepository) DeleteBySearch(identitis []string, identityType string,
 }
 
 func (r *CardRepository) Count() (int64, error) {
-	count, err := r.Orm.Where("error_code!=0").And("expire_at>?", time.Now().UTC()).Count(new([]core.SqlCard))
+	now := time.Now().UTC().Unix()
+	count, err := r.Orm.Where("error_code!=0").And("expire_at>?", now).Count(new(core.SqlCard))
 	if err != nil {
 		return 0, err
 	}
