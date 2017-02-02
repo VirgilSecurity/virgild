@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"encoding/hex"
 	"strings"
 
 	"github.com/VirgilSecurity/virgild/modules/cards/core"
@@ -15,6 +16,7 @@ var createValidator = []func(req *core.CreateCardRequest) (bool, error){
 	cardDataValueExceed256,
 	cardInfoValueExceed256,
 	createCardRequestSignsEmpty,
+	createCardRequestSelfSignIvalid,
 }
 
 func CreateCard(next core.CreateCard, validators ...func(req *core.CreateCardRequest) (bool, error)) core.CreateCard {
@@ -46,6 +48,22 @@ func cardPublicKeyLengthInvalid(req *core.CreateCardRequest) (bool, error) {
 func createCardRequestSignsEmpty(req *core.CreateCardRequest) (bool, error) {
 	if len(req.Request.Meta.Signatures) == 0 {
 		return false, core.ErrorSignsIsEmpty
+	}
+	return true, nil
+}
+
+func createCardRequestSelfSignIvalid(req *core.CreateCardRequest) (bool, error) {
+	id := virgil.Crypto().CalculateFingerprint(req.Request.Snapshot)
+	sign, ok := req.Request.Meta.Signatures[hex.EncodeToString(id)]
+	if !ok {
+		return false, core.ErrorSignItemInvalidForClient
+	}
+	pub, err := virgil.Crypto().ImportPublicKey(req.Info.PublicKey)
+	if err != nil {
+		return false, core.ErrorSnapshotIncorrect
+	}
+	if ok, err = virgil.Crypto().Verify(id, sign, pub); !ok {
+		return false, core.ErrorSignItemInvalidForClient
 	}
 	return true, nil
 }

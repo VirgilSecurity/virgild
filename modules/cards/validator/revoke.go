@@ -7,6 +7,7 @@ import (
 
 var revokeValidator = []func(req *core.RevokeCardRequest) (bool, error){
 	revocationReasonIsInvalide,
+	revokeCardMissId,
 	//revokeCardRequestSignsEmpty,
 }
 
@@ -32,6 +33,13 @@ func revokeCardRequestSignsEmpty(req *core.RevokeCardRequest) (bool, error) {
 func revocationReasonIsInvalide(req *core.RevokeCardRequest) (bool, error) {
 	if len(req.Info.RevocationReason) == 0 {
 		return false, core.ErrorRevocationReasonIsEmpty
+	}
+	return true, nil
+}
+
+func revokeCardMissId(req *core.RevokeCardRequest) (bool, error) {
+	if len(req.Info.ID) == 0 {
+		return false, core.ErrorRevokeCardIDInURLNotEqualCardIDInBody
 	}
 	return true, nil
 }
