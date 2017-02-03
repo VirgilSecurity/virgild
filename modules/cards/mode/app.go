@@ -8,14 +8,6 @@ import (
 	"gopkg.in/virgil.v4/errors"
 )
 
-type CardRepository interface {
-	Get(id string) (*core.SqlCard, error)
-	Find(identitis []string, identityType string, scope string) ([]core.SqlCard, error)
-	Add(cs core.SqlCard) error
-	DeleteById(id string) error
-	DeleteBySearch(identitis []string, identityType string, scope string) error
-}
-
 type VirgilClient interface {
 	GetCard(id string) (*virgil.Card, error)
 	SearchCards(virgil.Criteria) ([]*virgil.Card, error)
@@ -60,7 +52,7 @@ func (h *AppModeCardHandler) Get(id string) (*core.Card, error) {
 	if err != nil {
 		return nil, err
 	}
-	if c.ExpireAt.After(time.Now()) {
+	if c.ExpireAt < time.Now().Unix() {
 		h.Repo.DeleteById(id)
 		return h.remoteGet(id)
 	}
@@ -109,7 +101,7 @@ func (h *AppModeCardHandler) Search(criteria *virgil.Criteria) ([]core.Card, err
 	}
 
 	for _, v := range cards {
-		if v.ExpireAt.After(time.Now()) {
+		if v.ExpireAt < time.Now().Unix() {
 			h.Repo.DeleteBySearch(criteria.Identities, criteria.IdentityType, string(criteria.Scope))
 			return h.remoteSearch(criteria)
 		}

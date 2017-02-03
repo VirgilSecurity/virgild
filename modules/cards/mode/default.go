@@ -43,6 +43,7 @@ func (h *DefaultModeCardHandler) Create(req *core.CreateCardRequest) (*core.Card
 		Data:         req.Info.Data,
 		DeviceInfo:   req.Info.DeviceInfo,
 	}
+
 	sqlCard, err := vcard2SqlCard(vcard)
 	if err != nil {
 		return nil, err
