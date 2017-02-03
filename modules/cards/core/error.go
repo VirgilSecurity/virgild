@@ -5,12 +5,12 @@ import "fmt"
 type ResponseErrorCode int
 
 func (code ResponseErrorCode) Error() string {
-	return fmt.Sprintf("code: %v", code)
+	return fmt.Sprintf("code: %v", int(code))
 }
 
 const (
 	// 500
-	ErrorInernalApplication ResponseErrorCode = 10000
+	//ErrorInernalApplication ResponseErrorCode = 10000
 
 	// 401
 	ErrorAuthHeaderInvalid ResponseErrorCode = 20300

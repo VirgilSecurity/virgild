@@ -66,9 +66,6 @@ func responseError(err error, ctx *fasthttp.RequestCtx, logger Logger) {
 		}
 
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		if e == core.ErrorApplicationSignIsInvalid {
-			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		}
 
 		json.NewEncoder(ctx).Encode(responseErrorModel{
 			Code:    e,
@@ -79,8 +76,8 @@ func responseError(err error, ctx *fasthttp.RequestCtx, logger Logger) {
 
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		json.NewEncoder(ctx).Encode(responseErrorModel{
-			Code:    core.ResponseErrorCode(core.ErrorInernalApplication),
-			Message: mapCode2Msg(core.ErrorInernalApplication),
+			Code:    core.ResponseErrorCode(10000), //core.ErrorInernalApplication
+			Message: mapCode2Msg(10000),
 		})
 	}
 }

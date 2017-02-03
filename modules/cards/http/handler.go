@@ -82,16 +82,17 @@ type CardsRepository interface {
 	Count() (int64, error)
 }
 
+type cardsCountModel struct {
+	Count int64 `json:"count"`
+}
+
 func GetCountCards(repo CardsRepository) Response {
-	type CardsCountModel struct {
-		Count int64 `json:"count"`
-	}
 	return func(ctx *fasthttp.RequestCtx) (interface{}, error) {
 
 		c, err := repo.Count()
 		if err != nil {
 			return nil, err
 		}
-		return CardsCountModel{c}, nil
+		return cardsCountModel{c}, nil
 	}
 }
