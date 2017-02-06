@@ -66,7 +66,7 @@ func (h *AppModeCardHandler) remoteSearch(criteria *virgil.Criteria) ([]core.Car
 	if err != nil {
 		verr, ok := errors.ToSdkError(err)
 		if ok {
-			for k, _ := range criteria.Identities {
+			for k := range criteria.Identities {
 				h.Repo.Add(core.SqlCard{
 					Identity:     criteria.Identities[k],
 					IdentityType: criteria.IdentityType,
