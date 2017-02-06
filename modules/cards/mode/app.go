@@ -28,6 +28,7 @@ func (h *AppModeCardHandler) remoteGet(id string) (*core.Card, error) {
 			code := verr.ServiceErrorCode()
 			if verr.HTTPErrorCode() == 404 {
 				code = int(core.ErrorEntityNotFound)
+				err = core.ErrorEntityNotFound
 			}
 			h.Repo.Add(core.SqlCard{
 				CardID:    id,

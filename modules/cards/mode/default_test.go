@@ -55,7 +55,7 @@ func (f *fakeFingerprint) Calculate(data []byte) string {
 	return args.String(0)
 }
 
-func TestGet_RepoReturnErr_ReturnErr(t *testing.T) {
+func TestDefault_Get_RepoReturnErr_ReturnErr(t *testing.T) {
 	repo := new(fakeCardRepository)
 	repo.On("Get", mock.Anything).Return(nil, fmt.Errorf("Error"))
 	h := DefaultModeCardHandler{repo, nil}
@@ -63,7 +63,7 @@ func TestGet_RepoReturnErr_ReturnErr(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestGet_RepoReturnValErrorCodeNotZero_ReturnErr(t *testing.T) {
+func TestDefault_Get_RepoReturnValErrorCodeNotZero_ReturnErr(t *testing.T) {
 	repo := new(fakeCardRepository)
 	repo.On("Get", mock.Anything).Return(&core.SqlCard{ErrorCode: -1}, nil)
 	h := DefaultModeCardHandler{repo, nil}
@@ -71,7 +71,7 @@ func TestGet_RepoReturnValErrorCodeNotZero_ReturnErr(t *testing.T) {
 	assert.Equal(t, core.ResponseErrorCode(-1), err)
 }
 
-func TestGet_RepoReturnValCardInvalid_ReturnErr(t *testing.T) {
+func TestDefault_Get_RepoReturnValCardInvalid_ReturnErr(t *testing.T) {
 	repo := new(fakeCardRepository)
 	repo.On("Get", mock.Anything).Return(&core.SqlCard{Card: []byte("it's broken data")}, nil)
 	h := DefaultModeCardHandler{repo, nil}
@@ -79,7 +79,7 @@ func TestGet_RepoReturnValCardInvalid_ReturnErr(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestGet_RepoReturnValCard_ReturnCard(t *testing.T) {
+func TestDefault_Get_RepoReturnValCard_ReturnCard(t *testing.T) {
 	expected := &core.Card{Snapshot: []byte("test"), Meta: core.CardMeta{Signatures: map[string][]byte{
 		"test": []byte("sign"),
 	}}}
@@ -93,7 +93,7 @@ func TestGet_RepoReturnValCard_ReturnCard(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestSearch_RepoReturnErr_ReturnErr(t *testing.T) {
+func TestDefault_Search_RepoReturnErr_ReturnErr(t *testing.T) {
 	repo := new(fakeCardRepository)
 	repo.On("Find", mock.Anything, mock.Anything, mock.Anything).Return(nil, fmt.Errorf("Error"))
 	h := DefaultModeCardHandler{repo, nil}
@@ -101,7 +101,7 @@ func TestSearch_RepoReturnErr_ReturnErr(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestSearch_RepoReturnValErrorCodeNotZero_ReturnErr(t *testing.T) {
+func TestDefault_Search_RepoReturnValErrorCodeNotZero_ReturnErr(t *testing.T) {
 	repo := new(fakeCardRepository)
 	repo.On("Find", mock.Anything, mock.Anything, mock.Anything).Return([]core.SqlCard{core.SqlCard{ErrorCode: -1}}, nil)
 	h := DefaultModeCardHandler{repo, nil}
@@ -110,7 +110,7 @@ func TestSearch_RepoReturnValErrorCodeNotZero_ReturnErr(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestSearch_RepoReturnValCardInvalid_ReturnErr(t *testing.T) {
+func TestDefault_Search_RepoReturnValCardInvalid_ReturnErr(t *testing.T) {
 	repo := new(fakeCardRepository)
 	repo.On("Find", mock.Anything, mock.Anything, mock.Anything).Return([]core.SqlCard{core.SqlCard{Card: []byte("it's broken data")}}, nil)
 	h := DefaultModeCardHandler{repo, nil}
@@ -120,7 +120,7 @@ func TestSearch_RepoReturnValCardInvalid_ReturnErr(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestSearch_RepoReturnValCard_ReturnCard(t *testing.T) {
+func TestDefault_Search_RepoReturnValCard_ReturnCard(t *testing.T) {
 	crit := &virgil.Criteria{
 		Identities:   []string{"test", "test1"},
 		IdentityType: "app",
@@ -139,7 +139,7 @@ func TestSearch_RepoReturnValCard_ReturnCard(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
-func TestCreate_RepoReturnErr_ReturnErr(t *testing.T) {
+func TestDefault_Create_RepoReturnErr_ReturnErr(t *testing.T) {
 	repo := new(fakeCardRepository)
 	repo.On("Add", mock.Anything).Return(fmt.Errorf("Error"))
 	f := new(fakeFingerprint)
@@ -151,7 +151,7 @@ func TestCreate_RepoReturnErr_ReturnErr(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestCreate_StoreCard(t *testing.T) {
+func TestDefault_Create_StoreCard(t *testing.T) {
 	req := &core.CreateCardRequest{
 		Info: virgil.CardModel{
 			Scope:        virgil.CardScope.Application,
@@ -191,7 +191,7 @@ func TestCreate_StoreCard(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestCreate_ReturnCard(t *testing.T) {
+func TestDefault_Create_ReturnCard(t *testing.T) {
 	req := &core.CreateCardRequest{
 		Info: virgil.CardModel{
 			Scope:        virgil.CardScope.Application,
@@ -222,7 +222,7 @@ func TestCreate_ReturnCard(t *testing.T) {
 	assert.Equal(t, "id", c.ID)
 }
 
-func TestRevoke_ReturnErr(t *testing.T) {
+func TestDefault_Revoke_ReturnErr(t *testing.T) {
 	const id = "id"
 	repo := new(fakeCardRepository)
 	repo.On("DeleteById", id).Return(fmt.Errorf("Error"))
