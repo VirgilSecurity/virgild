@@ -10,7 +10,7 @@ import (
 
 type VirgilClient interface {
 	GetCard(id string) (*virgil.Card, error)
-	SearchCards(virgil.Criteria) ([]*virgil.Card, error)
+	SearchCards(*virgil.Criteria) ([]*virgil.Card, error)
 	CreateCard(req *virgil.SignableRequest) (*virgil.Card, error)
 	RevokeCard(req *virgil.SignableRequest) error
 }
@@ -62,7 +62,7 @@ func (h *AppModeCardHandler) Get(id string) (*core.Card, error) {
 }
 
 func (h *AppModeCardHandler) remoteSearch(criteria *virgil.Criteria) ([]core.Card, error) {
-	vcards, err := h.Remote.SearchCards(*criteria)
+	vcards, err := h.Remote.SearchCards(criteria)
 	if err != nil {
 		verr, ok := errors.ToSdkError(err)
 		if ok {

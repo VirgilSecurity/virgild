@@ -81,7 +81,7 @@ func main() {
 	// 	fmt.Println("appCard:", cards[0].ID)
 	// }
 
-	cards, err := client.SearchCards(virgil.Criteria{
+	cards, err := client.SearchCards(&virgil.Criteria{
 		IdentityType: "Smart Iot Device",
 		Identities: []string{
 			"Device #1",

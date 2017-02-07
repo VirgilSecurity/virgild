@@ -65,7 +65,7 @@ func TestSearchCards_FuncExecuted(t *testing.T) {
 	ctx := makeRequestCtx(crit)
 	var executed bool
 	cs, err := SearchCards(func(c *virgil.Criteria) ([]core.Card, error) {
-		assert.Equal(t, &crit, c)
+		assert.Equal(t, crit, c)
 		executed = true
 		return make([]core.Card, 0), fmt.Errorf("Error")
 	})(ctx)

@@ -26,7 +26,7 @@ func (f *fakeVirgilClient) GetCard(id string) (c *virgil.Card, err error) {
 	return
 }
 
-func (f *fakeVirgilClient) SearchCards(crit virgil.Criteria) (cs []*virgil.Card, err error) {
+func (f *fakeVirgilClient) SearchCards(crit *virgil.Criteria) (cs []*virgil.Card, err error) {
 	args := f.Called(crit)
 	cs, _ = args.Get(0).([]*virgil.Card)
 	err = args.Error(1)
@@ -259,7 +259,7 @@ func TestApp_Search_RepoReturnEmptyRemoteReturnCards_AddCardsToRepo(t *testing.T
 }
 
 func TestApp_Search_RepoReturnEmptyRemoteReturnCards_ReturnVal(t *testing.T) {
-	c := virgil.Criteria{
+	c := &virgil.Criteria{
 		Identities:   []string{"test1", "test2"},
 		IdentityType: "app",
 		Scope:        virgil.CardScope.Application,
@@ -274,7 +274,7 @@ func TestApp_Search_RepoReturnEmptyRemoteReturnCards_ReturnVal(t *testing.T) {
 
 	a := AppModeCardHandler{repo, vc}
 
-	actual, _ := a.Search(&c)
+	actual, _ := a.Search(c)
 
 	assert.Equal(t, expected, actual)
 }
@@ -373,7 +373,7 @@ func TestApp_Search_RepoReturnExpireCardsRemoteReturnCards_AddCardsToRepo(t *tes
 }
 
 func TestApp_Search_RepoReturnExpireCardsRemoteReturnCards_ReturnVal(t *testing.T) {
-	c := virgil.Criteria{
+	c := &virgil.Criteria{
 		Identities:   []string{"test1", "test2"},
 		IdentityType: "app",
 		Scope:        virgil.CardScope.Application,
@@ -390,7 +390,7 @@ func TestApp_Search_RepoReturnExpireCardsRemoteReturnCards_ReturnVal(t *testing.
 
 	a := AppModeCardHandler{repo, vc}
 
-	actual, _ := a.Search(&c)
+	actual, _ := a.Search(c)
 
 	assert.Equal(t, expected, actual)
 }
