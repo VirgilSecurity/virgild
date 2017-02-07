@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 
 	"github.com/valyala/fasthttp"
@@ -15,9 +16,20 @@ type cards struct {
 	Message string      `json:"message"`
 }
 
+func getToken(t []byte, auth func(token string) error) authHandler {
+	typeSpace := append(t, ' ')
+	return func(ctx *fasthttp.RequestCtx) error {
+		hauth := ctx.Request.Header.Peek("Authorization")
+		if !bytes.HasPrefix(hauth, typeSpace) {
+			return errTokenInvalid
+		}
+		return auth(string(hauth[len(typeSpace):]))
+	}
+}
+
 func cardsWrap(logger Logger, validator authHandler, next fasthttp.RequestHandler) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
-		_, err := validator(ctx)
+		err := validator(ctx)
 		if err != nil {
 			switch e := err.(type) {
 			case errResponse:
@@ -33,23 +45,6 @@ func cardsWrap(logger Logger, validator authHandler, next fasthttp.RequestHandle
 				}
 				ctx.SetContentType("application/json")
 				ctx.Write(b)
-				ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-			default:
-				logger.Printf("Auth card request: %v", err)
-				ctx.Error("", fasthttp.StatusInternalServerError)
-				return
-			}
-		}
-		next(ctx)
-	}
-}
-
-func adminWrap(logger Logger, validator authHandler, next fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		_, err := validator(ctx)
-		if err != nil {
-			switch err.(type) {
-			case errResponse:
 				ctx.SetStatusCode(fasthttp.StatusUnauthorized)
 			default:
 				logger.Printf("Auth card request: %v", err)

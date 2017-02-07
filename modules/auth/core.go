@@ -6,7 +6,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type authHandler func(ctx *fasthttp.RequestCtx) (bool, error)
+type authHandler func(ctx *fasthttp.RequestCtx) error
 
 type errResponse int
 

@@ -1,3 +1,5 @@
+// +build integration
+
 package db
 
 import (
@@ -319,11 +321,16 @@ func TestCount_ReturnCount(t *testing.T) {
 		Scope:        "app",
 		IdentityType: "email",
 		ExpireAt:     time.Now().AddDate(10, 0, 0).Unix(),
+	}, core.SqlCard{
+		Identity:     "test4",
+		Scope:        "app",
+		IdentityType: "email",
+		ExpireAt:     time.Now().AddDate(0, 1, 0).Unix(),
 	})
 
 	repo := CardRepository{Orm: orm}
 	count, err := repo.Count()
 
 	assert.Nil(t, err)
-	assert.Equal(t, int64(1), count)
+	assert.Equal(t, int64(2), count)
 }

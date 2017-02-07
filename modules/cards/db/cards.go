@@ -74,7 +74,7 @@ func (r *CardRepository) DeleteBySearch(identitis []string, identityType string,
 
 func (r *CardRepository) Count() (int64, error) {
 	now := time.Now().UTC().Unix()
-	count, err := r.Orm.Where("error_code!=0").And("expire_at>?", now).Count(new(core.SqlCard))
+	count, err := r.Orm.Where("error_code=0").And("expire_at>?", now).Count(new(core.SqlCard))
 	if err != nil {
 		return 0, err
 	}

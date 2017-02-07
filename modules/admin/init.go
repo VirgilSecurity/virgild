@@ -14,6 +14,7 @@ type AdminHandlers struct {
 	GetConfig    fasthttp.RequestHandler
 	UpdateConfig fasthttp.RequestHandler
 	CardInfo     fasthttp.RequestHandler
+	Auth         func(next fasthttp.RequestHandler) fasthttp.RequestHandler
 }
 
 func Init(conf *config.App) *AdminHandlers {
@@ -22,6 +23,7 @@ func Init(conf *config.App) *AdminHandlers {
 		GetConfig:    getConf(conf.Common.ConfigUpdate),
 		CardInfo:     getVirgilDCardInfo(conf.Site.VirgilD),
 		UpdateConfig: updateConf(conf.Common.ConfigUpdate),
+		Auth:         adminWrap(staticLogin(conf.Site.Admin.Login, conf.Site.Admin.Password)),
 	}
 }
 

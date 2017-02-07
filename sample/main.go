@@ -24,7 +24,7 @@ func main() {
 
 	// customValidator.AddVerifier(cardServiceID, cardsServicePublic)
 
-	client, err := virgil.NewClient("123",
+	client, err := virgil.NewClient("10ca0d8c7811965fb3e3e225793e2af6026fa3029e9ba0e98148a0a78f34b4f6",
 		virgil.ClientTransport(
 			virgilhttp.NewTransportClient(
 				"http://localhost:8080",
@@ -72,16 +72,16 @@ func main() {
 	// }
 	// fmt.Println("App card:", appCard.Identity)
 
-	cards, err := client.SearchCards(virgil.SearchCriteriaByAppBundle("com.gibsonmic.ed255app"))
-	if err != nil {
-		fmt.Println(err)
-	}
-	if len(cards) != 0 {
-		fmt.Println("Find global card")
-		fmt.Println("appCard:", cards[0].ID)
-	}
+	// cards, err := client.SearchCards(virgil.SearchCriteriaByAppBundle("com.gibsonmic.ed255app"))
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// if len(cards) != 0 {
+	// 	fmt.Println("Find global card")
+	// 	fmt.Println("appCard:", cards[0].ID)
+	// }
 
-	cards, err = client.SearchCards(virgil.Criteria{
+	cards, err := client.SearchCards(virgil.Criteria{
 		IdentityType: "Smart Iot Device",
 		Identities: []string{
 			"Device #1",
