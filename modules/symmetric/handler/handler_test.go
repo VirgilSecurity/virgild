@@ -1,10 +1,11 @@
-package symmetric
+package handler
 
 import (
 	"encoding/json"
 	"fmt"
 	"testing"
 
+	"github.com/VirgilSecurity/virgild/modules/symmetric/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/valyala/fasthttp"
@@ -14,7 +15,7 @@ type fakeSymmetricRepo struct {
 	mock.Mock
 }
 
-func (f *fakeSymmetricRepo) Create(k SymmetricKey) error {
+func (f *fakeSymmetricRepo) Create(k core.SymmetricKey) error {
 	args := f.Called(k)
 	return args.Error(0)
 }
@@ -22,21 +23,21 @@ func (f *fakeSymmetricRepo) Remove(keyID, userID string) error {
 	args := f.Called(keyID, userID)
 	return args.Error(0)
 }
-func (f *fakeSymmetricRepo) Get(keyID, userID string) (k *SymmetricKey, err error) {
+func (f *fakeSymmetricRepo) Get(keyID, userID string) (k *core.SymmetricKey, err error) {
 	args := f.Called(keyID, userID)
-	k, _ = args.Get(0).(*SymmetricKey)
+	k, _ = args.Get(0).(*core.SymmetricKey)
 	err = args.Error(1)
 	return
 }
-func (f *fakeSymmetricRepo) KeysByUser(userID string) (ks []SymmetricKey, err error) {
+func (f *fakeSymmetricRepo) KeysByUser(userID string) (ks []core.KeyUserPair, err error) {
 	args := f.Called(userID)
-	ks, _ = args.Get(0).([]SymmetricKey)
+	ks, _ = args.Get(0).([]core.KeyUserPair)
 	err = args.Error(1)
 	return
 }
-func (f *fakeSymmetricRepo) UsersByKey(keyID string) (ks []SymmetricKey, err error) {
+func (f *fakeSymmetricRepo) UsersByKey(keyID string) (ks []core.KeyUserPair, err error) {
 	args := f.Called(keyID)
-	ks, _ = args.Get(0).([]SymmetricKey)
+	ks, _ = args.Get(0).([]core.KeyUserPair)
 	err = args.Error(1)
 	return
 }
@@ -73,14 +74,14 @@ func TestGetKey_RepoReturnErr_ReturnErr(t *testing.T) {
 	ctx.SetUserValue("key_id", "1")
 	ctx.SetUserValue("user_id", "1")
 
-	f := getKey(repo)
+	f := GetKey(repo)
 	_, err := f(&ctx)
 
 	assert.NotNil(t, err)
 }
 
 func TestGetKey_RepoReturnVal_ReturnVal(t *testing.T) {
-	expected := &SymmetricKey{
+	expected := &core.SymmetricKey{
 		UserID:       "user_id",
 		KeyID:        "key_id",
 		EncryptedKey: []byte("test"),
@@ -92,7 +93,7 @@ func TestGetKey_RepoReturnVal_ReturnVal(t *testing.T) {
 	ctx.SetUserValue("key_id", "key_id")
 	ctx.SetUserValue("user_id", "user_id")
 
-	f := getKey(repo)
+	f := GetKey(repo)
 	actual, _ := f(&ctx)
 
 	assert.Equal(t, expected, actual)
@@ -101,26 +102,26 @@ func TestGetKey_RepoReturnVal_ReturnVal(t *testing.T) {
 func TestCreateKey_JSONInvalid_ReturnErr(t *testing.T) {
 	ctx := makeRequestCtx([]byte("broken JSON,."))
 
-	f := createKey(nil)
+	f := CreateKey(nil)
 	_, err := f(ctx)
 
-	assert.Equal(t, ErrorJSONIsInvalid, err)
+	assert.Equal(t, core.ErrorJSONIsInvalid, err)
 }
 
 func TestCreateKey_RepoReturnErr_ReturnErr(t *testing.T) {
 	repo := new(fakeSymmetricRepo)
 	repo.On("Create", mock.Anything).Return(fmt.Errorf("ERROR"))
 
-	ctx := makeRequestCtx(SymmetricKey{KeyID: "1234", UserID: "1234", EncryptedKey: []byte("test")})
+	ctx := makeRequestCtx(core.SymmetricKey{KeyID: "1234", UserID: "1234", EncryptedKey: []byte("test")})
 
-	f := createKey(repo)
+	f := CreateKey(repo)
 	_, err := f(ctx)
 
 	assert.NotNil(t, err)
 }
 
 func TestCreateKey_RepoReturnVal_ReturnVal(t *testing.T) {
-	k := SymmetricKey{
+	k := core.SymmetricKey{
 		UserID:       "user_id",
 		KeyID:        "key_id",
 		EncryptedKey: []byte("test"),
@@ -130,7 +131,7 @@ func TestCreateKey_RepoReturnVal_ReturnVal(t *testing.T) {
 
 	ctx := makeRequestCtx(k)
 
-	f := createKey(repo)
+	f := CreateKey(repo)
 	result, err := f(ctx)
 
 	assert.Nil(t, err)
@@ -144,26 +145,24 @@ func TestGetUsersByKey_RepoReturnErr_ReturnErr(t *testing.T) {
 	ctx := &fasthttp.RequestCtx{}
 	ctx.SetUserValue("key_id", "id")
 
-	f := getUsersByKey(repo)
+	f := GetUsersByKey(repo)
 	_, err := f(ctx)
 
 	assert.NotNil(t, err)
 }
 
 func TestGetUsersByKey_RepoReturnVal_ReturnVal(t *testing.T) {
-	k := []SymmetricKey{SymmetricKey{
-		UserID:       "user_id",
-		KeyID:        "key_id",
-		EncryptedKey: []byte("test"),
+	expected := []core.KeyUserPair{core.KeyUserPair{
+		UserID: "user_id",
+		KeyID:  "key_id",
 	}}
-	expected := []keyUserModel{keyUserModel{UserID: "user_id", KeyID: "key_id"}}
 	repo := new(fakeSymmetricRepo)
-	repo.On("UsersByKey", "id").Return(k, nil)
+	repo.On("UsersByKey", "id").Return(expected, nil)
 
 	ctx := &fasthttp.RequestCtx{}
 	ctx.SetUserValue("key_id", "id")
 
-	f := getUsersByKey(repo)
+	f := GetUsersByKey(repo)
 	actual, err := f(ctx)
 
 	assert.Nil(t, err)
@@ -177,26 +176,24 @@ func TestGetKeysByUser_RepoReturnErr_ReturnErr(t *testing.T) {
 	ctx := &fasthttp.RequestCtx{}
 	ctx.SetUserValue("user_id", "id")
 
-	f := getKeysByUser(repo)
+	f := GetKeysByUser(repo)
 	_, err := f(ctx)
 
 	assert.NotNil(t, err)
 }
 
 func TestGetKeysByUser_RepoReturnVal_ReturnVal(t *testing.T) {
-	k := []SymmetricKey{SymmetricKey{
-		UserID:       "user_id",
-		KeyID:        "key_id",
-		EncryptedKey: []byte("test"),
+	expected := []core.KeyUserPair{core.KeyUserPair{
+		UserID: "user_id",
+		KeyID:  "key_id",
 	}}
-	expected := []keyUserModel{keyUserModel{UserID: "user_id", KeyID: "key_id"}}
 	repo := new(fakeSymmetricRepo)
-	repo.On("KeysByUser", "id").Return(k, nil)
+	repo.On("KeysByUser", "id").Return(expected, nil)
 
 	ctx := &fasthttp.RequestCtx{}
 	ctx.SetUserValue("user_id", "id")
 
-	f := getKeysByUser(repo)
+	f := GetKeysByUser(repo)
 	actual, err := f(ctx)
 
 	assert.Nil(t, err)

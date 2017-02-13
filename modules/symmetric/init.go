@@ -2,6 +2,10 @@ package symmetric
 
 import (
 	"github.com/VirgilSecurity/virgild/config"
+	"github.com/VirgilSecurity/virgild/modules/symmetric/db"
+	"github.com/VirgilSecurity/virgild/modules/symmetric/handler"
+	"github.com/VirgilSecurity/virgild/modules/symmetric/http"
+	"github.com/VirgilSecurity/virgild/modules/symmetric/service"
 	"github.com/valyala/fasthttp"
 )
 
@@ -13,15 +17,18 @@ type SymmetricModule struct {
 }
 
 func Init(conf *config.App) *SymmetricModule {
-	Sync(conf.Common.DB)
-	repo := &SymmetricKeyRepo{
+	db.Sync(conf.Common.DB)
+	repo := &db.SymmetricKeyRepo{
 		Orm: conf.Common.DB,
 	}
-	wrap := MakeResponseWrapper(conf.Common.Logger)
+	s := &db.LogSymmetricKeyRepo{Orm: conf.Common.DB}
+	l := service.Log(s, repo)
+	wrap := http.MakeResponseWrapper(conf.Common.Logger)
+
 	return &SymmetricModule{
-		GetKey:         wrap(getKey(repo)),
-		CreateKey:      wrap(createKey(repo)),
-		GetKeysForUser: wrap(getKeysByUser(repo)),
-		GetUsersForKey: wrap(getUsersByKey(repo)),
+		GetKey:         wrap(l(handler.GetKey)),
+		CreateKey:      wrap(l(handler.CreateKey)),
+		GetKeysForUser: wrap(handler.GetKeysByUser(repo)),
+		GetUsersForKey: wrap(handler.GetUsersByKey(repo)),
 	}
 }

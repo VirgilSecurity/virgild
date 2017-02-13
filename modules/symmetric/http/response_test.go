@@ -1,10 +1,11 @@
-package symmetric
+package http
 
 import (
 	"encoding/json"
 	"fmt"
 	"testing"
 
+	"github.com/VirgilSecurity/virgild/modules/symmetric/core"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/valyala/fasthttp"
@@ -60,7 +61,7 @@ func TestMakeResponseWrapper_ResponseErrorCode_ReturnErr(t *testing.T) {
 func TestMakeResponseWrapper_ResponseErrorCodeUnknowCode_ReturnErr(t *testing.T) {
 	expected := responseErrorModel{-1, "Unknow response error"}
 	s := MakeResponseWrapper(nil)(func(ctx *fasthttp.RequestCtx) (interface{}, error) {
-		return nil, ResponseErrorCode(-1)
+		return nil, core.ResponseErrorCode(-1)
 	})
 	ctx := &fasthttp.RequestCtx{}
 	s(ctx)
@@ -75,7 +76,7 @@ func TestMakeResponseWrapper_ResponseErrorCodeUnknowCode_ReturnErr(t *testing.T)
 
 func TestMakeResponseWrapper_ResponseErrorCodeErrorEntityNotFound_ReturnErr(t *testing.T) {
 	s := MakeResponseWrapper(nil)(func(ctx *fasthttp.RequestCtx) (interface{}, error) {
-		return nil, ErrorEntityNotFound
+		return nil, core.ErrorEntityNotFound
 	})
 	ctx := &fasthttp.RequestCtx{}
 	s(ctx)

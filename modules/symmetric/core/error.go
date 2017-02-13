@@ -1,4 +1,4 @@
-package symmetric
+package core
 
 import "fmt"
 

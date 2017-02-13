@@ -1,6 +1,6 @@
 // +build integration
 
-package symmetric
+package db
 
 import (
 	"fmt"
