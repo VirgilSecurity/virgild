@@ -1,4 +1,4 @@
-// +build integration
+//// +build integration
 
 package db
 
@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/VirgilSecurity/virgild/modules/symmetric/core"
 	"github.com/go-xorm/xorm"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,7 +36,7 @@ func TestGet_KeyNotExist_ReturnErr(t *testing.T) {
 	repo := SymmetricKeyRepo{Orm: orm}
 	_, err = repo.Get("1", "1")
 
-	assert.Equal(t, ErrorEntityNotFound, err)
+	assert.Equal(t, core.ErrorEntityNotFound, err)
 }
 
 func TestGet_ReturnVal(t *testing.T) {
@@ -42,7 +44,7 @@ func TestGet_ReturnVal(t *testing.T) {
 	assert.Nil(t, err, "Cannot init db")
 	defer finDB(orm)
 
-	expected := &SymmetricKey{UserID: "test", KeyID: "1234", EncryptedKey: []byte("encrypted key")}
+	expected := &core.SymmetricKey{UserID: "test", KeyID: "1234", EncryptedKey: []byte("encrypted key")}
 	orm.InsertOne(expected)
 
 	repo := SymmetricKeyRepo{Orm: orm}
@@ -56,16 +58,16 @@ func TestKeysByUser_ReturnVal(t *testing.T) {
 	assert.Nil(t, err, "Cannot init db")
 	defer finDB(orm)
 
-	expected := SymmetricKey{UserID: "test", KeyID: "1234", EncryptedKey: []byte("encrypted key")}
+	expected := core.SymmetricKey{UserID: "test", KeyID: "1234", EncryptedKey: []byte("encrypted key")}
 	orm.Insert(expected,
-		&SymmetricKey{UserID: "test1", KeyID: "1234", EncryptedKey: []byte("encrypted key")},
-		&SymmetricKey{UserID: "test2", KeyID: "1234", EncryptedKey: []byte("encrypted key")})
+		&core.SymmetricKey{UserID: "test1", KeyID: "1234", EncryptedKey: []byte("encrypted key")},
+		&core.SymmetricKey{UserID: "test2", KeyID: "1234", EncryptedKey: []byte("encrypted key")})
 
 	repo := SymmetricKeyRepo{Orm: orm}
 	actual, _ := repo.KeysByUser("test")
 
 	assert.Len(t, actual, 1)
-	assert.Equal(t, expected, actual[0])
+	assert.Equal(t, core.KeyUserPair{UserID: expected.UserID, KeyID: expected.KeyID}, actual[0])
 }
 
 func TestUsersByKey_ReturnVal(t *testing.T) {
@@ -73,14 +75,14 @@ func TestUsersByKey_ReturnVal(t *testing.T) {
 	assert.Nil(t, err, "Cannot init db")
 	defer finDB(orm)
 
-	expected := SymmetricKey{UserID: "test", KeyID: "1234", EncryptedKey: []byte("encrypted key")}
+	expected := core.SymmetricKey{UserID: "test", KeyID: "1234", EncryptedKey: []byte("encrypted key")}
 	orm.Insert(expected,
-		&SymmetricKey{UserID: "test", KeyID: "666", EncryptedKey: []byte("encrypted key")},
-		&SymmetricKey{UserID: "test", KeyID: "555", EncryptedKey: []byte("encrypted key")})
+		&core.SymmetricKey{UserID: "test", KeyID: "666", EncryptedKey: []byte("encrypted key")},
+		&core.SymmetricKey{UserID: "test", KeyID: "555", EncryptedKey: []byte("encrypted key")})
 
 	repo := SymmetricKeyRepo{Orm: orm}
 	actual, _ := repo.UsersByKey("1234")
 
 	assert.Len(t, actual, 1)
-	assert.Equal(t, expected, actual[0])
+	assert.Equal(t, core.KeyUserPair{UserID: expected.UserID, KeyID: expected.KeyID}, actual[0])
 }
