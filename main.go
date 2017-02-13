@@ -8,6 +8,7 @@ import (
 	"github.com/VirgilSecurity/virgild/modules/auth"
 	"github.com/VirgilSecurity/virgild/modules/cards"
 	"github.com/VirgilSecurity/virgild/modules/statistics"
+	"github.com/VirgilSecurity/virgild/modules/symmetric"
 	"github.com/buaazp/fasthttprouter"
 
 	"github.com/valyala/fasthttp"
@@ -23,6 +24,7 @@ func main() {
 	s := statistics.Init(conf)
 	a := admin.Init(conf)
 	au := auth.Init(conf)
+	sk := symmetric.Init(conf)
 
 	r := fasthttprouter.New()
 
@@ -37,6 +39,12 @@ func main() {
 	// Statistics
 	r.GET("/api/statistics", a.Auth(s.GetStatistic))
 	r.GET("/api/statistics/last", a.Auth(s.LastActions))
+
+	// symmetric keys
+	r.POST("/api/keys", sk.CreateKey)
+	r.GET("/api/users/:user_id", sk.GetKeysForUser)
+	r.GET("/api/keys/:key_id/users", sk.GetUsersForKey)
+	r.GET("/api/keys/:key_id/users/:user_id", sk.GetKey)
 
 	// Admin
 	r.ServeFiles("/public/*filepath", "./public")
