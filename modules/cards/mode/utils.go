@@ -4,9 +4,16 @@ import (
 	"encoding/json"
 
 	"github.com/VirgilSecurity/virgild/modules/cards/core"
-	"github.com/pkg/errors"
 	virgil "gopkg.in/virgil.v4"
+	"gopkg.in/virgil.v4/errors"
 )
+
+type VirgilClient interface {
+	GetCard(id string) (*virgil.Card, error)
+	SearchCards(*virgil.Criteria) ([]*virgil.Card, error)
+	CreateCard(req *virgil.SignableRequest) (*virgil.Card, error)
+	RevokeCard(req *virgil.SignableRequest) error
+}
 
 type CardRepository interface {
 	Get(id string) (*core.SqlCard, error)
@@ -63,6 +70,62 @@ func sqlCards2Cards(sql []core.SqlCard) ([]core.Card, error) {
 		if err == nil {
 			cards = append(cards, *c)
 		}
+	}
+	return cards, nil
+}
+
+func getFromRemote(remote VirgilClient, repo CardRepository, id string) (*core.Card, error) {
+	vc, err := remote.GetCard(id)
+	if err != nil {
+		verr, ok := errors.ToSdkError(err)
+		if ok {
+			code := verr.ServiceErrorCode()
+			if verr.HTTPErrorCode() == 404 {
+				code = int(core.ErrorEntityNotFound)
+				err = core.ErrorEntityNotFound
+			}
+			repo.Add(core.SqlCard{
+				CardID:    id,
+				ErrorCode: code,
+			})
+		}
+		return nil, errors.Wrap(err, "")
+	}
+	sqlCard, err := vcard2SqlCard(vc)
+	if err != nil {
+		return nil, err
+	}
+	repo.Add(*sqlCard)
+	return vcard2Card(vc), nil
+}
+
+func searchFromRemote(remote VirgilClient, repo CardRepository, criteria *virgil.Criteria) ([]core.Card, error) {
+	vcards, err := remote.SearchCards(criteria)
+	if err != nil {
+		verr, ok := errors.ToSdkError(err)
+		if ok {
+			for k := range criteria.Identities {
+				repo.Add(core.SqlCard{
+					Identity:     criteria.Identities[k],
+					IdentityType: criteria.IdentityType,
+					Scope:        string(criteria.Scope),
+					ErrorCode:    verr.ServiceErrorCode(),
+				})
+			}
+		}
+		return nil, errors.Wrap(err, "")
+	}
+
+	cards := make([]core.Card, 0)
+	for _, vc := range vcards {
+
+		sqlCard, err := vcard2SqlCard(vc)
+		if err != nil {
+			return nil, err
+		}
+		repo.Add(*sqlCard)
+
+		cards = append(cards, *vcard2Card(vc))
 	}
 	return cards, nil
 }

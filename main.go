@@ -17,8 +17,10 @@ import (
 func main() {
 	conf := config.Init("virgild.conf")
 
-	fmt.Println("VirgilD CardID:", conf.Site.VirgilD.CardID)
-	fmt.Println("VirgilD PubKey:", conf.Site.VirgilD.PublicKey)
+	if conf.Cards.Mode != config.CardModeCache {
+		fmt.Println("VirgilD CardID:", conf.Site.VirgilD.CardID)
+		fmt.Println("VirgilD PubKey:", conf.Site.VirgilD.PublicKey)
+	}
 
 	c := cards.Init(conf)
 	s := statistics.Init(conf)

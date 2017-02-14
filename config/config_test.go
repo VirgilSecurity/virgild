@@ -28,7 +28,7 @@ func TestInitDefault_ConfigEmpty_SetDefaultValue(t *testing.T) {
 func TestInitDefault_ConfigSetRemote_SetDefaultValue(t *testing.T) {
 	expected := Config{
 		Cards: CardsConfig{
-			Remote: &RemoteConfig{
+			Remote: RemoteConfig{
 				Services: ServicesConfig{
 					Cards:    "https://cards.virgilsecurity.com",
 					CardsRO:  "https://cards-ro.virgilsecurity.com",
@@ -44,6 +44,6 @@ func TestInitDefault_ConfigSetRemote_SetDefaultValue(t *testing.T) {
 		},
 	}
 
-	actual := initDefault(Config{Cards: CardsConfig{Remote: &RemoteConfig{}}})
+	actual := initDefault(Config{Cards: CardsConfig{Remote: RemoteConfig{}}})
 	assert.Equal(t, expected.Cards.Remote, actual.Cards.Remote)
 }

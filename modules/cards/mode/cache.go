@@ -7,12 +7,12 @@ import (
 	virgil "gopkg.in/virgil.v4"
 )
 
-type AppModeCardHandler struct {
+type CacheModeHandler struct {
 	Repo   CardRepository
 	Remote VirgilClient
 }
 
-func (h *AppModeCardHandler) Get(id string) (*core.Card, error) {
+func (h *CacheModeHandler) Get(id string) (*core.Card, error) {
 	c, err := h.Repo.Get(id)
 	if err == core.ErrorEntityNotFound {
 		return getFromRemote(h.Remote, h.Repo, id)
@@ -28,7 +28,7 @@ func (h *AppModeCardHandler) Get(id string) (*core.Card, error) {
 	return sqlCard2Card(c)
 }
 
-func (h *AppModeCardHandler) Search(criteria *virgil.Criteria) ([]core.Card, error) {
+func (h *CacheModeHandler) Search(criteria *virgil.Criteria) ([]core.Card, error) {
 	cards, err := h.Repo.Find(criteria.Identities, criteria.IdentityType, string(criteria.Scope))
 	if err != nil {
 		return nil, err
@@ -46,26 +46,10 @@ func (h *AppModeCardHandler) Search(criteria *virgil.Criteria) ([]core.Card, err
 	return sqlCards2Cards(cards)
 }
 
-func (h *AppModeCardHandler) Create(req *core.CreateCardRequest) (*core.Card, error) {
-	vcard, err := h.Remote.CreateCard(&req.Request)
-	if err != nil {
-		return nil, err
-	}
-	sqlCard, err := vcard2SqlCard(vcard)
-	if err != nil {
-		return nil, err
-	}
-
-	h.Repo.Add(*sqlCard)
-	return vcard2Card(vcard), nil
+func (h *CacheModeHandler) Create(req *core.CreateCardRequest) (*core.Card, error) {
+	return nil, core.ErrorForbidden
 }
 
-func (h *AppModeCardHandler) Revoke(req *core.RevokeCardRequest) error {
-	err := h.Remote.RevokeCard(&req.Request)
-	if err != nil {
-		return err
-	}
-
-	h.Repo.DeleteById(req.Info.ID)
-	return nil
+func (h *CacheModeHandler) Revoke(req *core.RevokeCardRequest) error {
+	return core.ErrorForbidden
 }

@@ -33,32 +33,39 @@ func Init(conf *config.App) *CardsHandlers {
 
 	respWrap := http.MakeResponseWrapper(conf.Common.Logger)
 	mode := makeCardMode(conf)
-	signer := middleware.MakeSigner(conf.Cards.Signer.CardID, conf.Cards.Signer.PrivateKey)
 
-	if conf.Cards.Signer.Card != nil { // first run
-		card := conf.Cards.Signer.Card
-		mode.Create(&core.CreateCardRequest{
-			Info: virgil.CardModel{
-				Identity:     card.Identity,
-				IdentityType: card.IdentityType,
-				Scope:        card.Scope,
-				DeviceInfo:   card.DeviceInfo,
-				Data:         card.Data,
-			},
-			Request: virgil.SignableRequest{
-				Snapshot: card.Snapshot,
-				Meta: virgil.RequestMeta{
-					Signatures: card.Signatures,
+	createCard, revokeCard := mode.Create, mode.Revoke
+
+	if conf.Cards.Mode != config.CardModeCache {
+		signer := middleware.MakeSigner(conf.Cards.Signer.CardID, conf.Cards.Signer.PrivateKey)
+		if conf.Cards.Signer.Card != nil { // first run
+			card := conf.Cards.Signer.Card
+			mode.Create(&core.CreateCardRequest{
+				Info: virgil.CardModel{
+					Identity:     card.Identity,
+					IdentityType: card.IdentityType,
+					Scope:        card.Scope,
+					DeviceInfo:   card.DeviceInfo,
+					Data:         card.Data,
 				},
-			},
-		})
+				Request: virgil.SignableRequest{
+					Snapshot: card.Snapshot,
+					Meta: virgil.RequestMeta{
+						Signatures: card.Signatures,
+					},
+				},
+			})
+		}
+
+		createCard = middleware.SignCreateRequest(signer, createCard)
+		revokeCard = middleware.SignRevokeRequest(signer, revokeCard)
 	}
 
 	return &CardsHandlers{
 		GetCard:     respWrap(http.GetCard(mode.Get)),
 		SearchCards: respWrap(http.SearchCards(middleware.SetApplicationScopForSearch(validator.SearchCards(mode.Search)))),
-		CreateCard:  respWrap(http.CreateCard(validator.CreateCard(middleware.SignCreateRequest(signer, mode.Create)))),
-		RevokeCard:  respWrap(http.RevokeCard(validator.RevokeCard(middleware.SignRevokeRequest(signer, mode.Revoke)))),
+		CreateCard:  respWrap(http.CreateCard(validator.CreateCard(createCard))),
+		RevokeCard:  respWrap(http.RevokeCard(validator.RevokeCard(revokeCard))),
 		CountCards:  respWrap(http.GetCountCards(&db.CardRepository{Orm: conf.Common.DB})),
 	}
 
@@ -68,18 +75,26 @@ func makeCardMode(conf *config.App) cardMode {
 	cardRepo := &db.CardRepository{
 		Orm: conf.Common.DB,
 	}
-
-	if conf.Cards.Remote != nil {
+	switch conf.Cards.Mode {
+	case config.CardModeCache:
+		return &mode.CacheModeHandler{
+			Remote: conf.Cards.Remote.VClient,
+			Repo:   cardRepo,
+		}
+	case config.CardModeLocal:
+		return &mode.DefaultModeCardHandler{
+			Repo: cardRepo,
+			Fingerprint: &utils.Fingerprint{
+				Crypto: virgil.Crypto(),
+			},
+		}
+	case config.CardModeSync:
 		return &mode.AppModeCardHandler{
 			Repo:   cardRepo,
 			Remote: conf.Cards.Remote.VClient,
 		}
+	default:
+		conf.Common.Logger.Fatalln("Unsupported cards mode (%v)", conf.Cards.Mode)
+		return nil
 	}
-	return &mode.DefaultModeCardHandler{
-		Repo: cardRepo,
-		Fingerprint: &utils.Fingerprint{
-			Crypto: virgil.Crypto(),
-		},
-	}
-
 }

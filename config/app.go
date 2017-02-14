@@ -33,10 +33,19 @@ type Remote struct {
 	VClient *virgil.Client
 }
 
+type CardMode string
+
+const (
+	CardModeCache CardMode = "cache"
+	CardModeLocal CardMode = "local"
+	CardModeSync  CardMode = "sync"
+)
+
 type Cards struct {
+	Mode   CardMode
 	Signer *Signer
 	VRA    *Authority
-	Remote *Remote
+	Remote Remote
 }
 
 type SiteAdmin struct {
@@ -106,18 +115,12 @@ func Init(file string) *App {
 	if err != nil {
 		panic(err)
 	}
-	app.Cards.VRA, err = initVRA(conf.Cards.VRA)
+
+	app.Cards, err = initCards(&conf.Cards)
 	if err != nil {
 		panic(err)
 	}
-	app.Cards.Signer, err = initSigner(&conf.Cards.Signer)
-	if err != nil {
-		panic(err)
-	}
-	app.Cards.Remote, err = initRemote(conf.Cards.Remote)
-	if err != nil {
-		panic(err)
-	}
+
 	app.Site.VirgilD, err = setSiteVirgilD(app.Cards.Signer)
 	if err != nil {
 		panic(err)
@@ -130,7 +133,7 @@ func Init(file string) *App {
 		panic(err)
 	}
 
-	if app.Cards.Signer.Card != nil { // first start
+	if app.Common.config != conf { // has changes
 		app.Common.config = conf
 		saveConfigToFole(conf, file)
 	}
@@ -167,6 +170,33 @@ func initLogger(logFile string) (*log.Logger, error) {
 		w = f
 	}
 	return log.New(w, "", log.LUTC|log.LstdFlags), nil
+}
+
+func initCards(conf *CardsConfig) (cards Cards, err error) {
+	switch CardMode(conf.Mode) {
+	case CardModeCache, CardMode(""):
+		cards.Mode = CardModeCache
+	case CardModeLocal, CardModeSync:
+		cards.Mode = CardMode(conf.Mode)
+	default:
+		err = fmt.Errorf("Unsupported cards mode (%v)", conf.Mode)
+		return
+	}
+	cards.VRA, err = initVRA(conf.VRA)
+	if err != nil {
+		return
+	}
+	if cards.Mode != CardModeCache {
+		cards.Signer, err = initSigner(&conf.Signer)
+		if err != nil {
+			return
+		}
+	}
+	cards.Remote, err = initRemote(conf.Remote)
+	if err != nil {
+		return
+	}
+	return
 }
 
 func initVRA(conf *AuthorityConfig) (*Authority, error) {
@@ -228,16 +258,12 @@ func createVirgilCard(key virgilcrypto.PrivateKey) (*virgil.Card, error) {
 	}, nil
 }
 
-func initRemote(conf *RemoteConfig) (*Remote, error) {
-	if conf == nil {
-		return nil, nil
-	}
-
+func initRemote(conf RemoteConfig) (Remote, error) {
 	customValidator := virgil.NewCardsValidator()
 
 	cardsServicePublic, err := virgil.Crypto().ImportPublicKey([]byte(conf.Authority.PublicKey))
 	if err != nil {
-		return nil, fmt.Errorf("Cannot load public key of Authority Service: %+v", err)
+		return Remote{}, fmt.Errorf("Cannot load public key of Authority Service: %+v", err)
 	}
 
 	customValidator.AddVerifier(conf.Authority.CardID, cardsServicePublic)
@@ -250,15 +276,19 @@ func initRemote(conf *RemoteConfig) (*Remote, error) {
 				conf.Services.VRA)),
 		virgil.ClientCardsValidator(customValidator))
 	if err != nil {
-		return nil, fmt.Errorf("Cannot init Virgil Client: %+v", err)
+		return Remote{}, fmt.Errorf("Cannot init Virgil Client: %+v", err)
 	}
-	return &Remote{
+	return Remote{
 		VClient: vclient,
 		Cache:   time.Duration(conf.Cache) * time.Second,
 	}, nil
 }
 
 func setSiteVirgilD(signer *Signer) (VirgilDCard, error) {
+	if signer == nil {
+		return VirgilDCard{}, nil
+	}
+
 	pub, err := signer.PrivateKey.ExtractPublicKey()
 	if err != nil {
 		return VirgilDCard{}, fmt.Errorf("Cannot extract public key from VirgilD's private key: %+v", err)

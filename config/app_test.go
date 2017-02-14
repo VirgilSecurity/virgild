@@ -67,19 +67,13 @@ func TestInitSigner_ReturnSigner(t *testing.T) {
 	assert.Equal(t, "123", signer.CardID)
 }
 
-func TestInitRemote_Nil_ReturnNil(t *testing.T) {
-	r, err := initRemote(nil)
-	assert.Nil(t, err)
-	assert.Nil(t, r)
-}
-
 func TestInitRemote_PublicKeyInvalid_ReturnErr(t *testing.T) {
-	_, err := initRemote(&RemoteConfig{})
+	_, err := initRemote(RemoteConfig{Authority: AuthorityConfig{PublicKey: "+rVs="}})
 	assert.NotNil(t, err)
 }
 
 func TestInitRemote_ReturnRemote(t *testing.T) {
-	remote, err := initRemote(&RemoteConfig{Authority: AuthorityConfig{PublicKey: "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs="}})
+	remote, err := initRemote(RemoteConfig{Authority: AuthorityConfig{PublicKey: "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs="}})
 	assert.Nil(t, err)
 	assert.NotNil(t, remote)
 }
