@@ -129,17 +129,20 @@ func (h *tokenHandler) Create(ctx *fasthttp.RequestCtx) {
 	ctx.Write(b)
 }
 
-func auth(repo tokenRepo, permName string) func(token string) error {
-	perm := map2Perm(map[string]bool{permName: true})
-	return func(t string) error {
+func localScopes(repo tokenRepo) func(token string) ([]string, error) {
+	return func(t string) ([]string, error) {
+		scopes := make([]string, 0)
 		tt, err := repo.Get(t)
 		if err != nil {
-			return errTokenInvalid
+			return scopes, err
 		}
-		if tt.Permission&perm == perm {
-			return nil
+		m := perm2Map(tt.Permission)
+		for k, has := range m {
+			if has {
+				scopes = append(scopes, k)
+			}
 		}
-		return errAuthServiceDenny
+		return scopes, nil
 	}
 }
 
@@ -153,14 +156,14 @@ func perm2Map(perm permission) map[string]bool {
 }
 
 func map2Perm(m map[string]bool) permission {
-	r := Btoi(m[PermissionGetCard])*int(get) +
-		Btoi(m[PermissionSearchCards])*int(search) +
-		Btoi(m[PermissionCreateCard])*int(create) +
-		Btoi(m[PermissionRevokeCard])*int(revoke)
+	r := btoi(m[PermissionGetCard])*int(get) +
+		btoi(m[PermissionSearchCards])*int(search) +
+		btoi(m[PermissionCreateCard])*int(create) +
+		btoi(m[PermissionRevokeCard])*int(revoke)
 	return permission(r)
 }
 
-func Btoi(b bool) int {
+func btoi(b bool) int {
 	if b {
 		return 1
 	} else {

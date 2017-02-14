@@ -1,12 +1,6 @@
 package auth
 
-import (
-	"fmt"
-
-	"github.com/valyala/fasthttp"
-)
-
-type authHandler func(ctx *fasthttp.RequestCtx) error
+import "fmt"
 
 type errResponse int
 
@@ -15,7 +9,6 @@ func (e errResponse) Error() string {
 }
 
 var (
-	errTokenInvalid         errResponse = 20300
-	errAuthServiceReturnErr errResponse = 20301
-	errAuthServiceDenny     errResponse = 20302
+	errTokenInvalid     errResponse = 20300
+	errAuthServiceDenny errResponse = 20302
 )

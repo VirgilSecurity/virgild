@@ -48,11 +48,20 @@ type AdminConfig struct {
 	Password string `json:"password"`
 }
 
+type AuthConfig struct {
+	Mode      string `json:"mode"`
+	TokenType string `json:"token_type"`
+	Params    struct {
+		Host string `json:"host"`
+	} `json:"params"`
+}
+
 type Config struct {
 	Admin   AdminConfig `json:"admin"`
 	DB      string      `json:"db"`
 	LogFile string      `json:"log,omitempty"`
 	Cards   CardsConfig `json:"cards"`
+	Auth    AuthConfig  `json:"auth"`
 }
 
 func loadConfigFromFile(file string) (Config, error) {

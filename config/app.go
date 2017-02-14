@@ -61,10 +61,29 @@ type Common struct {
 	ConfigPath   string
 }
 
+type AuthMode string
+
+const (
+	AuthModeLocal    AuthMode = "local"
+	AuthModeExternal AuthMode = "external"
+	AuthModeNo       AuthMode = "no"
+)
+
+type AuthParams struct {
+	Host string
+}
+
+type Auth struct {
+	Mode      AuthMode
+	TokenType string
+	Params    AuthParams
+}
+
 type App struct {
 	Site   Site
 	Common Common
 	Cards  Cards
+	Auth   Auth
 }
 
 func Init(file string) *App {
@@ -105,6 +124,11 @@ func Init(file string) *App {
 	}
 	app.Site.Admin.Login = conf.Admin.Login
 	app.Site.Admin.Password = conf.Admin.Password
+
+	app.Auth, err = initAtuh(conf.Auth)
+	if err != nil {
+		panic(err)
+	}
 
 	if app.Cards.Signer.Card != nil { // first start
 		app.Common.config = conf
@@ -247,4 +271,36 @@ func setSiteVirgilD(signer *Signer) (VirgilDCard, error) {
 		CardID:    signer.CardID,
 		PublicKey: base64.StdEncoding.EncodeToString(b),
 	}, nil
+}
+
+func initAtuh(conf AuthConfig) (Auth, error) {
+	t := conf.TokenType
+	if t == "" {
+		t = "VIRGIL"
+	}
+	switch AuthMode(conf.Mode) {
+	case AuthModeLocal:
+		return Auth{
+			Mode:      AuthModeLocal,
+			TokenType: t,
+		}, nil
+	case AuthModeNo, AuthMode(""):
+		return Auth{
+			Mode:      AuthModeNo,
+			TokenType: t,
+		}, nil
+	case AuthModeExternal:
+		if conf.Params.Host == "" {
+			return Auth{}, fmt.Errorf("Auth config invalid. For external mode auth must be set the host of Auth service")
+		}
+		return Auth{
+			Mode:      AuthModeExternal,
+			TokenType: t,
+			Params: AuthParams{
+				Host: conf.Params.Host,
+			},
+		}, nil
+	default:
+		return Auth{}, fmt.Errorf("Undefined auth mode (%v). Supported [no, local, external]", conf.Mode)
+	}
 }

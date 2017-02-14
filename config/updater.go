@@ -79,5 +79,9 @@ func (u *Updater) validate(conf Config) error {
 			return err
 		}
 	}
+	_, err := initAtuh(conf.Auth)
+	if err != nil {
+		return err
+	}
 	return nil
 }

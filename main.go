@@ -36,10 +36,6 @@ func main() {
 	r.DELETE("/v4/card/:id", au.Middleware(auth.PermissionRevokeCard, s.Middleware(c.RevokeCard)))
 	r.DELETE("/v1/card/:id", au.Middleware(auth.PermissionRevokeCard, s.Middleware(c.RevokeCard)))
 
-	// Statistics
-	r.GET("/api/statistics", a.Auth(s.GetStatistic))
-	r.GET("/api/statistics/last", a.Auth(s.LastActions))
-
 	// symmetric keys
 	r.POST("/api/keys", sk.CreateKey)
 	r.GET("/api/users/:user_id", sk.GetKeysForUser)
@@ -57,6 +53,10 @@ func main() {
 	r.DELETE("/api/tokens/:id", a.Auth(au.RemoveToken))
 	r.PUT("/api/tokens/:id", a.Auth(au.UpdateToken))
 	r.GET("/", a.Index)
+
+	// Statistics
+	r.GET("/api/statistics", a.Auth(s.GetStatistic))
+	r.GET("/api/statistics/last", a.Auth(s.LastActions))
 
 	panic(fasthttp.ListenAndServe(":8080", r.Handler))
 }

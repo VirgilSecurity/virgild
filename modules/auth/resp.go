@@ -3,56 +3,69 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 
 	"github.com/valyala/fasthttp"
 )
 
-type Logger interface {
+type logger interface {
 	Printf(format string, args ...interface{})
 }
 
-type cards struct {
+type scopes func(t string) ([]string, error)
+
+func wrap(l logger, tokenType string, getScopes scopes) func(string, fasthttp.RequestHandler) fasthttp.RequestHandler {
+	ttSpace := append([]byte(tokenType), ' ')
+	errWrap := errWrapFunc(l)
+	return func(scope string, next fasthttp.RequestHandler) fasthttp.RequestHandler {
+		return func(ctx *fasthttp.RequestCtx) {
+
+			hauth := ctx.Request.Header.Peek("Authorization")
+			if !bytes.HasPrefix(hauth, ttSpace) {
+				errWrap(errTokenInvalid, ctx)
+				return
+			}
+
+			scopes, err := getScopes(string(hauth[len(ttSpace):]))
+			if err != nil {
+				errWrap(errTokenInvalid, ctx)
+				return
+			}
+			ctx.Response.Header.Add("X-OAuth-Scopes", strings.Join(scopes, ", "))
+			ctx.Response.Header.Add("X-Accepted-OAuth-Scopes", scope)
+
+			for _, s := range scopes {
+				if s == scope || s == "*" {
+					next(ctx)
+					return
+				}
+			}
+			errWrap(errAuthServiceDenny, ctx)
+		}
+	}
+}
+
+type respErr struct {
 	Code    errResponse `json:"code"`
 	Message string      `json:"message"`
 }
 
-func getToken(t []byte, auth func(token string) error) authHandler {
-	typeSpace := append(t, ' ')
-	return func(ctx *fasthttp.RequestCtx) error {
-		hauth := ctx.Request.Header.Peek("Authorization")
-		if !bytes.HasPrefix(hauth, typeSpace) {
-			return errTokenInvalid
-		}
-		return auth(string(hauth[len(typeSpace):]))
-	}
-}
+func errWrapFunc(l logger) func(err error, ctx *fasthttp.RequestCtx) {
+	return func(err error, ctx *fasthttp.RequestCtx) {
+		ctx.SetContentType("application/json")
 
-func cardsWrap(logger Logger, validator authHandler, next fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		err := validator(ctx)
-		if err != nil {
-			switch e := err.(type) {
-			case errResponse:
-				msg, ok := errMap[e]
-				if !ok {
-					msg = "Unknow response error"
-				}
-				b, err := json.Marshal(cards{e, msg})
-				if err != nil {
-					logger.Printf("Auth card request. Cannot marshal response: %v", e)
-					ctx.Error("", fasthttp.StatusInternalServerError)
-					return
-				}
-				ctx.SetContentType("application/json")
-				ctx.Write(b)
-				ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-			default:
-				logger.Printf("Auth card request: %v", err)
-				ctx.Error("", fasthttp.StatusInternalServerError)
-				return
+		switch e := err.(type) {
+		case errResponse:
+			msg, ok := errMap[e]
+			if !ok {
+				msg = "Unknow response error"
 			}
+			json.NewEncoder(ctx).Encode(respErr{e, msg})
+			ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+		default:
+			l.Printf("Auth card request: %v", err)
+			ctx.Error("", fasthttp.StatusInternalServerError)
 		}
-		next(ctx)
 	}
 }
 
