@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/VirgilSecurity/virgild/config"
@@ -14,8 +15,14 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+var configPath string
+
+func init() {
+	flag.StringVar(&configPath, "config", "virgild.conf", "Path to config file")
+}
+
 func main() {
-	conf := config.Init("virgild.conf")
+	conf := config.Init(configPath)
 
 	if conf.Cards.Mode != config.CardModeCache {
 		fmt.Println("VirgilD CardID:", conf.Site.VirgilD.CardID)
