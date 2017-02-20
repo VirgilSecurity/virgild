@@ -140,8 +140,8 @@ Arg | Environment name | File name | Description
  vd-card-id | VD_CARD_ID | vd-card-id | VirgilD card id
  vd-key | VD_KEY | vd-key | VirgilD private key
  vd-key-passwrod | VD_KEY_PASSWROD | vd-key-passwrod | Passwrod for Virgild private key
- admin_login | ADMIN_LOGIN | admin_login | User name for login to admin panel
- admin_passwrod | ADMIN_PASSWROD | admin_passwrod | SHA256 hash of admin password
+ admin-login | ADMIN_LOGIN | admin_login | User name for login to admin panel
+ admin-passwrod | ADMIN_PASSWROD | admin_passwrod | SHA256 hash of admin password
  cache | CACHE | cache | Caching duration for global cards (in secondes)
  cards-service | CARDS_SERVICE | cards-service |  Address of Cards service
  cards-ro-service | CARDS_RO_SERVICE | cards-ro-service | Address of Read only cards  service
@@ -149,6 +149,7 @@ Arg | Environment name | File name | Description
  ra-service | RA_SERVICE | ra-service | Address of registration authority  service
  authority-card-id | AUTHIRUTY_CARD_ID | authority-card-id | Authority card id
  authority-pubkey | AUTHORITY_PUBKEY | authority-pubkey | Authority public key
+ remote-token | REMOTE_TOKEN | remote-token | Token for get access to Virgil cloud
  auth-mode | AUTH_MODE | auth-mode | Authentication mode
 
 Default arguments
@@ -159,8 +160,8 @@ Default arguments
  db | sqlite3:virgild.db
  log | console
  mode | cache
- admin_login | admin
- admin_passwrod | admin
+ admin-login | admin
+ admin-passwrod | admin
  cache | 3600
  cards-service | https://cards.virgilsecurity.com
  cards-ro-service | https://cards-ro.virgilsecurity.com
