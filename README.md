@@ -129,25 +129,45 @@ All information you can find on the [development portal](https://virgilsecurity.
 
 # Appendix A. Environment
 
-Command line arguments (prefix: --)| Environment name | File name | Default value | Description
----|---|---|---|---
- config | CONFIG | - | virgild.conf | Path to config file
- db | DB | db | sqlite3:virgild.db | Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql
- log | LOG | log | console | Path to file log. 'console' is special value for print to stdout
- mode | MODE | mode | cache | VirgilD service mode
- vd-card-id | VD_CARD_ID | vd-card-id | not set | VirgilD card id
- vd-key | VD_KEY | vd-key | not set | VirgilD private key
- vd-key-passwrod | VD_KEY_PASSWROD | vd-key-passwrod | not set | Passwrod for Virgild private key
- admin_login | ADMIN_LOGIN | admin_login | admin | User name for login to admin panel
- admin_passwrod | ADMIN_PASSWROD | admin_passwrod | admin | SHA256 hash of admin password
- cache | CACHE | cache | 3600 | Caching duration for global cards (in secondes)
- cards-service | CARDS_SERVICE | cards-service | https://cards.virgilsecurity.com | Address of Cards service
- cards-ro-service | CARDS_RO_SERVICE | cards-ro-service | https://cards-ro.virgilsecurity.com | Address of Read only cards  service
- identity-service | IDENTITY_SERVICE | identity-service | https://identity.virgilsecurity.com | Address of identity  service
- ra-service | RA_SERVICE | ra-service | https://ra.virgilsecurity.com | Address of registration authority  service
- authority-card-id | AUTHIRUTY_CARD_ID | authority-card-id | 3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853 | Authority card id
- authority-pubkey | AUTHORITY_PUBKEY | authority-pubkey | MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG | Authority public key
- auth-mode | AUTH_MODE | auth-mode | no | Authentication mode
+For using command line arguments (args) use prefix --
+
+Arg | Environment name | File name | Description
+---|---|---|---
+ config | CONFIG | - | Path to config file
+ db | DB | db |  Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql
+ log | LOG | log | Path to file log. 'console' is special value for print to stdout
+ mode | MODE | mode | VirgilD service mode
+ vd-card-id | VD_CARD_ID | vd-card-id | VirgilD card id
+ vd-key | VD_KEY | vd-key | VirgilD private key
+ vd-key-passwrod | VD_KEY_PASSWROD | vd-key-passwrod | Passwrod for Virgild private key
+ admin_login | ADMIN_LOGIN | admin_login | User name for login to admin panel
+ admin_passwrod | ADMIN_PASSWROD | admin_passwrod | SHA256 hash of admin password
+ cache | CACHE | cache | Caching duration for global cards (in secondes)
+ cards-service | CARDS_SERVICE | cards-service |  Address of Cards service
+ cards-ro-service | CARDS_RO_SERVICE | cards-ro-service | Address of Read only cards  service
+ identity-service | IDENTITY_SERVICE | identity-service | Address of identity  service
+ ra-service | RA_SERVICE | ra-service | Address of registration authority  service
+ authority-card-id | AUTHIRUTY_CARD_ID | authority-card-id | Authority card id
+ authority-pubkey | AUTHORITY_PUBKEY | authority-pubkey | Authority public key
+ auth-mode | AUTH_MODE | auth-mode | Authentication mode
+
+Default arguments
+ Arg | Default value
+ ---|---
+ config | virgild.conf
+ db | sqlite3:virgild.db
+ log | console
+ mode | cache
+ admin_login | admin
+ admin_passwrod | admin
+ cache | 3600
+ cards-service | https://cards.virgilsecurity.com
+ cards-ro-service | https://cards-ro.virgilsecurity.com
+ identity-service | https://identity.virgilsecurity.com
+ ra-service | https://ra.virgilsecurity.com
+ authority-card-id | 3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853
+ authority-pubkey | MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG
+ auth-mode | no
 
 # Appendix B. Token base authontication
 
