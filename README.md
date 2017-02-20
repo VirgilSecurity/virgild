@@ -152,7 +152,8 @@ Arg | Environment name | File name | Description
  auth-mode | AUTH_MODE | auth-mode | Authentication mode
 
 Default arguments
- Arg | Default value
+
+ Arg | Value
  ---|---
  config | virgild.conf
  db | sqlite3:virgild.db
