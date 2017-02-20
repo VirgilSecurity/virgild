@@ -139,7 +139,7 @@ Arg | Environment name | File name | Description
  mode | MODE | mode | VirgilD service mode
  vd-card-id | VD_CARD_ID | vd-card-id | VirgilD card id
  vd-key | VD_KEY | vd-key | VirgilD private key
- vd-key-passwrod | VD_KEY_PASSWROD | vd-key-passwrod | Passwrod for Virgild private key
+ vd-key-password | VD_KEY_PASSWORD | vd-key-password | Password for Virgild private key
  admin-login | ADMIN_LOGIN | admin_login | User name for login to admin panel
  admin-passwrod | ADMIN_PASSWROD | admin_passwrod | SHA256 hash of admin password
  cache | CACHE | cache | Caching duration for global cards (in secondes)
