@@ -72,6 +72,7 @@ type Common struct {
 	config       Config
 	ConfigUpdate *Updater
 	ConfigPath   string
+	Address      string
 }
 
 type AuthMode string
@@ -112,6 +113,8 @@ func Init() *App {
 	} else {
 		app.Common.ConfigPath = *configPath
 	}
+
+	app.Common.Address = conf.Address
 
 	app.Common.DB, err = initDB(conf.DB)
 	if err != nil {

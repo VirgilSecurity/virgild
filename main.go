@@ -60,5 +60,5 @@ func main() {
 	r.GET("/api/statistics", a.Auth(s.GetStatistic))
 	r.GET("/api/statistics/last", a.Auth(s.LastActions))
 
-	panic(fasthttp.ListenAndServe(":8080", r.Handler))
+	panic(fasthttp.ListenAndServe(conf.Common.Address, r.Handler))
 }

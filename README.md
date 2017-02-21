@@ -134,6 +134,7 @@ For using command line arguments (args) use prefix -
 
 Arg | Environment name | File name | Description
 ---|---|---|---
+address | ADDRESS | ADDRESS | VirgilD address
  config | CONFIG | - | Path to config file
  db | DB | db |  Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql
  log | LOG | log | Path to file log. 'console' is special value for print to stdout
@@ -157,6 +158,7 @@ Arg | Environment name | File name | Description
 
  Arg | Value
  ---|---
+ address | 127.0.0.1:8080
  config | virgild.conf
  db | sqlite3:virgild.db
  log | console
