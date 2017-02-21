@@ -14,6 +14,7 @@ var configPath *string
 func init() {
 	flag.StringVar(&defaultConfig.Admin.Login, "admin-login", "admin", "User name for login to admin panel")
 	flag.StringVar(&defaultConfig.Admin.Password, "admin-passwrod", "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", "SHA256 hash of admin password")
+	flag.BoolVar(&defaultConfig.Admin.Enabled, "admin-enabled", false, "Enebled admin panel")
 	flag.StringVar(&defaultConfig.Auth.Mode, "auth-mode", "no", "Authentication mode")
 	flag.StringVar(&defaultConfig.Auth.Params.Host, "auth-address", "", "Remote authorization service address")
 	flag.StringVar(&defaultConfig.Auth.TokenType, "auth-token-type", "VIRGIL", "Authorization type")
@@ -70,6 +71,7 @@ type CardsConfig struct {
 }
 
 type AdminConfig struct {
+	Enabled  bool
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
@@ -100,6 +102,7 @@ func saveConfigToFole(config Config, file string) error {
 
 	saveStrVal(f, "admin-login", config.Admin.Login)
 	saveStrVal(f, "admin-password", config.Admin.Password)
+	saveBoolVal(f, "admin-enabled", config.Admin.Enabled)
 	saveStrVal(f, "auth-mode", config.Auth.Mode)
 	saveStrVal(f, "auth-address", config.Auth.Params.Host)
 	saveStrVal(f, "auth-token-type", config.Auth.TokenType)

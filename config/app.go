@@ -62,6 +62,7 @@ type VirgilDCard struct {
 	PublicKey string `json:"public_key"`
 }
 type Site struct {
+	Enabled bool
 	Admin   SiteAdmin
 	VirgilD VirgilDCard
 }
@@ -135,6 +136,7 @@ func Init() *App {
 	}
 	app.Site.Admin.Login = conf.Admin.Login
 	app.Site.Admin.Password = conf.Admin.Password
+	app.Site.Enabled = conf.Admin.Enabled
 
 	app.Auth, err = initAtuh(conf.Auth)
 	if err != nil {

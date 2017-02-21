@@ -18,12 +18,32 @@ type AdminHandlers struct {
 }
 
 func Init(conf *config.App) *AdminHandlers {
+	if conf.Site.Enabled {
+		return &AdminHandlers{
+			Index:        mainPage("./templates/index.html"),
+			GetConfig:    getConf(conf.Common.ConfigUpdate),
+			CardInfo:     getVirgilDCardInfo(conf.Site.VirgilD),
+			UpdateConfig: updateConf(conf.Common.ConfigUpdate),
+			Auth:         adminWrap(staticLogin(conf.Site.Admin.Login, conf.Site.Admin.Password)),
+		}
+	}
+
+	methodNotAllowed := func(ctx *fasthttp.RequestCtx) {
+		ctx.ResetBody()
+		ctx.Error("", fasthttp.StatusMethodNotAllowed)
+	}
+	authForbidden := func(next fasthttp.RequestHandler) fasthttp.RequestHandler {
+		return func(ctx *fasthttp.RequestCtx) {
+			ctx.ResetBody()
+			ctx.Error("", fasthttp.StatusForbidden)
+		}
+	}
 	return &AdminHandlers{
-		Index:        mainPage("./templates/index.html"),
-		GetConfig:    getConf(conf.Common.ConfigUpdate),
-		CardInfo:     getVirgilDCardInfo(conf.Site.VirgilD),
-		UpdateConfig: updateConf(conf.Common.ConfigUpdate),
-		Auth:         adminWrap(staticLogin(conf.Site.Admin.Login, conf.Site.Admin.Password)),
+		Index:        methodNotAllowed,
+		GetConfig:    methodNotAllowed,
+		CardInfo:     methodNotAllowed,
+		UpdateConfig: methodNotAllowed,
+		Auth:         authForbidden,
 	}
 }
 
