@@ -142,6 +142,7 @@ address | ADDRESS | ADDRESS | VirgilD address
  vd-card-id | VD_CARD_ID | vd-card-id | VirgilD card id
  vd-key | VD_KEY | vd-key | VirgilD private key
  vd-key-password | VD_KEY_PASSWORD | vd-key-password | Password for Virgild private key
+ admin-enabled | ADMIN_ENABLED | admin-enabled | Enabled admin panel
  admin-login | ADMIN_LOGIN | admin_login | User name for login to admin panel
  admin-passwrod | ADMIN_PASSWROD | admin_passwrod | SHA256 hash of admin password
  cache | CACHE | cache | Caching duration for global cards (in seconds)
@@ -163,6 +164,7 @@ address | ADDRESS | ADDRESS | VirgilD address
  db | sqlite3:virgild.db
  log | console
  mode | cache
+ admin-enabled | false
  admin-login | admin
  admin-passwrod | admin
  cache | 3600
