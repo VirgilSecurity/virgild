@@ -187,7 +187,7 @@ func initCards(conf *CardsConfig) (cards Cards, err error) {
 	if err != nil {
 		return
 	}
-	if cards.Mode != CardModeLocal {
+	if cards.Mode != CardModeCache {
 		cards.Signer, err = initSigner(&conf.Signer)
 		if err != nil {
 			return
