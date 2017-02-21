@@ -129,7 +129,7 @@ All information you can find on the [development portal](https://virgilsecurity.
 
 # Appendix A. Environment
 
-For using command line arguments (args) use prefix --
+For using command line arguments (args) use prefix -
 
 Arg | Environment name | File name | Description
 ---|---|---|---
