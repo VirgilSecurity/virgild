@@ -122,6 +122,7 @@ where basic authentication is credentials for your admin panel.
 * *Auth mode* - it's authentication mode for getting access to VirgilD. It can take two values: no and local. No mode - will give you full access to VirgilD without any permissions. Local mode - provides permissions by tokens. ([Settup token base permission](#appendix-b-token-base-permission))
 
 Full list of parameters in [Appendix A. Environment](#appendix-a-environment).
+
 [List of default arguments](#default-arguments)
 
 # API
@@ -142,7 +143,7 @@ Arg | Environment name | File name | Description
  vd-key-password | VD_KEY_PASSWORD | vd-key-password | Password for Virgild private key
  admin-login | ADMIN_LOGIN | admin_login | User name for login to admin panel
  admin-passwrod | ADMIN_PASSWROD | admin_passwrod | SHA256 hash of admin password
- cache | CACHE | cache | Caching duration for global cards (in secondes)
+ cache | CACHE | cache | Caching duration for global cards (in seconds)
  cards-service | CARDS_SERVICE | cards-service |  Address of Cards service
  cards-ro-service | CARDS_RO_SERVICE | cards-ro-service | Address of Read only cards  service
  identity-service | IDENTITY_SERVICE | identity-service | Address of identity  service
