@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-xorm/xorm"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/namsral/flag"
 	virgil "gopkg.in/virgil.v4"
 	"gopkg.in/virgil.v4/transport/virgilhttp"
 	"gopkg.in/virgil.v4/virgilcrypto"
@@ -95,17 +96,19 @@ type App struct {
 	Auth   Auth
 }
 
-func Init(file string) *App {
+func Init() *App {
+	var err error
 	app := new(App)
 
-	conf, err := loadConfigFromFile(file)
-	if err != nil {
-		log.Fatalf("Cannot load configuration file: %v", err)
-	}
+	flag.Parse()
 
-	conf = initDefault(conf)
+	conf := defaultConfig
 	app.Common.config = conf
-	app.Common.ConfigPath = file
+	if *configPath == "" {
+		app.Common.ConfigPath = "virgild.conf"
+	} else {
+		app.Common.ConfigPath = *configPath
+	}
 
 	app.Common.DB, err = initDB(conf.DB)
 	if err != nil {
@@ -115,7 +118,6 @@ func Init(file string) *App {
 	if err != nil {
 		panic(err)
 	}
-
 	app.Cards, err = initCards(&conf.Cards)
 	if err != nil {
 		panic(err)
@@ -135,7 +137,7 @@ func Init(file string) *App {
 
 	if app.Common.config != conf { // has changes
 		app.Common.config = conf
-		saveConfigToFole(conf, file)
+		saveConfigToFole(conf, app.Common.ConfigPath)
 	}
 	app.Common.ConfigUpdate = &Updater{
 		app: app,
@@ -199,8 +201,8 @@ func initCards(conf *CardsConfig) (cards Cards, err error) {
 	return
 }
 
-func initVRA(conf *AuthorityConfig) (*Authority, error) {
-	if conf == nil || conf.CardID == "" || conf.PublicKey == "" {
+func initVRA(conf AuthorityConfig) (*Authority, error) {
+	if conf.CardID == "" || conf.PublicKey == "" {
 		return nil, nil
 	}
 	pub, err := virgil.Crypto().ImportPublicKey([]byte(conf.PublicKey))
@@ -214,6 +216,23 @@ func initVRA(conf *AuthorityConfig) (*Authority, error) {
 }
 
 func initSigner(conf *SignerConfig) (*Signer, error) {
+	if conf.PrivateKey == "" {
+		pk, err := virgil.Crypto().GenerateKeypair()
+		if err != nil {
+			log.Fatalf("Cannot generate keypair for VirgilD: %v", err)
+		}
+		p, err := pk.PrivateKey().Encode([]byte(""))
+		if err != nil {
+			log.Fatalf("Cannot encode private key for VirgilD: %v", err)
+		}
+
+		conf = &SignerConfig{
+			PrivateKey:         base64.StdEncoding.EncodeToString(p),
+			PrivateKeyPassword: "",
+			CardID:             "",
+		}
+	}
+
 	priv, err := virgil.Crypto().ImportPrivateKey([]byte(conf.PrivateKey), conf.PrivateKeyPassword)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot load private key for VirgilD: %v", err)

@@ -23,11 +23,10 @@ func TestInitDB_ReturnOrm(t *testing.T) {
 }
 
 func TestInitVRA_Nil_ReturnNil(t *testing.T) {
-	table := []*AuthorityConfig{
-		nil,
-		&AuthorityConfig{CardID: "ad"},
-		&AuthorityConfig{PublicKey: "ad"},
-		&AuthorityConfig{},
+	table := []AuthorityConfig{
+		AuthorityConfig{CardID: "ad"},
+		AuthorityConfig{PublicKey: "ad"},
+		AuthorityConfig{},
 	}
 
 	for _, v := range table {
@@ -38,19 +37,19 @@ func TestInitVRA_Nil_ReturnNil(t *testing.T) {
 }
 
 func TestInitVRA_PublicKeyInvalid_ReturnErr(t *testing.T) {
-	_, err := initVRA(&AuthorityConfig{CardID: "asdf", PublicKey: "asdf"})
+	_, err := initVRA(AuthorityConfig{CardID: "asdf", PublicKey: "asdf"})
 	assert.NotNil(t, err)
 }
 
 func TestInitVRA_ReturnVRA(t *testing.T) {
-	vra, err := initVRA(&AuthorityConfig{CardID: "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853", PublicKey: "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs="})
+	vra, err := initVRA(AuthorityConfig{CardID: "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853", PublicKey: "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs="})
 	assert.Nil(t, err)
 	assert.NotNil(t, vra)
 }
 
 func TestInitSigner_PrivateKeyInvalid_ReturnErr(t *testing.T) {
 	_, err := initSigner(&SignerConfig{})
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
 }
 
 func TestInitSigner_CardIdEmpty_ReturnCard(t *testing.T) {

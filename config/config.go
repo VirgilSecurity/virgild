@@ -1,16 +1,40 @@
 package config
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/hex"
-	"encoding/json"
-	"io/ioutil"
-	"log"
+	"fmt"
+	"io"
 	"os"
 
-	virgil "gopkg.in/virgil.v4"
+	"github.com/namsral/flag"
 )
+
+var defaultConfig Config
+var configPath *string
+
+func init() {
+	flag.StringVar(&defaultConfig.Admin.Login, "admin-login", "admin", "User name for login to admin panel")
+	flag.StringVar(&defaultConfig.Admin.Password, "admin-passwrod", "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", "SHA256 hash of admin password")
+	flag.StringVar(&defaultConfig.Auth.Mode, "auth-mode", "no", "Authentication mode")
+	flag.StringVar(&defaultConfig.Auth.Params.Host, "auth-address", "", "Remote authorization service address")
+	flag.StringVar(&defaultConfig.Auth.TokenType, "auth-token-type", "VIRGIL", "Authorization type")
+	flag.StringVar(&defaultConfig.Cards.Mode, "mode", "cache", "VirgilD service mode")
+	flag.StringVar(&defaultConfig.Cards.Remote.Authority.CardID, "authority-card-id", "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853", "Authority card id")
+	flag.StringVar(&defaultConfig.Cards.Remote.Authority.PublicKey, "authority-pubkey", "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs=", "Authority public key")
+	flag.IntVar(&defaultConfig.Cards.Remote.Cache, "cache", 3600, "Caching duration for global cards (in secondes)")
+	flag.StringVar(&defaultConfig.Cards.Remote.Services.Cards, "cards-service", "https://cards.virgilsecurity.com", "Address of Cards service")
+	flag.StringVar(&defaultConfig.Cards.Remote.Services.CardsRO, "cards-ro-service", "https://cards-ro.virgilsecurity.com", "Address of Read only cards service")
+	flag.StringVar(&defaultConfig.Cards.Remote.Services.Identity, "identity-service", "https://identity.virgilsecurity.com", "Address of identity service")
+	flag.StringVar(&defaultConfig.Cards.Remote.Services.VRA, "ra-service", "https://ra.virgilsecurity.com", "Address of registration authority service")
+	flag.StringVar(&defaultConfig.Cards.Remote.Token, "remote-token", "", "Token for get access to Virgil cloud")
+	flag.StringVar(&defaultConfig.Cards.Signer.CardID, "vd-card-id", "", "VirgilD card id")
+	flag.StringVar(&defaultConfig.Cards.Signer.PrivateKey, "vd-key", "", "VirgilD private key")
+	flag.StringVar(&defaultConfig.Cards.Signer.PrivateKeyPassword, "vd-key-password", "", "Password for Virgild private key")
+	flag.StringVar(&defaultConfig.Cards.VRA.CardID, "ra-card-id", "", "Registration Authority card id")
+	flag.StringVar(&defaultConfig.Cards.VRA.PublicKey, "ra-pubkey", "", "Registration Authority public key")
+	flag.StringVar(&defaultConfig.DB, "db", "sqlite3:virgild.db", "Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql")
+	flag.StringVar(&defaultConfig.LogFile, "log", "console", "Path to file log. 'console' is special value for print to stdout")
+	configPath = flag.String(flag.DefaultConfigFlagname, "", "Path to config file")
+}
 
 type SignerConfig struct {
 	CardID             string `json:"card_id"`
@@ -38,10 +62,10 @@ type RemoteConfig struct {
 }
 
 type CardsConfig struct {
-	Mode   string           `json:"mode"`
-	Signer SignerConfig     `json:"signer,omitempty"`
-	VRA    *AuthorityConfig `json:"vra,omitempty"`
-	Remote RemoteConfig     `json:"remote,omitempty"`
+	Mode   string          `json:"mode"`
+	Signer SignerConfig    `json:"signer,omitempty"`
+	VRA    AuthorityConfig `json:"vra,omitempty"`
+	Remote RemoteConfig    `json:"remote,omitempty"`
 }
 
 type AdminConfig struct {
@@ -65,80 +89,46 @@ type Config struct {
 	Auth    AuthConfig  `json:"auth"`
 }
 
-func loadConfigFromFile(file string) (Config, error) {
-	var conf Config
-	if _, err := os.Stat(file); os.IsNotExist(err) {
-		return conf, nil
-	}
-	d, err := ioutil.ReadFile(file)
-	if err != nil {
-		return conf, err
-	}
-	err = json.Unmarshal(d, &conf)
-	return conf, err
-}
-
 func saveConfigToFole(config Config, file string) error {
 	f, err := os.Create(file)
 	if err != nil {
 		return err
 	}
-	enc := json.NewEncoder(f)
-	enc.SetIndent("", "\t")
-	err = enc.Encode(config)
+	defer f.Close()
+
+	saveStrVal(f, "admin-login", config.Admin.Login)
+	saveStrVal(f, "admin-password", config.Admin.Password)
+	saveStrVal(f, "auth-mode", config.Auth.Mode)
+	saveStrVal(f, "auth-address", config.Auth.Params.Host)
+	saveStrVal(f, "auth-token-type", config.Auth.TokenType)
+	saveStrVal(f, "mode", config.Cards.Mode)
+	saveStrVal(f, "authority-card-id", config.Cards.Remote.Authority.CardID)
+	saveStrVal(f, "authority-pubkey", config.Cards.Remote.Authority.PublicKey)
+	saveIntVal(f, "cache", config.Cards.Remote.Cache)
+	saveStrVal(f, "cards-service", config.Cards.Remote.Services.Cards)
+	saveStrVal(f, "identity-service", config.Cards.Remote.Services.Identity)
+	saveStrVal(f, "ra-service", config.Cards.Remote.Services.VRA)
+	saveStrVal(f, "remote-token", config.Cards.Remote.Token)
+	saveStrVal(f, "vd-card-id", config.Cards.Signer.CardID)
+	saveStrVal(f, "vd-key", config.Cards.Signer.PrivateKey)
+	saveStrVal(f, "vd-key-password", config.Cards.Signer.PrivateKeyPassword)
+	saveStrVal(f, "ra-card-id", config.Cards.VRA.CardID)
+	saveStrVal(f, "ra-pubkey", config.Cards.VRA.PublicKey)
+	saveStrVal(f, "db", config.DB)
+	saveStrVal(f, "log", config.LogFile)
 
 	f.Close()
 	return err
 }
 
-func initDefault(conf Config) Config {
-	if conf.DB == "" {
-		conf.DB = "sqlite3:virgild.db"
-	}
-	if conf.LogFile == "" {
-		conf.LogFile = "console"
-	}
-	if conf.Admin.Login == "" {
-		conf.Admin.Login = "admin"
-	}
-	if conf.Admin.Password == "" {
-		h := sha256.Sum256([]byte("admin"))
-		conf.Admin.Password = hex.EncodeToString(h[:])
-	}
-	if conf.Cards.Signer.PrivateKey == "" {
-		pk, err := virgil.Crypto().GenerateKeypair()
-		if err != nil {
-			log.Fatalf("Cannot generate keypair for VirgilD: %v", err)
-		}
-		p, err := pk.PrivateKey().Encode([]byte(""))
-		if err != nil {
-			log.Fatalf("Cannot encode private key for VirgilD: %v", err)
-		}
+func saveStrVal(w io.Writer, name, val string) {
+	fmt.Fprintf(w, "%v %v\n", name, val)
+}
 
-		conf.Cards.Signer = SignerConfig{
-			PrivateKey:         base64.StdEncoding.EncodeToString(p),
-			PrivateKeyPassword: "",
-			CardID:             "",
-		}
-	}
-	if conf.Cards.Remote.Services.Cards == "" {
-		conf.Cards.Remote.Services.Cards = "https://cards.virgilsecurity.com"
-	}
-	if conf.Cards.Remote.Services.CardsRO == "" {
-		conf.Cards.Remote.Services.CardsRO = "https://cards-ro.virgilsecurity.com"
-	}
-	if conf.Cards.Remote.Services.Identity == "" {
-		conf.Cards.Remote.Services.Identity = "https://identity.virgilsecurity.com"
-	}
-	if conf.Cards.Remote.Services.VRA == "" {
-		conf.Cards.Remote.Services.VRA = "https://ra.virgilsecurity.com"
-	}
-	if conf.Cards.Remote.Authority.CardID == "" || conf.Cards.Remote.Authority.PublicKey == "" {
-		conf.Cards.Remote.Authority.CardID = "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853"
-		conf.Cards.Remote.Authority.PublicKey = "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs="
-	}
-	if conf.Cards.Remote.Cache == 0 {
-		conf.Cards.Remote.Cache = 3600
-	}
-	return conf
+func saveBoolVal(w io.Writer, name string, val bool) {
+	fmt.Fprintf(w, "%v %t\n", name, val)
+}
+
+func saveIntVal(w io.Writer, name string, val int) {
+	fmt.Fprintf(w, "%v %v\n", name, val)
 }
