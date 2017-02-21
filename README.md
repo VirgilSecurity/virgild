@@ -187,7 +187,7 @@ address | ADDRESS | ADDRESS | VirgilD address
 
 ## Prepere
 
-* Set auth-mode to local value
+* Set auth-mode to local value and admin-enabled
 * Restart service
 
 ## Create token
