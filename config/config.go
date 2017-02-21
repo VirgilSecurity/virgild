@@ -33,7 +33,7 @@ func init() {
 	flag.StringVar(&defaultConfig.Cards.VRA.PublicKey, "ra-pubkey", "", "Registration Authority public key")
 	flag.StringVar(&defaultConfig.DB, "db", "sqlite3:virgild.db", "Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql")
 	flag.StringVar(&defaultConfig.LogFile, "log", "console", "Path to file log. 'console' is special value for print to stdout")
-	flag.StringVar(&defaultConfig.Address, "address", "127.0.0.1:8080", "VirgilD address")
+	flag.StringVar(&defaultConfig.Address, "address", ":8080", "VirgilD address")
 	configPath = flag.String(flag.DefaultConfigFlagname, "", "Path to config file")
 }
 

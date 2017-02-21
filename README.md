@@ -158,7 +158,7 @@ address | ADDRESS | ADDRESS | VirgilD address
 
  Arg | Value
  ---|---
- address | 127.0.0.1:8080
+ address | :8080
  config | virgild.conf
  db | sqlite3:virgild.db
  log | console
