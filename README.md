@@ -26,7 +26,7 @@ This will significantly speed up the worldwide adoption of secure messaging, dis
 By moving to a distributed trust model, Virgil will accelerate its ability to penetrate the market and help ensure that Virginia will be at the epicenter of Internet application security.
 
 # Topics
-* [Get in start](#get-in-start)
+* [Getting started](#getting-started)
 	* [Install](#install)
 	* [Usage mode](#usage-mode)
 		* [Cache servcie](#cache-servcie)
@@ -36,15 +36,15 @@ By moving to a distributed trust model, Virgil will accelerate its ability to pe
 	* [Settings](#settings)
 * [API](#api)
 * [Appendix A. Environment](#appendix-a-environment)
-* [Appendix B. Token base authontication](#appendix-b-token-base-authontication)
+	* [Default arguments](#default-arguments)
+* [Appendix B. Token base authentication](#appendix-b-token-base-authentication)
 	* [Prepere](#prepere)
 	* [Create token](#create-token)
 	* [Get tokens](#get-tokens)
 	* [Update token](#update-token)
 	* [Delete token](#delete-token)
 
-# Get in start
-
+# Getting started
 
 ## Install
 
@@ -58,7 +58,7 @@ Virgild can work in 3 modes.
 
 ### Cache service
 
-Run the docker container by following commands
+Run docker container using following commands
 
 ```
 # Pull image from Docker Hub.
@@ -68,13 +68,13 @@ $ docker pull virgilsecurity/virgild
 # Use `docker run` for the first time.
 $ docker run --name=virgild -p 80:8080 virgilsecurity/virgild
 
-# Use `docker start` if you have stopped it.
+# Use `docker start` if you stopped it.
 $ docker start virgild
 ```
 
 ### Local PKI
-Virgild card will be generated on first running the program. All information  will be stored in */srv/virgild.conf*  config file so we recomended add a volume for persistence.
-Run the docker container by following commands
+Virgild card will be generated on the first program start. All information  will be stored in */srv/virgild.conf*  config file so we recomended add a volume for persistence.
+Run docker container using following commands
 
 ```
 # Pull image from Docker Hub.
@@ -84,12 +84,12 @@ $ docker pull virgilsecurity/virgild
 # Use `docker run` for the first time.
 $ docker run --name=virgild -p 80:8080 -e MODE=local -v :/srv virgilsecurity/virgild
 
-# Use `docker start` if you have stopped it.
+# Use `docker start` if you stopped it.
 $ docker start virgild
 ```
 
 ### PKI with sync mode
-Register on [develop portal](https://developer.virgilsecurity.com) and create your application. Run the docker container by following commands where {VD_CARD_ID} and {VD_KEY} data getting on registration  your app.
+Register on [develop portal](https://developer.virgilsecurity.com) and create your application. Run the docker container by following commands where {VD_CARD_ID} and {VD_KEY} should be replaced with values from developer portal. You can use copied base64 string from developer portal or encode your private key file with base64 and supply as a command line argument
 
 ```
 # Pull image from Docker Hub.
@@ -99,7 +99,7 @@ $ docker pull virgilsecurity/virgild
 # Use `docker run` for the first time.
 $ docker run --name=virgild -p 80:8080 -e MODE=sync -e VD_CARD_ID={CARD_ID} VD_KEY={PRIVATE_KEY} virgilsecurity/virgild
 
-# Use `docker start` if you have stopped it.
+# Use `docker start` if you stopped it.
 $ docker start virgild
 ```
 
@@ -110,19 +110,19 @@ $ curl http://localhost/health/status -v
 ```
 
 ## Settings
-Most of settings are obvious and easy to understand, but some parameters needed more detailed description:
 * *db* - database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql (by default `virgild.db`)
-* *VirgilD card* - it's card id and private key settings. VirgilD will sign all creating  or deleting card witch throgh via it. If it not set so VirgilD will create card and private key and store into local storage. You can get public information by following curl command
+* *VirgilD card* - it's VirgilD card id and private key settings used in sync mode. VirgilD will sign all creating or deleting card requests which go through it. If it not set VirgilD will create card and private key on the first run and store them into local storage. You can get public key information by issuing the following curl command
 
 ```
 $ curl http://localhost:8080/api/card -H 'Authorization: Basic YWRtaW46YWRtaW4='
 ```
 
-where basic authentication for your admin panel.
+where basic authentication is credentials for your admin panel.
 * *Authority card* - It's a card whose signature we trust. If this parameter is set up then a client's card must have signature of the authority. The parameter contains of two values: card ID card and public key
-* *Auth mode* - it's authontication mode for get access to VirgilD. It can take two value: no and local. No mode - will get full access to VirgilD without any permission. Local mode - provide permissions by token ([Settup token base permission](#appendix-b-token-base-permission))
+* *Auth mode* - it's authentication mode for getting access to VirgilD. It can take two values: no and local. No mode - will give you full access to VirgilD without any permissions. Local mode - provides permissions by tokens. ([Settup token base permission](#appendix-b-token-base-permission))
 
 Full list of parameters in [Appendix A. Environment](#appendix-a-environment).
+[List of default arguments](#default-arguments)
 
 # API
 All information you can find on the [development portal](https://virgilsecurity.com/docs/services/cards/v4/cards-service)
@@ -152,7 +152,7 @@ Arg | Environment name | File name | Description
  remote-token | REMOTE_TOKEN | remote-token | Token for get access to Virgil cloud
  auth-mode | AUTH_MODE | auth-mode | Authentication mode
 
-Default arguments
+## Default arguments
 
  Arg | Value
  ---|---
@@ -168,10 +168,10 @@ Default arguments
  identity-service | https://identity.virgilsecurity.com
  ra-service | https://ra.virgilsecurity.com
  authority-card-id | 3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853
- authority-pubkey | MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG
+ authority-pubkey | MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs=
  auth-mode | no
 
-# Appendix B. Token base authontication
+# Appendix B. Token base authentication
 
 ## Topic
 * [Prepere](#prepere)
