@@ -134,7 +134,6 @@ func Init() *App {
 	if err != nil {
 		panic(err)
 	}
-
 	if app.Common.config != conf { // has changes
 		app.Common.config = conf
 		saveConfigToFole(conf, app.Common.ConfigPath)
@@ -188,7 +187,7 @@ func initCards(conf *CardsConfig) (cards Cards, err error) {
 	if err != nil {
 		return
 	}
-	if cards.Mode != CardModeCache {
+	if cards.Mode != CardModeLocal {
 		cards.Signer, err = initSigner(&conf.Signer)
 		if err != nil {
 			return
@@ -226,11 +225,7 @@ func initSigner(conf *SignerConfig) (*Signer, error) {
 			log.Fatalf("Cannot encode private key for VirgilD: %v", err)
 		}
 
-		conf = &SignerConfig{
-			PrivateKey:         base64.StdEncoding.EncodeToString(p),
-			PrivateKeyPassword: "",
-			CardID:             "",
-		}
+		conf.PrivateKey = base64.StdEncoding.EncodeToString(p)
 	}
 
 	priv, err := virgil.Crypto().ImportPrivateKey([]byte(conf.PrivateKey), conf.PrivateKeyPassword)
