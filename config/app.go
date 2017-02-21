@@ -231,7 +231,11 @@ func initSigner(conf *SignerConfig) (*Signer, error) {
 		conf.PrivateKey = base64.StdEncoding.EncodeToString(p)
 	}
 
-	priv, err := virgil.Crypto().ImportPrivateKey([]byte(conf.PrivateKey), conf.PrivateKeyPassword)
+	b, err := base64.StdEncoding.DecodeString(conf.PrivateKey)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot decode authority public key from base64: %+v", err)
+	}
+	priv, err := virgil.Crypto().ImportPrivateKey(b, conf.PrivateKeyPassword)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot load private key for VirgilD: %v", err)
 	}
@@ -278,7 +282,11 @@ func createVirgilCard(key virgilcrypto.PrivateKey) (*virgil.Card, error) {
 func initRemote(conf RemoteConfig) (Remote, error) {
 	customValidator := virgil.NewCardsValidator()
 
-	cardsServicePublic, err := virgil.Crypto().ImportPublicKey([]byte(conf.Authority.PublicKey))
+	b, err := base64.StdEncoding.DecodeString(conf.Authority.PublicKey)
+	if err != nil {
+		return Remote{}, fmt.Errorf("Cannot decode authority public key from base64: %+v", err)
+	}
+	cardsServicePublic, err := virgil.Crypto().ImportPublicKey(b)
 	if err != nil {
 		return Remote{}, fmt.Errorf("Cannot load public key of Authority Service: %+v", err)
 	}
