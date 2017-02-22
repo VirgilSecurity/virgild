@@ -26,7 +26,7 @@ script:
 after_seccess:
   - make docker_inspect
 
-branches:
-  only:
-  - master
-  - /^v\d+\.\d+$/
+# branches:
+  # only:
+  # - master
+  # - /^v\d+\.\d+$/
