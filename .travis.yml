@@ -13,20 +13,20 @@ go:
 
 before_install:
   # - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" virgilsecurity-docker-core.bintray.io;
-  # - docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD"
+  - docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD"
 install:
   - echo $GIT_COMMIT $GIT_BRANCH
 
 
 script:
   - make docker
-  # - make docker_dockerhub_tag
-  # - make docker_dockerhub_push
+  - make docker_dockerhub_tag
+  - make docker_dockerhub_push
 
 after_seccess:
   - make docker_inspect
 
-# branches:
-  # only:
-  # - master
-  # - /^v\d+\.\d+$/
+branches:
+  only:
+  - master
+  - /^v\d+\.\d+$/
