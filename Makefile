@@ -6,7 +6,7 @@ IMAGENAME=$(ARTF)
 DOCKERHUB_REPOSITORY=virgilsecurity/$(IMAGENAME)
 
 define tag_docker
-  @if [ "$(GIT_COMMIT)" = "master" ]; then \
+  @if [ "$(GIT_BRANCH)" = "master" ]; then \
     docker tag $(IMAGENAME) $(1):latest; \
   fi
   @if [ "$(GIT_BRANCH)" != "master" ]; then \
