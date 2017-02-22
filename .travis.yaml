@@ -1,0 +1,34 @@
+sudo: required
+
+services:
+  - docker
+env:
+  global:
+    - IMAGENAME=virgild
+    - DOCKERHUB_REPOSITORY=virgilsecurity/$IMAGENAME
+    - GIT_COMMIT=$TRAVIS_COMMIT
+    - GIT_BRANCH=$TRAVIS_BRANCH
+language: go
+
+go:
+  - 1.7.x
+
+before_install:
+  # - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" virgilsecurity-docker-core.bintray.io;
+  # - docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD"
+install:
+  - echo $GIT_COMMIT $GIT_BRANCH
+
+
+script:
+  - make docker
+  # - make docker_dockerhub_tag
+  # - make docker_dockerhub_push
+
+after_seccess:
+  - make docker_inspect
+
+branches:
+  only:
+  - master
+  - /^v\d+\.\d+$/
