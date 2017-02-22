@@ -1,4 +1,4 @@
-FROM alpine:3.4
+FROM alpine:3.5
 MAINTAINER Virgil <support@VirgilSecurity.com>
 RUN apk add --update ca-certificates
 ARG GIT_COMMIT=unkown
