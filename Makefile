@@ -1,9 +1,9 @@
 .PHONY: get test test_all test_integration build clear build build_artifacts
 docker: get test_all build_docker clear
 
-ARTF = virgild
-IMAGENAME=$ARTF
-DOCKERHUB_REPOSITORY=virgilsecurity/$IMAGENAME
+ARTF =virgild
+IMAGENAME=$(ARTF)
+DOCKERHUB_REPOSITORY=virgilsecurity/$(IMAGENAME)
 
 define tag_docker
   @if [ "$(GIT_COMMIT)" = "master" ]; then \
