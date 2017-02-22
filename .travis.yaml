@@ -4,8 +4,6 @@ services:
   - docker
 env:
   global:
-    - IMAGENAME=virgild
-    - DOCKERHUB_REPOSITORY=virgilsecurity/$IMAGENAME
     - GIT_COMMIT=$TRAVIS_COMMIT
     - GIT_BRANCH=$TRAVIS_BRANCH
 language: go
