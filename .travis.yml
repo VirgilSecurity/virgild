@@ -12,7 +12,6 @@ go:
   - 1.7.x
 
 before_install:
-  # - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" virgilsecurity-docker-core.bintray.io;
   - docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD"
 install:
   - echo $GIT_COMMIT $GIT_BRANCH
