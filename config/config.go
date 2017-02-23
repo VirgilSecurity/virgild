@@ -5,11 +5,11 @@ import (
 	"io"
 	"os"
 
-	"github.com/namsral/flag"
+	"github.com/tochka/flag"
 )
 
 var defaultConfig Config
-var configPath *string
+var configPath string
 
 func init() {
 	flag.StringVar(&defaultConfig.Admin.Login, "admin-login", "admin", "User name for login to admin panel")
@@ -35,7 +35,8 @@ func init() {
 	flag.StringVar(&defaultConfig.DB, "db", "sqlite3:virgild.db", "Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql")
 	flag.StringVar(&defaultConfig.LogFile, "log", "console", "Path to file log. 'console' is special value for print to stdout")
 	flag.StringVar(&defaultConfig.Address, "address", ":8080", "VirgilD address")
-	configPath = flag.String(flag.DefaultConfigFlagname, "", "Path to config file")
+
+	flag.StringVar(&configPath, flag.DefaultConfigFlagname, "virgild.conf", "path to config file")
 }
 
 type SignerConfig struct {

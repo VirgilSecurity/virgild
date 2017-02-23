@@ -109,10 +109,10 @@ func Init() *App {
 
 	conf := defaultConfig
 	app.Common.config = conf
-	if *configPath == "" {
+	if configPath == "" {
 		app.Common.ConfigPath = "virgild.conf"
 	} else {
-		app.Common.ConfigPath = *configPath
+		app.Common.ConfigPath = configPath
 	}
 
 	app.Common.Address = conf.Address
