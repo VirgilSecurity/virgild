@@ -41,7 +41,7 @@ func Init(conf *config.App) *AdminHandlers {
 	return &AdminHandlers{
 		Index:        methodNotAllowed,
 		GetConfig:    methodNotAllowed,
-		CardInfo:     methodNotAllowed,
+		CardInfo:     getVirgilDCardInfo(conf.Site.VirgilD),
 		UpdateConfig: methodNotAllowed,
 		Auth:         authForbidden,
 	}

@@ -48,7 +48,7 @@ func main() {
 	// Admin
 	r.ServeFiles("/public/*filepath", "./public")
 	r.GET("/api/cards/count", a.Auth(c.CountCards))
-	r.GET("/api/card", a.Auth(a.CardInfo))
+	r.GET("/api/card", a.CardInfo)
 	r.GET("/api/config", a.Auth(a.GetConfig))
 	r.POST("/api/config", a.Auth(a.UpdateConfig))
 	r.GET("/api/tokens", a.Auth(au.GetTokens))
