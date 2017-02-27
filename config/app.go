@@ -70,7 +70,7 @@ type Site struct {
 type Common struct {
 	DB           *xorm.Engine
 	Logger       *log.Logger
-	config       Config
+	Config       Config
 	ConfigUpdate *Updater
 	ConfigPath   string
 	Address      string
@@ -108,7 +108,7 @@ func Init() *App {
 	flag.Parse()
 
 	conf := defaultConfig
-	app.Common.config = conf
+	app.Common.Config = conf
 	if configPath == "" {
 		app.Common.ConfigPath = "virgild.conf"
 	} else {
@@ -142,8 +142,8 @@ func Init() *App {
 	if err != nil {
 		panic(err)
 	}
-	if app.Common.config != conf { // has changes
-		app.Common.config = conf
+	if app.Common.Config != conf { // has changes
+		app.Common.Config = conf
 		saveConfigToFole(conf, app.Common.ConfigPath)
 	}
 	app.Common.ConfigUpdate = &Updater{

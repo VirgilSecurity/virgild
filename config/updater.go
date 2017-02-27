@@ -12,7 +12,7 @@ type Updater struct {
 }
 
 func (u *Updater) Config() Config {
-	c := u.app.Common.config
+	c := u.app.Common.Config
 	// clera private Data
 	c.Cards.Signer.PrivateKey = ""
 	c.Cards.Signer.PrivateKeyPassword = ""
@@ -45,7 +45,7 @@ func (u *Updater) Update(conf Config) error {
 }
 
 func (u *Updater) validate(conf Config) error {
-	ac := u.app.Common.config
+	ac := u.app.Common.Config
 	if ac == conf {
 		return fmt.Errorf("Configurations are equal")
 	}

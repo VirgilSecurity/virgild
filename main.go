@@ -7,6 +7,7 @@ import (
 	"github.com/VirgilSecurity/virgild/modules/admin"
 	"github.com/VirgilSecurity/virgild/modules/auth"
 	"github.com/VirgilSecurity/virgild/modules/cards"
+	"github.com/VirgilSecurity/virgild/modules/health"
 	"github.com/VirgilSecurity/virgild/modules/statistics"
 	"github.com/VirgilSecurity/virgild/modules/symmetric"
 	"github.com/buaazp/fasthttprouter"
@@ -21,7 +22,7 @@ func main() {
 		fmt.Println("VirgilD CardID:", conf.Site.VirgilD.CardID)
 		fmt.Println("VirgilD PubKey:", conf.Site.VirgilD.PublicKey)
 	}
-
+	h := health.Init(conf)
 	c := cards.Init(conf)
 	s := statistics.Init(conf)
 	a := admin.Init(conf)
@@ -59,6 +60,9 @@ func main() {
 	// Statistics
 	r.GET("/api/statistics", a.Auth(s.GetStatistic))
 	r.GET("/api/statistics/last", a.Auth(s.LastActions))
+
+	r.GET("/health/status", h.Status)
+	r.GET("/health/info", h.Info)
 
 	panic(fasthttp.ListenAndServe(conf.Common.Address, r.Handler))
 }
