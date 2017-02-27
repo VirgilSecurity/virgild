@@ -15,7 +15,7 @@ define tag_docker
 endef
 
 get:
-	go get -v -t  ./...
+	go get -v -t -tags docker  ./...
 
 test_all: test test_integration
 
