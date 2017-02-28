@@ -73,7 +73,8 @@ func Init(conf *config.App) *CardsHandlers {
 
 func makeCardMode(conf *config.App) cardMode {
 	cardRepo := &db.CardRepository{
-		Orm: conf.Common.DB,
+		Orm:   conf.Common.DB,
+		Cache: conf.Cards.Remote.Cache,
 	}
 	switch conf.Cards.Mode {
 	case config.CardModeCache:
