@@ -42,6 +42,7 @@ func (h *DefaultModeCardHandler) Create(req *core.CreateCardRequest) (*core.Card
 		Signatures:   req.Request.Meta.Signatures,
 		Data:         req.Info.Data,
 		DeviceInfo:   req.Info.DeviceInfo,
+		Relations:    make(map[string][]byte, 0),
 	}
 
 	sqlCard, err := vcard2SqlCard(vcard)

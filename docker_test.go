@@ -106,6 +106,11 @@ func TestSyncSearchCards(t *testing.T) {
 	card, err := vc.CreateCard(req)
 	assert.NoError(t, err, "Cannot create create card in the cloud")
 
+	// HOT FIX
+	if card.Relations == nil {
+		card.Relations = make(map[string][]byte)
+	}
+
 	time.Sleep(5 * time.Second)
 
 	defer func() {

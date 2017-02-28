@@ -22,6 +22,7 @@ type CardMeta struct {
 	CreatedAt   string            `json:"created_at,omitempty"`
 	CardVersion string            `json:"card_version,omitempty"`
 	Signatures  map[string][]byte `json:"signs"`
+	Relations   map[string][]byte `json:"relations"`
 }
 
 type CreateCardRequest struct {

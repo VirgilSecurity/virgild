@@ -29,7 +29,6 @@ func vcard2SqlCard(vcard *virgil.Card) (*core.SqlCard, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "")
 	}
-
 	return &core.SqlCard{
 		CardID:       vcard.ID,
 		Identity:     vcard.Identity,
@@ -40,15 +39,20 @@ func vcard2SqlCard(vcard *virgil.Card) (*core.SqlCard, error) {
 }
 
 func vcard2Card(vcard *virgil.Card) *core.Card {
-	return &core.Card{
+	c := &core.Card{
 		ID:       vcard.ID,
 		Snapshot: vcard.Snapshot,
 		Meta: core.CardMeta{
 			CreatedAt:   vcard.CreatedAt,
 			CardVersion: vcard.CardVersion,
 			Signatures:  vcard.Signatures,
+			Relations:   vcard.Relations,
 		},
 	}
+	if c.Meta.Relations == nil {
+		c.Meta.Relations = make(map[string][]byte)
+	}
+	return c
 }
 
 func sqlCard2Card(sql *core.SqlCard) (*core.Card, error) {

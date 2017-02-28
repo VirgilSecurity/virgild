@@ -1,5 +1,5 @@
 .PHONY: get test test_all test_integration build clear build build_artifacts
-docker: get test_all build_docker docker_test clear
+docker: get test_all build_docker docker_test
 
 ARTF =virgild
 IMAGENAME=$(ARTF)
