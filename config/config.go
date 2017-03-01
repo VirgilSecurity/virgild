@@ -13,7 +13,7 @@ var configPath string
 
 func init() {
 	flag.StringVar(&defaultConfig.Admin.Login, "admin-login", "admin", "User name for login to admin panel")
-	flag.StringVar(&defaultConfig.Admin.Password, "admin-passwrod", "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", "SHA256 hash of admin password")
+	flag.StringVar(&defaultConfig.Admin.Password, "admin-password", "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", "SHA256 hash of admin password")
 	flag.BoolVar(&defaultConfig.Admin.Enabled, "admin-enabled", false, "Enebled admin panel")
 	flag.StringVar(&defaultConfig.Auth.Mode, "auth-mode", "no", "Authentication mode")
 	flag.StringVar(&defaultConfig.Auth.Params.Host, "auth-address", "", "Remote authorization service address")
