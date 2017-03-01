@@ -39,6 +39,19 @@ build_docker:
 	docker build -t $(IMAGENAME) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) .
 
 docker_test:
+ifndef SYNC_TOKEN
+	$(error SYNC_TOKEN is undefined. Access token for get access to Virgil cloud)
+endif
+ifndef SYNC_APP_ID
+	$(error SYNC_APP_ID is undefined. Application card id in Virgil cloud)
+endif
+ifndef SYNC_APP_KEY
+	$(error SYNC_APP_KEY is undefined. Private key in base64 incoding)
+endif
+ifndef SYNC_APP_KEY
+	$(error SYNC_APP_KEY_PASS is undefined. Password for private key)
+endif
+
 	# CACHE
 	docker-compose up -d virgild_cache
 	go test -tags=docker -run Cache -v
