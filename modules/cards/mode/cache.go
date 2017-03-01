@@ -5,6 +5,7 @@ import (
 
 	"github.com/VirgilSecurity/virgild/modules/cards/core"
 	virgil "gopkg.in/virgil.v4"
+	"gopkg.in/virgil.v4/errors"
 )
 
 type CacheModeHandler struct {
@@ -47,9 +48,32 @@ func (h *CacheModeHandler) Search(criteria *virgil.Criteria) ([]core.Card, error
 }
 
 func (h *CacheModeHandler) Create(req *core.CreateCardRequest) (*core.Card, error) {
-	return nil, core.ErrorForbidden
+	c, err := h.Remote.CreateCard(&req.Request)
+	if err != nil {
+		ve, ok := errors.ToSdkError(err)
+		if ok && ve.IsServiceError() {
+			return nil, core.ResponseErrorCode(ve.ServiceErrorCode())
+		}
+		return nil, err
+	}
+	scard, err := vcard2SqlCard(c)
+	if err != nil {
+		return nil, err
+	}
+	h.Repo.Add(*scard)
+
+	return vcard2Card(c), nil
 }
 
 func (h *CacheModeHandler) Revoke(req *core.RevokeCardRequest) error {
-	return core.ErrorForbidden
+	err := h.Remote.RevokeCard(&req.Request)
+	if err != nil {
+		ve, ok := errors.ToSdkError(err)
+		if ok && ve.IsServiceError() {
+			return core.ResponseErrorCode(ve.ServiceErrorCode())
+		}
+		return err
+	}
+	h.Repo.DeleteById(req.Info.ID)
+	return nil
 }

@@ -43,13 +43,8 @@ func CreateCard(f core.CreateCard) Response {
 		}
 
 		return f(&core.CreateCardRequest{
-			Info: creq,
-			Request: virgil.SignableRequest{
-				Snapshot: req.Snapshot,
-				Meta: virgil.RequestMeta{
-					Signatures: req.Meta.Signatures,
-				},
-			}})
+			Info:    creq,
+			Request: *req})
 	}
 }
 
@@ -68,13 +63,8 @@ func RevokeCard(f core.RevokeCard) Response {
 		}
 
 		return nil, f(&core.RevokeCardRequest{
-			Info: creq,
-			Request: virgil.SignableRequest{
-				Snapshot: req.Snapshot,
-				Meta: virgil.RequestMeta{
-					Signatures: req.Meta.Signatures,
-				},
-			}})
+			Info:    creq,
+			Request: *req})
 	}
 }
 
