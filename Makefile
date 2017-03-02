@@ -19,7 +19,7 @@ get:
 	go get -v -d -t -tags docker  ./...
 ifeq ($(strip $(OS)),Linux)
 	wget https://cdn.virgilsecurity.com/crypto-go/virgil-crypto-2.0.4-go-linux-x86_64.tgz -P $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/
-	tar -xvf virgil-crypto-2.0.4-go-linux-x86_64.tgz --strip-components=1 -C $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/
+	tar -xvf $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil-crypto-2.0.4-go-linux-x86_64.tgz --strip-components=1 -C $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/
 endif
 
 test_all: test test_integration
