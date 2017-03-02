@@ -48,7 +48,7 @@ endif
 ifndef SYNC_APP_KEY
 	$(error SYNC_APP_KEY is undefined. Private key in base64 incoding)
 endif
-ifndef SYNC_APP_KEY
+ifndef SYNC_APP_KEY_PASS
 	$(error SYNC_APP_KEY_PASS is undefined. Password for private key)
 endif
 
