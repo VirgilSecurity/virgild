@@ -36,12 +36,13 @@ clear:
 build:
 	go build -o $(ARTF)
 
-build_in_docker: get
+build_in_docker:
+	go get -v  ./...
 	CGO_ENABLED=1 GOARCH=amd64 go build  --ldflags '-extldflags "-static"' -o build/docker/$(ARTF)
 
 build_docker:
-	docker build -t docker_build -f build_docker .
-	docker run --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild docker_build make build_in_docker
+	docker build -t build_docker -f build_docker .
+	docker run --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild build_docker make build_in_docker
 	docker build -t $(IMAGENAME) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) .
 
 docker_test:
