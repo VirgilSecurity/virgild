@@ -6,8 +6,8 @@ import (
 	"github.com/go-xorm/xorm"
 )
 
-func sync(e *xorm.Engine) {
-	e.Sync2(new(token))
+func sync(e *xorm.Engine) error {
+	return e.Sync2(new(token))
 }
 
 type TokenRepo struct {

@@ -25,7 +25,10 @@ type AuthHandler struct {
 }
 
 func Init(app *config.App) *AuthHandler {
-	sync(app.Common.DB)
+	err := sync(app.Common.DB)
+	if err != nil {
+		app.Common.Logger.Fatalln("Cannot sync db", err)
+	}
 	repo := &TokenRepo{
 		Orm: app.Common.DB,
 	}

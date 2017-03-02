@@ -29,7 +29,10 @@ type CardsHandlers struct {
 }
 
 func Init(conf *config.App) *CardsHandlers {
-	db.Sync(conf.Common.DB)
+	err := db.Sync(conf.Common.DB)
+	if err != nil {
+		conf.Common.Logger.Fatalln("Cannot sync db", err)
+	}
 
 	respWrap := http.MakeResponseWrapper(conf.Common.Logger)
 	mode := makeCardMode(conf)
