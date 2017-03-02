@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"net/http"
-
 	"github.com/VirgilSecurity/virgild/config"
 	"github.com/valyala/fasthttp"
 )
@@ -41,8 +39,6 @@ func Init(app *config.App) *AuthHandler {
 		m = noAuth
 	case config.AuthModeLocal:
 		m = wrap(app.Common.Logger, app.Auth.TokenType, localScopes(repo))
-	case config.AuthModeExternal:
-		m = wrap(app.Common.Logger, app.Auth.TokenType, externalScopes(&vclient{HttpClient: &http.Client{}, Host: app.Auth.Params.Host}))
 	}
 	return &AuthHandler{
 		Middleware:  m,
