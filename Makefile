@@ -1,4 +1,4 @@
-.PHONY: get test test_all test_integration build clear build build_artifacts
+.PHONY: get test test_all test_integration build clear build build_artifacts build_docker
 docker: get test_all build_docker docker_test
 
 ARTF =virgild
@@ -35,7 +35,8 @@ build_in_docker: get
 	CGO_ENABLED=1 GOARCH=amd64 go build  --ldflags '-extldflags "-static"' -o build/docker/$(ARTF)
 
 build_docker:
-	docker run --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild golang:1.7 make build_in_docker
+	docker build -t docker_build -f build_docker .
+	docker run --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild docker_build make build_in_docker
 	docker build -t $(IMAGENAME) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) .
 
 docker_test:

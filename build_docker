@@ -1,0 +1,28 @@
+FROM ubuntu
+RUN apt-get update \
+        && apt-get install -y ca-certificates \
+        && update-ca-certificates \
+        && apt-get install -y --no-install-recommends wget cmake swig doxygen \
+        g++ \
+        gcc \
+        libc6-dev \
+        make \
+        pkg-config \
+        curl \
+        git \
+        && rm -rf /var/lib/apt/lists/*
+ENV GOLANG_VERSION 1.7.5
+ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
+RUN curl -fksSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
+        && tar -C /usr/local -xzf golang.tar.gz \
+        && rm golang.tar.gz
+ENV GOPATH /go
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+
+RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+RUN git clone https://github.com/VirgilSecurity/virgil-crypto.git \
+        && cd virgil-crypto \
+        && cmake -H. -B_build -DCMAKE_INSTALL_PREFIX=_install -DLANG=go -DINSTALL_CORE_LIBS=ON \
+        && cmake --build _build --target install \
+        && go get -d gopkg.in/virgilsecurity/virgil-crypto-go.v4 \
+        && cp -r _install/* $GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4
