@@ -104,7 +104,7 @@ func TestSyncSearchCards(t *testing.T) {
 	assert.NoError(t, err, "Cannot create virgil client")
 
 	card, err := vc.CreateCard(req)
-	assert.NoError(t, err, "Cannot create create card in the cloud")
+	assert.NoError(t, err, "Cannot create card in the cloud")
 
 	// HOT FIX
 	if card.Relations == nil {
