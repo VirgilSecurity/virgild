@@ -4,6 +4,7 @@ docker: get test_all build_docker docker_test
 ARTF =virgild
 IMAGENAME=$(ARTF)
 DOCKERHUB_REPOSITORY=virgilsecurity/$(IMAGENAME)
+OS = $(shell uname -s)
 
 define tag_docker
   @if [ "$(GIT_BRANCH)" = "master" ]; then \
@@ -15,7 +16,11 @@ define tag_docker
 endef
 
 get:
-	go get -v -t -tags docker  ./...
+	go get -v -d -t -tags docker  ./...
+ifeq ($(strip $(OS)),Linux)
+	wget https://cdn.virgilsecurity.com/crypto-go/virgil-crypto-2.0.4-go-linux-x86_64.tgz -P $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/
+	tar -xvf virgil-crypto-2.0.4-go-linux-x86_64.tgz --strip-components=1 -C $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/
+endif
 
 test_all: test test_integration
 
