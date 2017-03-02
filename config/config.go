@@ -18,6 +18,10 @@ func init() {
 	flag.StringVar(&defaultConfig.Auth.Mode, "auth-mode", "no", "Authentication mode")
 	flag.StringVar(&defaultConfig.Auth.Params.Host, "auth-address", "", "Remote authorization service address")
 	flag.StringVar(&defaultConfig.Auth.TokenType, "auth-token-type", "VIRGIL", "Authorization type")
+
+	flag.IntVar(&defaultConfig.Cards.Cache.Duration, "cards-cache-duration", 3600, "Cache duration")
+	flag.IntVar(&defaultConfig.Cards.Cache.SizeMb, "cards-cache-size", 0, "cache will not allocate more memory than this limit, value in MB. if value is reached then the oldest entries can be overridden for the new ones  0 value means no size limit")
+
 	flag.StringVar(&defaultConfig.Cards.Mode, "mode", "cache", "VirgilD service mode")
 	flag.StringVar(&defaultConfig.Cards.Remote.Authority.CardID, "authority-card-id", "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853", "Authority card id")
 	flag.StringVar(&defaultConfig.Cards.Remote.Authority.PublicKey, "authority-pubkey", "MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs=", "Authority public key")
@@ -32,6 +36,7 @@ func init() {
 	flag.StringVar(&defaultConfig.Cards.Signer.PrivateKeyPassword, "vd-key-password", "", "Password for Virgild private key")
 	flag.StringVar(&defaultConfig.Cards.VRA.CardID, "ra-card-id", "", "Registration Authority card id")
 	flag.StringVar(&defaultConfig.Cards.VRA.PublicKey, "ra-pubkey", "", "Registration Authority public key")
+
 	flag.StringVar(&defaultConfig.DB, "db", "sqlite3:virgild.db", "Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql")
 	flag.StringVar(&defaultConfig.LogFile, "log", "console", "Path to file log. 'console' is special value for print to stdout")
 	flag.StringVar(&defaultConfig.Address, "address", ":8080", "VirgilD address")
@@ -64,11 +69,17 @@ type RemoteConfig struct {
 	Authority AuthorityConfig `json:"authority,omitempty"`
 }
 
+type CardsCacheConfig struct {
+	Duration int
+	SizeMb   int
+}
+
 type CardsConfig struct {
-	Mode   string          `json:"mode"`
-	Signer SignerConfig    `json:"signer,omitempty"`
-	VRA    AuthorityConfig `json:"vra,omitempty"`
-	Remote RemoteConfig    `json:"remote,omitempty"`
+	Mode   string           `json:"mode"`
+	Signer SignerConfig     `json:"signer,omitempty"`
+	VRA    AuthorityConfig  `json:"vra,omitempty"`
+	Remote RemoteConfig     `json:"remote,omitempty"`
+	Cache  CardsCacheConfig `json:"cache"`
 }
 
 type AdminConfig struct {
@@ -108,6 +119,8 @@ func saveConfigToFole(config Config, file string) error {
 	saveStrVal(f, "auth-address", config.Auth.Params.Host)
 	saveStrVal(f, "auth-token-type", config.Auth.TokenType)
 	saveStrVal(f, "mode", config.Cards.Mode)
+	saveIntVal(f, "cards-cache-duration", config.Cards.Cache.Duration)
+	saveIntVal(f, "cards-cache-size", config.Cards.Cache.SizeMb)
 	saveStrVal(f, "authority-card-id", config.Cards.Remote.Authority.CardID)
 	saveStrVal(f, "authority-pubkey", config.Cards.Remote.Authority.PublicKey)
 	saveIntVal(f, "cache", config.Cards.Remote.Cache)

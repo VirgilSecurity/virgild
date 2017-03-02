@@ -38,6 +38,11 @@ type Remote struct {
 	VClient *virgil.Client
 }
 
+type Cache struct {
+	Duration time.Duration
+	Size     int
+}
+
 type CardMode string
 
 const (
@@ -51,6 +56,7 @@ type Cards struct {
 	Signer *Signer
 	VRA    *Authority
 	Remote Remote
+	Cache  Cache
 }
 
 type SiteAdmin struct {
@@ -192,6 +198,10 @@ func initCards(conf *CardsConfig) (cards Cards, err error) {
 	default:
 		err = fmt.Errorf("Unsupported cards mode (%v)", conf.Mode)
 		return
+	}
+	cards.Cache = Cache{
+		Duration: time.Duration(conf.Cache.Duration) * time.Second,
+		Size:     conf.Cache.SizeMb,
 	}
 	cards.VRA, err = initVRA(conf.VRA)
 	if err != nil {
