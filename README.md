@@ -92,7 +92,7 @@ $ docker pull virgilsecurity/virgild
 
 
 # Use `docker run` for the first time.
-$ docker run --name=virgild -p 80:8080 -e MODE=sync -e VD_CARD_ID={CARD_ID} VD_KEY={PRIVATE_KEY} virgilsecurity/virgild
+$ docker run --name=virgild -p 80:8080 -e MODE=sync -e VD_CARD_ID={CARD_ID} VD_KEY={PRIVATE_KEY} -e REMOTE_TOKEN={REMOTE_TOKEN} virgilsecurity/virgild
 
 # Use `docker start` if you stopped it.
 $ docker start virgild
