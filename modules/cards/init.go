@@ -9,6 +9,7 @@ import (
 	"github.com/VirgilSecurity/virgild/modules/cards/mode"
 	"github.com/VirgilSecurity/virgild/modules/cards/utils"
 	"github.com/VirgilSecurity/virgild/modules/cards/validator"
+	"github.com/allegro/bigcache"
 	"github.com/valyala/fasthttp"
 	virgil "gopkg.in/virgil.v4"
 )
@@ -33,6 +34,19 @@ func Init(conf *config.App) *CardsHandlers {
 	if err != nil {
 		conf.Common.Logger.Fatalln("Cannot sync db", err)
 	}
+
+	h, err := middleware.NewHasher()
+	if err != nil {
+		conf.Common.Logger.Fatalln("Cannot create hash function for cache", err)
+	}
+	cc := bigcache.DefaultConfig(conf.Cards.Cache.Duration)
+	cc.HardMaxCacheSize = conf.Cards.Cache.Size
+	cc.Hasher = h
+	cache, err := bigcache.NewBigCache(cc)
+	if err != nil {
+		conf.Common.Logger.Fatalln("Cannot create cache", err)
+	}
+	ch := middleware.MakeCache(cache)
 
 	respWrap := http.MakeResponseWrapper(conf.Common.Logger)
 	mode := makeCardMode(conf)
@@ -65,8 +79,8 @@ func Init(conf *config.App) *CardsHandlers {
 	}
 
 	return &CardsHandlers{
-		GetCard:     respWrap(http.GetCard(mode.Get)),
-		SearchCards: respWrap(http.SearchCards(middleware.SetApplicationScopForSearch(validator.SearchCards(mode.Search)))),
+		GetCard:     ch(respWrap(http.GetCard(mode.Get))),
+		SearchCards: ch(respWrap(http.SearchCards(middleware.SetApplicationScopForSearch(validator.SearchCards(mode.Search))))),
 		CreateCard:  respWrap(http.CreateCard(validator.CreateCard(createCard))),
 		RevokeCard:  respWrap(http.RevokeCard(validator.RevokeCard(revokeCard))),
 		CountCards:  respWrap(http.GetCountCards(&db.CardRepository{Orm: conf.Common.DB})),
