@@ -34,7 +34,7 @@ func MakeCache(cache *bigcache.BigCache) func(next fasthttp.RequestHandler) fast
 		return func(ctx *fasthttp.RequestCtx) {
 			key := fmt.Sprintf("%s_%s_%s", ctx.Method(), ctx.Path(), ctx.PostBody())
 			r, err := cache.Get(key)
-			if err == nil {
+			if err == nil && len(key) == 0 {
 				ctx.Success("application/json", r)
 				return
 			}
