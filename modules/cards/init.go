@@ -7,9 +7,7 @@ import (
 	"github.com/VirgilSecurity/virgild/modules/cards/http"
 	"github.com/VirgilSecurity/virgild/modules/cards/middleware"
 	"github.com/VirgilSecurity/virgild/modules/cards/mode"
-	"github.com/VirgilSecurity/virgild/modules/cards/utils"
 	"github.com/VirgilSecurity/virgild/modules/cards/validator"
-	"github.com/allegro/bigcache"
 	"github.com/valyala/fasthttp"
 	virgil "gopkg.in/virgil.v4"
 )
@@ -35,29 +33,13 @@ func Init(conf *config.App) *CardsHandlers {
 		conf.Common.Logger.Fatalln("Cannot sync db", err)
 	}
 
-	h, err := middleware.NewHasher()
-	if err != nil {
-		conf.Common.Logger.Fatalln("Cannot create hash function for cache", err)
-	}
-	cc := bigcache.DefaultConfig(conf.Cards.Cache.Duration)
-	cc.HardMaxCacheSize = conf.Cards.Cache.Size
-	cc.Hasher = h
-	cache, err := bigcache.NewBigCache(cc)
-	if err != nil {
-		conf.Common.Logger.Fatalln("Cannot create cache", err)
-	}
-	ch := middleware.MakeCache(cache)
-
 	respWrap := http.MakeResponseWrapper(conf.Common.Logger)
-	mode := makeCardMode(conf)
-
-	createCard, revokeCard := mode.Create, mode.Revoke
+	getCard, searchCards, createCard, revokeCard := makeCardMode(conf)
 
 	if conf.Cards.Mode != config.CardModeCache {
-		signer := middleware.MakeSigner(conf.Cards.Signer.CardID, conf.Cards.Signer.PrivateKey)
 		if conf.Cards.Signer.Card != nil { // first run
 			card := conf.Cards.Signer.Card
-			mode.Create(&core.CreateCardRequest{
+			createCard(&core.CreateCardRequest{
 				Info: virgil.CardModel{
 					Identity:     card.Identity,
 					IdentityType: card.IdentityType,
@@ -74,13 +56,14 @@ func Init(conf *config.App) *CardsHandlers {
 			})
 		}
 
+		signer := middleware.MakeSigner(conf.Cards.Signer.CardID, conf.Cards.Signer.PrivateKey)
 		createCard = middleware.SignCreateRequest(signer, createCard)
 		revokeCard = middleware.SignRevokeRequest(signer, revokeCard)
 	}
 
 	return &CardsHandlers{
-		GetCard:     ch(respWrap(http.GetCard(mode.Get))),
-		SearchCards: ch(respWrap(http.SearchCards(middleware.SetApplicationScopForSearch(validator.SearchCards(mode.Search))))),
+		GetCard:     respWrap(http.GetCard(getCard)),
+		SearchCards: respWrap(http.SearchCards(middleware.SetApplicationScopForSearch(validator.SearchCards(searchCards)))),
 		CreateCard:  respWrap(http.CreateCard(validator.CreateCard(createCard))),
 		RevokeCard:  respWrap(http.RevokeCard(validator.RevokeCard(revokeCard))),
 		CountCards:  respWrap(http.GetCountCards(&db.CardRepository{Orm: conf.Common.DB})),
@@ -88,31 +71,50 @@ func Init(conf *config.App) *CardsHandlers {
 
 }
 
-func makeCardMode(conf *config.App) cardMode {
+func makeCardMode(conf *config.App) (get core.GetCard, search core.SearchCards, create core.CreateCard, revoke core.RevokeCard) {
 	cardRepo := &db.CardRepository{
 		Orm:   conf.Common.DB,
 		Cache: conf.Cards.Remote.Cache,
 	}
+
 	switch conf.Cards.Mode {
 	case config.CardModeCache:
-		return &mode.CacheModeHandler{
-			Remote: conf.Cards.Remote.VClient,
-			Repo:   cardRepo,
+		remote := mode.RemoteCardsMiddleware{
+			Client: conf.Cards.Remote.VClient,
 		}
+		get = remote.Get
+		search = remote.Search
+		create = remote.Create
+		revoke = remote.Revoke
 	case config.CardModeLocal:
-		return &mode.DefaultModeCardHandler{
+		dummy := mode.DummyCardsMiddleware{}
+		local := mode.LocalCardsMiddleware{
 			Repo: cardRepo,
-			Fingerprint: &utils.Fingerprint{
-				Crypto: virgil.Crypto(),
-			},
 		}
+		get = local.Get(dummy.Get)
+		search = local.Search(dummy.Search)
+		create = local.Create(dummy.Create)
+		revoke = local.Revoke(dummy.Revoke)
 	case config.CardModeSync:
-		return &mode.AppModeCardHandler{
-			Repo:   cardRepo,
-			Remote: conf.Cards.Remote.VClient,
+		remote := mode.RemoteCardsMiddleware{
+			Client: conf.Cards.Remote.VClient,
 		}
+		local := mode.LocalCardsMiddleware{
+			Repo: cardRepo,
+		}
+
+		get = local.Get(remote.Get)
+		search = local.Search(remote.Search)
+		create = local.Create(remote.Create)
+		revoke = local.Revoke(remote.Revoke)
 	default:
 		conf.Common.Logger.Fatalln("Unsupported cards mode (%v)", conf.Cards.Mode)
-		return nil
+		return nil, nil, nil, nil
 	}
+
+	cache := mode.CacheCardsMiddleware{Manager: conf.Common.Cache}
+	return cache.Get(get),
+		cache.Search(search),
+		cache.Create(create),
+		cache.Revoke(revoke)
 }

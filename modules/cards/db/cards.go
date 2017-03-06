@@ -55,6 +55,11 @@ func (r *CardRepository) Add(cs core.SqlCard) error {
 	return err
 }
 
+func (r *CardRepository) MarkDeletedById(id string) error {
+	_, err := r.Orm.Where("card_id =?", id).Cols("deleted").Update(&core.SqlCard{Deleted: true})
+	return err
+}
+
 func (r *CardRepository) DeleteById(id string) error {
 	_, err := r.Orm.Where("card_id =?", id).Delete(new(core.SqlCard))
 	return err
@@ -74,7 +79,7 @@ func (r *CardRepository) DeleteBySearch(identitis []string, identityType string,
 
 func (r *CardRepository) Count() (int64, error) {
 	now := time.Now().UTC().Unix()
-	count, err := r.Orm.Where("error_code=0").And("expire_at>?", now).Count(new(core.SqlCard))
+	count, err := r.Orm.Where("expire_at>?", now).Count(new(core.SqlCard))
 	if err != nil {
 		return 0, err
 	}

@@ -1,79 +1,92 @@
 package mode
 
 import (
-	"time"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/VirgilSecurity/virgild/modules/cards/core"
 	virgil "gopkg.in/virgil.v4"
-	"gopkg.in/virgil.v4/errors"
 )
 
-type CacheModeHandler struct {
-	Repo   CardRepository
-	Remote VirgilClient
+type CacheManager interface {
+	Get(key string, val interface{}) bool
+	Set(key string, val interface{})
+	Del(key string)
 }
 
-func (h *CacheModeHandler) Get(id string) (*core.Card, error) {
-	c, err := h.Repo.Get(id)
-	if err == core.ErrorEntityNotFound {
-		return getFromRemote(h.Remote, h.Repo, id)
-	}
-	if err != nil {
-		return nil, err
-	}
-	if c.ExpireAt < time.Now().Unix() {
-		h.Repo.DeleteById(id)
-		return getFromRemote(h.Remote, h.Repo, id)
-	}
-
-	return sqlCard2Card(c)
+type CacheCardsMiddleware struct {
+	Manager CacheManager
 }
 
-func (h *CacheModeHandler) Search(criteria *virgil.Criteria) ([]core.Card, error) {
-	cards, err := h.Repo.Find(criteria.Identities, criteria.IdentityType, string(criteria.Scope))
-	if err != nil {
-		return nil, err
-	}
-	if len(cards) == 0 {
-		return searchFromRemote(h.Remote, h.Repo, criteria)
-	}
-
-	for _, v := range cards {
-		if v.ExpireAt < time.Now().Unix() {
-			h.Repo.DeleteBySearch(criteria.Identities, criteria.IdentityType, string(criteria.Scope))
-			return searchFromRemote(h.Remote, h.Repo, criteria)
+func (ccm *CacheCardsMiddleware) Get(next core.GetCard) core.GetCard {
+	return func(id string) (card *core.Card, err error) {
+		if has := ccm.Manager.Get(id, &card); !has {
+			card, err = next(id)
+			if err != nil {
+				return
+			}
+			ccm.Manager.Set(id, card)
+			return
 		}
+		return
 	}
-	return sqlCards2Cards(cards)
 }
 
-func (h *CacheModeHandler) Create(req *core.CreateCardRequest) (*core.Card, error) {
-	c, err := h.Remote.CreateCard(&req.Request)
-	if err != nil {
-		ve, ok := errors.ToSdkError(err)
-		if ok && ve.IsServiceError() {
-			return nil, core.ResponseErrorCode(ve.ServiceErrorCode())
-		}
-		return nil, err
-	}
-	scard, err := vcard2SqlCard(c)
-	if err != nil {
-		return nil, err
-	}
-	h.Repo.Add(*scard)
+func (ccm *CacheCardsMiddleware) Search(next core.SearchCards) core.SearchCards {
+	return func(crit *virgil.Criteria) (cards []core.Card, err error) {
+		var ids []string
 
-	return vcard2Card(c), nil
+		sort.Strings(crit.Identities)
+		key := fmt.Sprint(crit.IdentityType, crit.Scope, strings.Join(crit.Identities, "_"))
+
+		if ccm.Manager.Get(key, ids) {
+			var miss bool
+			for _, id := range ids {
+				var card core.Card
+				if has := ccm.Manager.Get(id, &card); !has {
+					miss = true
+					break
+				}
+				cards = append(cards, card)
+			}
+
+			if !miss {
+				return
+			}
+		}
+
+		cards, err = next(crit)
+		if err != nil {
+			return
+		}
+
+		for _, card := range cards {
+			ids = append(ids, card.ID)
+			ccm.Manager.Set(card.ID, &card)
+		}
+
+		ccm.Manager.Set(key, ids)
+		return
+	}
 }
 
-func (h *CacheModeHandler) Revoke(req *core.RevokeCardRequest) error {
-	err := h.Remote.RevokeCard(&req.Request)
-	if err != nil {
-		ve, ok := errors.ToSdkError(err)
-		if ok && ve.IsServiceError() {
-			return core.ResponseErrorCode(ve.ServiceErrorCode())
+func (ccm *CacheCardsMiddleware) Create(next core.CreateCard) core.CreateCard {
+	return func(req *core.CreateCardRequest) (card *core.Card, err error) {
+		card, err = next(req)
+		if err == nil {
+			ccm.Manager.Set(card.ID, card)
 		}
-		return err
+		return
 	}
-	h.Repo.DeleteById(req.Info.ID)
-	return nil
+}
+
+func (ccm *CacheCardsMiddleware) Revoke(next core.RevokeCard) core.RevokeCard {
+	return func(req *core.RevokeCardRequest) (err error) {
+		err = next(req)
+		if err == nil {
+			ccm.Manager.Del(req.Info.ID)
+		}
+		return
+	}
 }

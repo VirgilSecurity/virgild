@@ -9,7 +9,6 @@ type SqlCard struct {
 	Scope        string
 	ExpireAt     int64
 	Deleted      bool
-	ErrorCode    int `xorm:"notnull"`
 	Card         []byte
 }
 
