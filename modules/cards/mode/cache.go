@@ -40,7 +40,7 @@ func (ccm *CacheCardsMiddleware) Search(next core.SearchCards) core.SearchCards 
 		sort.Strings(crit.Identities)
 		key := fmt.Sprint(crit.IdentityType, crit.Scope, strings.Join(crit.Identities, "_"))
 
-		if ccm.Manager.Get(key, ids) {
+		if ccm.Manager.Get(key, &ids) {
 			var miss bool
 			for _, id := range ids {
 				var card core.Card
@@ -61,6 +61,7 @@ func (ccm *CacheCardsMiddleware) Search(next core.SearchCards) core.SearchCards 
 			return
 		}
 
+		ids = ids[:0]
 		for _, card := range cards {
 			ids = append(ids, card.ID)
 			ccm.Manager.Set(card.ID, &card)
