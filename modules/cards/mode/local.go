@@ -27,17 +27,6 @@ func sqlCard2Card(sql *core.SqlCard) (*core.Card, error) {
 	return card, nil
 }
 
-func sqlCards2Cards(sql []core.SqlCard) ([]core.Card, error) {
-	cards := make([]core.Card, 0)
-	for _, v := range sql {
-		c, err := sqlCard2Card(&v)
-		if err == nil {
-			cards = append(cards, *c)
-		}
-	}
-	return cards, nil
-}
-
 func card2SqlCard(card *core.Card) (*core.SqlCard, error) {
 	var info virgil.CardModel
 	err := json.Unmarshal(card.Snapshot, &info)
@@ -129,12 +118,26 @@ func (lcm *LocalCardsMiddleware) Search(next core.SearchCards) core.SearchCards 
 
 		ct := time.Now().Unix()
 		for _, v := range cards {
+			if v.Deleted {
+				continue
+			}
 			if v.ExpireAt < ct {
 				lcm.Repo.DeleteBySearch(criteria.Identities, criteria.IdentityType, string(criteria.Scope))
 				return serchFromNext(criteria)
 			}
 		}
-		return sqlCards2Cards(cards)
+
+		cs := make([]core.Card, 0, len(cards))
+		for _, v := range cards {
+			if v.Deleted {
+				continue
+			}
+			c, err := sqlCard2Card(&v)
+			if err == nil {
+				cs = append(cs, *c)
+			}
+		}
+		return cs, nil
 	}
 }
 
