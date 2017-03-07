@@ -43,7 +43,7 @@ func main() {
 	r.PUT("/api/tokens/:id", a.Auth(au.UpdateToken))
 
 	r.GET("/health/status", h.Status)
-	r.GET("/health/info", h.Info)
+	r.GET("/health/info", a.Auth(h.Info))
 
 	panic(fasthttp.ListenAndServe(conf.Common.Address, r.Handler))
 }
