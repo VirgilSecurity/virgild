@@ -9,12 +9,13 @@ Our first generation cloud-based cryptography and key management system uses a c
 **VirgilD** is a public key management system which is fully compatible with [Virgil cloud](https://virgilsecurity.com). VirgilD can work like a caching service of public keys and also like a standalone version. It is the core of distributed key management system. It operates in a chainable manner allowing to build decentralized trust models at any scale.
 
 VirgilD features:
-- It is  100% API compatible with the cloud
+- It is  100% API compatible with the Virgil Cloud
 - VirgilD instances can work as a cache to the cloud, speeding up the access to your keys..
 - VirgilD instances can work as a cache to other VirgilD instances, thus forming an infinite scale trusted information database
 - It has a pluggable network engine architecture. Right now it supports only HTTP(S) but we will add other protocols soon
+- Local PKI
 
-Our reference implementation is written in Go language and runs on Linux and Windows servers. It provides a software interface to store cryptographically validated objects as well as provide a simple validation mechanism for any data secured by the system.
+Our reference implementation is written in Go language and runs on Linux and Windows  native mode or via docker in any docker supported platform. It provides a software interface to store cryptographically validated objects as well as provide a simple validation mechanism for any data secured by the system.
 
 VirgilD will significantly speed up the worldwide adoption of secure messaging, distributed identity management, verifiable and cryptographically protected content distribution, asset management, and many other use cases that rely on cryptographically validated security and trust.
 
@@ -101,18 +102,19 @@ $ docker start virgild
 ## Check
 
 ```
-$ curl http://localhost/health/status -v
+$ curl http://localhost/health/info -H 'Authorization: Basic YWRtaW46YWRtaW4=' -v
 ```
+
+where [basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication) is credentials for your admin panel. For previous request used default credential (login: admin, password: admin)
 
 ## Settings
 * *db* - database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql (by default `virgild.db`)
 * *VirgilD card* - it's VirgilD card id and private key settings used in sync mode. VirgilD will sign all creating or deleting card requests which go through it. If it not set VirgilD will create card and private key on the first run and store them into local storage. You can get public key information by issuing the following curl command
 
 ```
-$ curl http://localhost:8080/api/card -H 'Authorization: Basic YWRtaW46YWRtaW4='
+$ curl http://localhost:8080/api/card
 ```
 
-where basic authentication is credentials for your admin panel.
 * *Authority card* - It's a card whose signature we trust. If this parameter is set up then a client's card must have signature of the authority. The parameter contains of two values: card ID card and public key
 * *Auth mode* - it's authentication mode for getting access to VirgilD. It can take two values: no and local. No mode - will give you full access to VirgilD without any permissions. Local mode - provides permissions by tokens. ([Settup token base permission](#appendix-b-token-base-permission))
 
@@ -184,6 +186,8 @@ address | ADDRESS | ADDRESS | VirgilD address
 
 * Set auth-mode to local value and admin-enabled
 * Restart service
+
+_[Basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication) is credentials for your admin panel. For all following requests used default credential (login: admin, password: admin)_
 
 ## Create token
 
