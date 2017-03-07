@@ -24,9 +24,6 @@ func vcard2Card(vcard *virgil.Card) *core.Card {
 			Relations:   vcard.Relations,
 		},
 	}
-	if c.Meta.Relations == nil {
-		c.Meta.Relations = make(map[string][]byte)
-	}
 	return c
 }
 
