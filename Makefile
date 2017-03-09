@@ -38,11 +38,13 @@ build:
 
 build_in_docker:
 	go get -v  ./...
-	CGO_ENABLED=1 GOARCH=amd64 go build  --ldflags '-extldflags "-static"' -o build/docker/$(ARTF)
+	CGO_ENABLED=1 GOARCH=amd64 go build -tags=c_crypto  --ldflags '-extldflags "-static"' -o build/docker/$(ARTF)
 
-build_docker:
+build/docker/$(ARTF):
 	docker build -t build_docker -f build_docker .
 	docker run --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild build_docker make build_in_docker
+
+build_docker: build/docker/$(ARTF)
 	docker build -t $(IMAGENAME) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) .
 
 docker_test:
@@ -72,22 +74,25 @@ endif
 	go test -tags=docker -run Local -v
 	docker-compose down
 
-docker_dockerhub_tag:
+docker_dockerhub_publish:
 	$(call tag_docker, $(DOCKERHUB_REPOSITORY))
-
-docker_dockerhub_push:
 	docker push $(DOCKERHUB_REPOSITORY)
 
 docker_inspect:
 		docker inspect -f '{{index .ContainerConfig.Labels "git-commit"}}' $(IMAGENAME)
 		docker inspect -f '{{index .ContainerConfig.Labels "git-branch"}}' $(IMAGENAME)
 
-build_artifacts: clear get
-	CGO_ENABLED=1 GOARCH=amd64 go build  --ldflags '-extldflags "-static"' -o build/linux_x64/$(ARTF)
-#	CGO_ENABLED=1 GOARCH=386 go build  --ldflags '-extldflags "-static"' -o build/linux_x86/$(ARTF)
-#	CGO_ENABLED=1 GOARCH=arm go build  --ldflags '-extldflags "-static"' -o build/linux_arm/$(ARTF)
+build_artifacts: get build/linux-amd64.tar.gz build/windows-amd64.zip build/macosx-amd64.tar.gz
 
-	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build  --ldflags '-extldflags "-static"' -o build/windows_x86/$(ARTF).exe
-#	CGO_ENABLED=1 GOOS=windows GOARCH=386 CC=x86_64-w64-mingw32-gcc go build  --ldflags '-extldflags "-static"' -o build/windows_x64/$(ARTF).exe
+build/linux-amd64.tar.gz: build/docker/$(ARTF)
+	mkdir -p build/linux-amd64/$(ARTF)
+	mv build/docker/$(ARTF) build/linux-amd64/$(ARTF)/$(ARTF)
+	tar -zcvf build/linux-amd64.tar.gz -C build/linux-amd64/ .
 
-	CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 CC=o64-clang go build  -o build/macos/$(ARTF)
+build/windows-amd64.zip:
+	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build  --ldflags '-extldflags "-static"' -o build/windows-amd64/$(ARTF)/$(ARTF).exe
+	cd build/windows-amd64 &&	zip -r ../windows-amd64.zip . &&	cd ../..
+
+build/macosx-amd64.tar.gz:
+	CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 CC=o64-clang go build -tags=c_crypto  -o build/macosx-amd64/$(ARTF)/$(ARTF)
+	tar -zcvf build/macosx-amd64.tar.gz -C build/macosx-amd64/ .

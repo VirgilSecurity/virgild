@@ -20,7 +20,6 @@ import (
 	virgil "gopkg.in/virgil.v4"
 	"gopkg.in/virgil.v4/transport/virgilhttp"
 	"gopkg.in/virgil.v4/virgilcrypto"
-	crypto "gopkg.in/virgilsecurity/virgil-crypto-go.v4"
 )
 
 type Signer struct {
@@ -107,7 +106,6 @@ type App struct {
 func Init() *App {
 	var err error
 	app := new(App)
-	virgilcrypto.DefaultCrypto = &crypto.NativeCrypto{}
 
 	flag.Parse()
 
