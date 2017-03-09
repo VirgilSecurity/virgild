@@ -24,7 +24,7 @@ script:
   - make docker
   - make build/windows-amd64.zip
   - make build/linux-amd64.tar.gz
-  - make docker_dockerhub_publish
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then make docker_dockerhub_publish; fi'
 
 after_seccess:
   - make docker_inspect
