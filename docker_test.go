@@ -412,7 +412,7 @@ func TestLocalRevokeCard(t *testing.T) {
 	assert.NoError(t, err, "Cannot self sign")
 
 	card, err := client.CreateCard(req)
-	assert.NoError(t, err, "Cannot create create card in the cloud")
+	assert.NoError(t, err, "Cannot create card in the local storage")
 
 	req, _ = virgil.NewRevokeCardRequest(card.ID, virgil.RevocationReason.Unspecified)
 	err = client.RevokeCard(req)

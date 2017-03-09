@@ -19,13 +19,6 @@ type HealthChecker struct {
 }
 
 func (h *HealthChecker) Status(ctx *fasthttp.RequestCtx) {
-	r := h.check()
-	for _, v := range r {
-		if v.Status != fasthttp.StatusOK {
-			ctx.SetStatusCode(v.Status)
-			return
-		}
-	}
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 

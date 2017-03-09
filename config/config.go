@@ -19,8 +19,8 @@ func init() {
 	flag.StringVar(&defaultConfig.Auth.Params.Host, "auth-address", "", "Remote authorization service address")
 	flag.StringVar(&defaultConfig.Auth.TokenType, "auth-token-type", "VIRGIL", "Authorization type")
 
-	flag.IntVar(&defaultConfig.Cards.Cache.Duration, "cards-cache-duration", 3600, "Cache duration")
-	flag.IntVar(&defaultConfig.Cards.Cache.SizeMb, "cards-cache-size", 0, "cache will not allocate more memory than this limit, value in MB. if value is reached then the oldest entries can be overridden for the new ones  0 value means no size limit")
+	flag.IntVar(&defaultConfig.Cards.Cache.Duration, "cache-duration", 3600, "Cache duration")
+	flag.IntVar(&defaultConfig.Cards.Cache.SizeMb, "cache-size", 1024, "cache will not allocate more memory than this limit, value in MB. if value is reached then the oldest entries can be overridden for the new ones  0 value means no size limit")
 
 	flag.StringVar(&defaultConfig.Cards.Mode, "mode", "cache", "VirgilD service mode")
 	flag.StringVar(&defaultConfig.Cards.Remote.Authority.CardID, "authority-card-id", "3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853", "Authority card id")
@@ -119,8 +119,8 @@ func saveConfigToFole(config Config, file string) error {
 	saveStrVal(f, "auth-address", config.Auth.Params.Host)
 	saveStrVal(f, "auth-token-type", config.Auth.TokenType)
 	saveStrVal(f, "mode", config.Cards.Mode)
-	saveIntVal(f, "cards-cache-duration", config.Cards.Cache.Duration)
-	saveIntVal(f, "cards-cache-size", config.Cards.Cache.SizeMb)
+	saveIntVal(f, "cache-duration", config.Cards.Cache.Duration)
+	saveIntVal(f, "cache-size", config.Cards.Cache.SizeMb)
 	saveStrVal(f, "authority-card-id", config.Cards.Remote.Authority.CardID)
 	saveStrVal(f, "authority-pubkey", config.Cards.Remote.Authority.PublicKey)
 	saveIntVal(f, "cache", config.Cards.Remote.Cache)

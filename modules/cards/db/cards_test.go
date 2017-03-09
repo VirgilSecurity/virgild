@@ -204,6 +204,28 @@ func TestAdd_ScopeApplication_NeverExp(t *testing.T) {
 	assert.Equal(t, time.Date(2999, 1, 1, 0, 0, 0, 0, time.UTC).Unix(), actual.ExpireAt)
 }
 
+func TestMarkDeletedById_Remove(t *testing.T) {
+	orm, err := initDB()
+	assert.Nil(t, err, "Cannot init db")
+	defer finDB(orm)
+
+	orm.InsertOne(core.SqlCard{
+		CardID:       "removeByID",
+		Identity:     "removeByIDIdenityt",
+		Scope:        "removeByIDScope",
+		IdentityType: "removeByIDNick",
+		ExpireAt:     time.Date(2016, 1, 1, 0, 0, 0, 0, time.UTC).Unix(),
+	})
+	repo := CardRepository{time.Hour, orm}
+	err = repo.MarkDeletedById("removeByID")
+	assert.Nil(t, err)
+	var actual core.SqlCard
+	has, _ := orm.Where("card_id=?", "removeByID").Get(&actual)
+
+	assert.True(t, has)
+	assert.True(t, actual.Deleted)
+}
+
 func TestDeleteById_Remove(t *testing.T) {
 	orm, err := initDB()
 	assert.Nil(t, err, "Cannot init db")
@@ -305,13 +327,7 @@ func TestCount_ReturnCount(t *testing.T) {
 	assert.Nil(t, err, "Cannot init db")
 	defer finDB(orm)
 
-	orm.Insert(core.SqlCard{ // Skeeped because ErrorCode !=0
-		Identity:     "test1",
-		Scope:        "global",
-		IdentityType: "nick",
-		ExpireAt:     time.Now().AddDate(10, 0, 0).Unix(),
-		ErrorCode:    404,
-	}, core.SqlCard{ // Skeeped because ExpireAt < now
+	orm.Insert(core.SqlCard{ // Skeeped because ExpireAt < now
 		Identity:     "test2",
 		Scope:        "app",
 		IdentityType: "nick",

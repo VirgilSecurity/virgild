@@ -39,21 +39,8 @@ func makeInfoFunc(r map[string]interface{}, err error) info {
 	}
 }
 
-func TestStatus_CheckerReturnErr_ReturnBadRequest(t *testing.T) {
-	h := HealthChecker{checkList: map[string]info{
-		"test": makeInfoFunc(nil, fmt.Errorf("error")),
-	},
-	}
-	ctx := makeRequestCtx(nil)
-	h.Status(ctx)
-
-	assert.Equal(t, fasthttp.StatusBadRequest, ctx.Response.StatusCode())
-}
-
 func TestStatus_CheckerInfo_ReturnOk(t *testing.T) {
-	h := HealthChecker{checkList: map[string]info{
-		"test": makeInfoFunc(nil, nil),
-	}}
+	h := HealthChecker{}
 	ctx := makeRequestCtx(nil)
 	h.Status(ctx)
 

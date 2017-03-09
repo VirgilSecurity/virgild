@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allegro/bigcache"
 	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
@@ -38,11 +39,6 @@ type Remote struct {
 	VClient *virgil.Client
 }
 
-type Cache struct {
-	Duration time.Duration
-	Size     int
-}
-
 type CardMode string
 
 const (
@@ -56,7 +52,6 @@ type Cards struct {
 	Signer *Signer
 	VRA    *Authority
 	Remote Remote
-	Cache  Cache
 }
 
 type SiteAdmin struct {
@@ -78,6 +73,7 @@ type Common struct {
 	DB           *xorm.Engine
 	Logger       *log.Logger
 	Config       Config
+	Cache        *CacheManager
 	ConfigUpdate *Updater
 	ConfigPath   string
 	Address      string
@@ -134,6 +130,11 @@ func Init() *App {
 		panic(err)
 	}
 	app.Cards, err = initCards(&conf.Cards)
+	if err != nil {
+		panic(err)
+	}
+
+	app.Common.Cache, err = initCache(conf.Cards.Cache, app.Common.Logger)
 	if err != nil {
 		panic(err)
 	}
@@ -198,10 +199,6 @@ func initCards(conf *CardsConfig) (cards Cards, err error) {
 	default:
 		err = fmt.Errorf("Unsupported cards mode (%v)", conf.Mode)
 		return
-	}
-	cards.Cache = Cache{
-		Duration: time.Duration(conf.Cache.Duration) * time.Second,
-		Size:     conf.Cache.SizeMb,
 	}
 	cards.VRA, err = initVRA(conf.VRA)
 	if err != nil {
@@ -294,6 +291,22 @@ func createVirgilCard(key virgilcrypto.PrivateKey) (*virgil.Card, error) {
 		Snapshot:     req.Snapshot,
 		Signatures:   req.Meta.Signatures,
 	}, nil
+}
+
+func initCache(conf CardsCacheConfig, logger *log.Logger) (*CacheManager, error) {
+	hasher, err := newHasher()
+	if err != nil {
+		return nil, fmt.Errorf("Cannot create hash function for cache: %v", err)
+	}
+
+	cc := bigcache.DefaultConfig(time.Duration(conf.Duration) * time.Second)
+	cc.HardMaxCacheSize = conf.SizeMb
+	cc.Hasher = hasher
+	cache, err := bigcache.NewBigCache(cc)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot create cache: %v", err)
+	}
+	return &CacheManager{Cache: cache, Logger: logger}, nil
 }
 
 func initRemote(conf RemoteConfig) (Remote, error) {
