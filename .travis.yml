@@ -19,8 +19,7 @@ install:
 
 script:
   - make docker
-  - make docker_dockerhub_tag
-  - make docker_dockerhub_push
+  - make docker_dockerhub_publish
 
 after_seccess:
   - make docker_inspect
