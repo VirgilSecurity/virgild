@@ -82,7 +82,7 @@ docker_inspect:
 		docker inspect -f '{{index .ContainerConfig.Labels "git-commit"}}' $(IMAGENAME)
 		docker inspect -f '{{index .ContainerConfig.Labels "git-branch"}}' $(IMAGENAME)
 
-build_artifacts: get build/linux-amd64.tar.gz build/windows-amd64.zip
+build_artifacts: get build/linux-amd64.tar.gz build/windows-amd64.zip build/macosx-amd64.tar.gz
 
 build/linux-amd64.tar.gz: build/docker/$(ARTF)
 	mkdir -p build/linux-amd64/$(ARTF)

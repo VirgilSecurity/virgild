@@ -14,6 +14,7 @@ go:
   - 1.7.x
 
 before_install:
+  - mkdir build
   - docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD"
 
 install:
@@ -22,7 +23,11 @@ install:
 
 script:
   - make docker
-  - make build_artifacts
+  - ls -l
+  - ls -l build
+  - chmod -R 777 build
+  - make build/windows-amd64.zip
+  - make build/linux-amd64.tar.gz
   - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then make docker_dockerhub_publish; fi'
 
 after_seccess:
