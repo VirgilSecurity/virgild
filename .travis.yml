@@ -22,8 +22,8 @@ install:
 
 script:
   - make docker
-  - make build/windows-amd64.zip
-  - make build/linux-amd64.tar.gz
+  - sudo make build/windows-amd64.zip
+  - sudo make build/linux-amd64.tar.gz
   - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then make docker_dockerhub_publish; fi'
 
 after_seccess:
