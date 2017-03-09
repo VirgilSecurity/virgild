@@ -2,10 +2,12 @@ sudo: required
 
 services:
   - docker
+
 env:
   global:
     - GIT_COMMIT=$TRAVIS_COMMIT
     - GIT_BRANCH=$TRAVIS_BRANCH
+
 language: go
 
 go:
@@ -13,19 +15,33 @@ go:
 
 before_install:
   - docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD"
+
 install:
   - echo $GIT_COMMIT $GIT_BRANCH
-
+  - sudo apt-get install -y mingw-w64 zip
 
 script:
   - make docker
-  - make docker_dockerhub_tag
-  - make docker_dockerhub_push
+  - sudo chmod -R 777 build
+  - make build/windows-amd64.zip
+  - make build/linux-amd64.tar.gz
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then make docker_dockerhub_publish; fi'
 
 after_seccess:
   - make docker_inspect
 
 branches:
   only:
-  - master
-  - /^v\d+\.\d+$/
+    - master
+    - "/^v\\d+\\.\\d+$/"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: e7OBw+5zpLhH/oxyl98Xka+rBssCmWn2zsBiJDXjLLVB9rVozFPKXfUcQZ9yq7gnbo27NB1hfijKvdAZmR4lTRAmfuW+G4Q/9T3XKQ4X16Zc4r8YyIrSzljU9jRu9fOWCJ9gR21j9CvNIJtvzdoVmHmfufEQFKuqoOz2qnq5OV4a88Z5ZgfsW390TNBPz1N37pvf8T/erP7E78gunjoNhKBbqU5HqQe693vh8lIwlI89xhyqvN/6M53oA03E0UhC/TnFbOhCGvz9QIMEc4RspZPqDRtCpECnxPOiu+y9tKcCttT6wjlr5p8b3JcA/j3XnkYVrFg671yxlpDypcYhX8eGx0j3J2fNGk9q1t0g2V4ZBxcWNtgZXp/RL5NfINFAdYEXOlwAKJ/fItbN/1+RT7arGAzCGnafU/bjm2d+OCrxeCyVfuEhLWfDc35GqRpc8d1JR4ywj7t7lFj1VmyMAV9WgjXlq1jXBR2/P+BZBZqHo25H1VJT6PFFNzfNVcGaGzPuDPMOkVOeZWVWy5s1l+EzMfdoMmeBAmsaOhclpuHGs7wxJ5e3fnKCMnAxoYeyJo1itujXj3jCVlHzInlba//Q3q6MkTDt4ZqRR6l5dRKhlDqAEWh5Dadl2almHqfw4X62SEhRAOVr37TDfN+fcmkydGTx+P0Sc2r65VjOWjI=
+  skip_cleanup: true
+  file:
+    - build/windows-amd64.zip
+    - build/linux-amd64.tar.gz
+  on:
+    tags: true
