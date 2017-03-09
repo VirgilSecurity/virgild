@@ -18,6 +18,7 @@ before_install:
 
 install:
   - echo $GIT_COMMIT $GIT_BRANCH
+  - sudo apt-get intstall -y mingw-w64 zip
 
 script:
   - make docker
