@@ -13,9 +13,13 @@ matrix:
           - GIT_COMMIT=$TRAVIS_COMMIT
           - GIT_BRANCH=$TRAVIS_BRANCH
           - TARGET_OS=linux
+      addons:
+        apt:
+          packages:
+            - swig
 # WINDOWS
     - os: linux
-      sudo: false
+      sudo: required
       language: go
       go: 1.7.5
       env:
