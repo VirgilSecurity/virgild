@@ -56,7 +56,7 @@ ifeq ($(C_CRYPTO),true)
 endif
 
 get: $(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.go
-	go get -v -t -tags docker  ./...
+	go get -v -d -t -tags docker  ./...
 
 
 $(BUILD_FILE_NAME): get

@@ -48,7 +48,7 @@ before_install:
 
       curl -L -O http://downloads.sourceforge.net/swig/swig-${SWIG_VERSION}.tar.gz;
       tar -xzf swig-${SWIG_VERSION}.tar.gz ;
-      cd swig-${SWIG_VERSION} && ./configure --prefix=$HOME/swig && make && make install ;
+      cd swig-${SWIG_VERSION} && ./configure --prefix=$HOME/swig && make && make install && cd ..;      
     fi'
 
 install:
