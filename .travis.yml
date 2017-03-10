@@ -16,10 +16,9 @@ matrix:
       addons:
         apt:
           packages:
-            - swig
+            - swig-3.0.7
 # WINDOWS
     - os: linux
-      sudo: required
       language: go
       go: 1.7.5
       env:
@@ -29,6 +28,7 @@ matrix:
       addons:
         apt:
           packages:
+            - gcc-mingw-w64
             - mingw-w64
             - zip
 
