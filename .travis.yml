@@ -1,46 +1,76 @@
-sudo: required
+matrix:
+  include:
+# DOCKER && LINUX
+    - os: linux
+      language: go
+      go: 1.7.x
+      dist: trusty
+      sudo: required
+      services:
+            - docker
+      env:
+        global:
+          - GIT_COMMIT=$TRAVIS_COMMIT
+          - GIT_BRANCH=$TRAVIS_BRANCH
+          - TARGET_OS=linux
+# WINDOWS
+    - os: linux
+      sudo: false
+      language: go
+      go: 1.7.5
+      env:
+        global:
+         - TARGET_OS=windows
+         - CC=x86_64-w64-mingw32-gcc
+      addons:
+        apt:
+          packages:
+            - mingw-w64
+            - zip
 
-services:
-  - docker
-
-env:
-  global:
-    - GIT_COMMIT=$TRAVIS_COMMIT
-    - GIT_BRANCH=$TRAVIS_BRANCH
-
-language: go
-
-go:
-  - 1.7.x
+# MACOS
+#    - os: linux
+#      sudo: false
+#      language: go
+#      go: 1.7.5
+#      env:
+#        global:
+#         - TARGET_OS=darwin
 
 before_install:
-  - docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD"
+  - 'if [ "$TARGET_OS" = "linux" ]; then
+      docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD";
+    fi'
 
 install:
-  - echo $GIT_COMMIT $GIT_BRANCH
-  - sudo apt-get intstall -y mingw-w64 zip
+  - make get
 
 script:
-  - make docker
-  - make build/windows-amd64.zip
-  - make build/linux-amd64.tar.gz
-  - make docker_dockerhub_publish
+  - make
+  - make test_all
+  - make build_artifacts
+  - 'if [ "$TARGET_OS" = "linux" ]; then
+      make build_docker;
+      make docker_test;
+    fi'
 
 after_seccess:
-  - make docker_inspect
-
-branches:
-  only:
-    - master
-    - "/^v\\d+\\.\\d+$/"
+  - 'if [ "$TARGET_OS" = "linux" ]; then
+      make docker_inspect;
+    fi'
 
 deploy:
-  provider: releases
-  api_key:
-    secure: e7OBw+5zpLhH/oxyl98Xka+rBssCmWn2zsBiJDXjLLVB9rVozFPKXfUcQZ9yq7gnbo27NB1hfijKvdAZmR4lTRAmfuW+G4Q/9T3XKQ4X16Zc4r8YyIrSzljU9jRu9fOWCJ9gR21j9CvNIJtvzdoVmHmfufEQFKuqoOz2qnq5OV4a88Z5ZgfsW390TNBPz1N37pvf8T/erP7E78gunjoNhKBbqU5HqQe693vh8lIwlI89xhyqvN/6M53oA03E0UhC/TnFbOhCGvz9QIMEc4RspZPqDRtCpECnxPOiu+y9tKcCttT6wjlr5p8b3JcA/j3XnkYVrFg671yxlpDypcYhX8eGx0j3J2fNGk9q1t0g2V4ZBxcWNtgZXp/RL5NfINFAdYEXOlwAKJ/fItbN/1+RT7arGAzCGnafU/bjm2d+OCrxeCyVfuEhLWfDc35GqRpc8d1JR4ywj7t7lFj1VmyMAV9WgjXlq1jXBR2/P+BZBZqHo25H1VJT6PFFNzfNVcGaGzPuDPMOkVOeZWVWy5s1l+EzMfdoMmeBAmsaOhclpuHGs7wxJ5e3fnKCMnAxoYeyJo1itujXj3jCVlHzInlba//Q3q6MkTDt4ZqRR6l5dRKhlDqAEWh5Dadl2almHqfw4X62SEhRAOVr37TDfN+fcmkydGTx+P0Sc2r65VjOWjI=
-  skip_cleanup: true
-  file:
-    - build/windows-amd64.zip
-    - build/linux-amd64.tar.gz
-  on:
-    tags: true
+  - provider: releases
+    api_key:
+      secure: e7OBw+5zpLhH/oxyl98Xka+rBssCmWn2zsBiJDXjLLVB9rVozFPKXfUcQZ9yq7gnbo27NB1hfijKvdAZmR4lTRAmfuW+G4Q/9T3XKQ4X16Zc4r8YyIrSzljU9jRu9fOWCJ9gR21j9CvNIJtvzdoVmHmfufEQFKuqoOz2qnq5OV4a88Z5ZgfsW390TNBPz1N37pvf8T/erP7E78gunjoNhKBbqU5HqQe693vh8lIwlI89xhyqvN/6M53oA03E0UhC/TnFbOhCGvz9QIMEc4RspZPqDRtCpECnxPOiu+y9tKcCttT6wjlr5p8b3JcA/j3XnkYVrFg671yxlpDypcYhX8eGx0j3J2fNGk9q1t0g2V4ZBxcWNtgZXp/RL5NfINFAdYEXOlwAKJ/fItbN/1+RT7arGAzCGnafU/bjm2d+OCrxeCyVfuEhLWfDc35GqRpc8d1JR4ywj7t7lFj1VmyMAV9WgjXlq1jXBR2/P+BZBZqHo25H1VJT6PFFNzfNVcGaGzPuDPMOkVOeZWVWy5s1l+EzMfdoMmeBAmsaOhclpuHGs7wxJ5e3fnKCMnAxoYeyJo1itujXj3jCVlHzInlba//Q3q6MkTDt4ZqRR6l5dRKhlDqAEWh5Dadl2almHqfw4X62SEhRAOVr37TDfN+fcmkydGTx+P0Sc2r65VjOWjI=
+    skip_cleanup: true
+    file_glob: true
+    file: artf/*
+    on:
+      tags: true
+  - provider: script
+    script: make docker_dockerhub_publish
+    on:
+      branch: master
+      tags: true
+      condition: "$TARGET_OS = linux"
