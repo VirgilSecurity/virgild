@@ -3,7 +3,12 @@
 PROJECT =virgild
 IMAGENAME=$(PROJECT)
 DOCKERHUB_REPOSITORY=virgilsecurity/$(IMAGENAME)
+
+ifeq ($(OS),Windows_NT)
+TARGET_OS ?= windows
+else
 TARGET_OS ?= $(shell uname -s | tr A-Z a-z)
+endif
 
 ifeq ($(TARGET_OS),darwin)
 ARTF_OS_NAME?=macosx
