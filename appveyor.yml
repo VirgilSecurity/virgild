@@ -1,0 +1,36 @@
+version: "{build}"
+
+os: Windows Server 2012 R2
+
+clone_folder: c:\gopath\src\github.com\VirgilSecurity\virgild
+
+environment:
+  GOPATH: c:\gopath
+
+skip_branch_with_pr: true
+
+pull_requests:
+  do_not_increment_build_number: true
+
+install:
+  - set PATH=%GOPATH%\bin;c:\go\bin;c:\MinGW\bin\;c:\MinGW\msys\1.0\bin;%PATH%
+  - mingw32-make get
+
+build_script:
+   - mingw32-make build
+   - mingw32-make build_artifacts
+
+test_script:
+  - mingw32-make test_all
+
+artifacts:
+  - path: artf\windows-amd64.zip
+
+# deploy:
+#   provider: GitHub
+#   auth_token:
+#     secure: aOL6vz6w0YQLy7nsEtDX0R41x4XDEFm0puwb1jCP+8c7R+IZ+0OXkNejNtnZjFV4
+#   artifact: artf\windows-amd64.zip
+#   force_update: true
+#   on:
+#     appveyor_repo_tag: true        # deploy on tag push only
