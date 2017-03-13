@@ -15,12 +15,12 @@ matrix:
           - TARGET_OS=linux
           - SWIG_VERSION=3.0.7
 # MACOS
-   - os: osx
-     language: go
-     go: 1.7.5
-     env:
-       global:
-        - TARGET_OS=darwin
+    - os: osx
+      language: go
+      go: 1.7.5
+      env:
+        global:
+          - TARGET_OS=darwin
 
 before_install:
   - 'if [ "$TARGET_OS" = "linux" ]; then
