@@ -116,7 +116,7 @@ docker_inspect:
 build_artifacts: clear_artifact $(BUILD_FILE_NAME)
 	mkdir -p artf/src/$(PROJECT)
 	mv $(BUILD_FILE_NAME) artf/src/$(PROJECT)/
-
+  
 ifeq ($(TARGET_OS),windows)
 	cd artf/src &&	zip -r ../$(ARTF_OS_NAME)-amd64.zip . &&	cd ../..
 else
