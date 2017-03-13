@@ -14,25 +14,6 @@ matrix:
           - GIT_BRANCH=$TRAVIS_BRANCH
           - TARGET_OS=linux
           - SWIG_VERSION=3.0.7
-# WINDOWS
-    - os: linux
-      language: go
-      go: 1.7.5
-      env:
-        global:
-         - TARGET_OS=windows
-         - CC=x86_64-w64-mingw32-gcc
-      addons:
-        apt:
-          packages:
-            - binutils-mingw-w64-x86-64
-            - binutils-mingw-w64-i686
-            - gcc-mingw-w64-x86-64
-            - gcc-mingw-w64-i686
-            - gcc-mingw-w64
-            - mingw-w64
-            - zip
-
 # MACOS
 #    - os: linux
 #      sudo: false
@@ -45,10 +26,6 @@ matrix:
 before_install:
   - 'if [ "$TARGET_OS" = "linux" ]; then
       docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD";
-
-      curl -L -O http://downloads.sourceforge.net/swig/swig-${SWIG_VERSION}.tar.gz;
-      tar -xzf swig-${SWIG_VERSION}.tar.gz ;
-      cd swig-${SWIG_VERSION} && ./configure --prefix=$HOME/swig && make && make install && cd ..;      
     fi'
 
 install:

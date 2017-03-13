@@ -1,4 +1,4 @@
-.PHONY: get test test_all clear_artifact build_artifacts docker_test docker_dockerhub_publish
+.PHONY: get test test_all clear_artifact build_artifacts docker build_docker docker_test docker_inspect docker_dockerhub_publish
 
 PROJECT =virgild
 IMAGENAME=$(PROJECT)
