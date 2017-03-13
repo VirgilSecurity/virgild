@@ -26,9 +26,9 @@ matrix:
 before_install:
   - 'if [ "$TARGET_OS" = "linux" ]; then
       docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD";
-      go get -d gopkg.in/virgilsecurity/virgil-crypto-go.v4
-      wget https://cdn.virgilsecurity.com/crypto-go/virgil-crypto-2.0.4-go-linux-x86_64.tgz
-      tar -xvf virgil-crypto-2.0.4-go-linux-x86_64.tgz --strip-components=1 -C $GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/
+      go get -d gopkg.in/virgilsecurity/virgil-crypto-go.v4;
+      wget https://cdn.virgilsecurity.com/crypto-go/virgil-crypto-2.0.4-go-linux-x86_64.tgz;
+      tar -xvf virgil-crypto-2.0.4-go-linux-x86_64.tgz --strip-components=1 -C $GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/;
     fi'
 
 install:
