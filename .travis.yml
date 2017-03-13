@@ -35,7 +35,7 @@ install:
   - make get
 
 script:
-  - make
+  - make build
   - make test_all
   - make build_artifacts
   - 'if [ "$TARGET_OS" = "linux" ]; then

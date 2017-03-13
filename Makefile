@@ -32,7 +32,7 @@ ifneq ($(TARGET_OS),darwin)
 BUILD_ARGS+= --ldflags '-extldflags "-static"'
 endif
 
-.DEFAULT_GOAL := $(BUILD_FILE_NAME)
+.DEFAULT_GOAL := build
 
 
 define tag_docker
@@ -63,14 +63,19 @@ endif
 get: $(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.go
 	go get -v -d -t -tags docker  ./...
 
+build: get
+	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
 
-$(BUILD_FILE_NAME): get
+$(BUILD_FILE_NAME):
 	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
 
 
 docker: build_docker docker_test
 
-build_docker: build
+
+rebuild_docker: build build_docker
+	
+build_docker: $(BUILD_FILE_NAME)
 	docker build -t $(IMAGENAME) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) .
 
 docker_test:
