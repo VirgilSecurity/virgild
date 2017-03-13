@@ -15,13 +15,12 @@ matrix:
           - TARGET_OS=linux
           - SWIG_VERSION=3.0.7
 # MACOS
-#    - os: linux
-#      sudo: false
-#      language: go
-#      go: 1.7.5
-#      env:
-#        global:
-#         - TARGET_OS=darwin
+   - os: osx
+     language: go
+     go: 1.7.5
+     env:
+       global:
+        - TARGET_OS=darwin
 
 before_install:
   - 'if [ "$TARGET_OS" = "linux" ]; then
@@ -37,11 +36,11 @@ install:
 script:
   - make build
   - make test_all
-  - make build_artifacts
   - 'if [ "$TARGET_OS" = "linux" ]; then
       make build_docker;
       make docker_test;
     fi'
+  - make build_artifacts
 
 after_seccess:
   - 'if [ "$TARGET_OS" = "linux" ]; then
