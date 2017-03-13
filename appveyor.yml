@@ -26,11 +26,11 @@ test_script:
 artifacts:
   - path: artf\windows-amd64.zip
 
-# deploy:
-#   provider: GitHub
-#   auth_token:
-#     secure: aOL6vz6w0YQLy7nsEtDX0R41x4XDEFm0puwb1jCP+8c7R+IZ+0OXkNejNtnZjFV4
-#   artifact: artf\windows-amd64.zip
-#   force_update: true
-#   on:
-#     appveyor_repo_tag: true        # deploy on tag push only
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: yd+wW9NsDKuXnBFbrPX05jq1YYG1oSTuFnYhizyOMqEjqsV2JAHuN64H+l5rxUZf
+  artifact: artf\windows-amd64.zip
+  force_update: true
+  on:
+    appveyor_repo_tag: true        # deploy on tag push only
