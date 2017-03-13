@@ -13,7 +13,7 @@ pull_requests:
   do_not_increment_build_number: true
 
 install:
-  - set PATH=%GOPATH%\bin;c:\go\bin;c:\MinGW\bin\;c:\MinGW\msys\1.0\bin;%PATH%
+  - set PATH=%GOPATH%\bin;c:\go\bin;c:\msys64\mingw64\bin\;c:\MinGW\msys\1.0\bin;%PATH%
   - mingw32-make get
 
 build_script:
