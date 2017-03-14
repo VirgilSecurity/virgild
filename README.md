@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/VirgilSecurity/virgild.svg?branch=master)](https://travis-ci.org/VirgilSecurity/virgild)
+[![Build status](https://ci.appveyor.com/api/projects/status/pdaahgsdva7bd0w3?svg=true)](https://ci.appveyor.com/project/tochka/virgild)
+
 # VirgilD
 
 Virgil Security, Inc., is a Manassas, Virginia, based cybersecurity company and a graduate of the Fall 2014 cohort of the MACH37 cybersecurity accelerator program.

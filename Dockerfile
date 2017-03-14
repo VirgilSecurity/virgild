@@ -5,7 +5,7 @@ ARG GIT_COMMIT=unkown
 ARG GIT_BRANCH=unkown
 LABEL git-commit=$GIT_COMMIT
 LABEL git-branch=$GIT_BRANCH
-ADD build/docker/virgild .
+ADD virgild .
 VOLUME ["/srv"]
 
 ENV PORT 8080

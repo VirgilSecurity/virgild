@@ -1,10 +1,39 @@
-.PHONY: get test test_all test_integration build clear build build_artifacts build_docker
-docker: get test_all build_docker docker_test
+.PHONY: get test test_all clear_artifact build_artifacts docker build_docker docker_test docker_inspect docker_dockerhub_publish
 
-ARTF =virgild
-IMAGENAME=$(ARTF)
+PROJECT =virgild
+IMAGENAME=$(PROJECT)
 DOCKERHUB_REPOSITORY=virgilsecurity/$(IMAGENAME)
-OS = $(shell uname -s)
+
+ifeq ($(OS),Windows_NT)
+TARGET_OS ?= windows
+else
+TARGET_OS ?= $(shell uname -s | tr A-Z a-z)
+endif
+
+ifeq ($(TARGET_OS),darwin)
+ARTF_OS_NAME?=macosx
+else
+ARTF_OS_NAME?=$(TARGET_OS)
+endif
+
+ifeq ($(TARGET_OS),windows)
+BUILD_FILE_NAME?=$(PROJECT).exe
+C_CRYPTO=false
+else
+BUILD_FILE_NAME?=$(PROJECT)
+C_CRYPTO?=true
+endif
+
+BUILD_ARGS=
+ifeq ($(C_CRYPTO),true)
+BUILD_ARGS+=-tags=c_crypto
+endif
+ifneq ($(TARGET_OS),darwin)
+BUILD_ARGS+= --ldflags '-extldflags "-static"'
+endif
+
+.DEFAULT_GOAL := build
+
 
 define tag_docker
   @if [ "$(GIT_BRANCH)" = "master" ]; then \
@@ -15,36 +44,38 @@ define tag_docker
   fi
 endef
 
-get:
-	go get -v -d -t -tags docker  ./...
-ifeq ($(strip $(OS)),Linux)
-	wget https://cdn.virgilsecurity.com/crypto-go/virgil-crypto-2.0.4-go-linux-x86_64.tgz -P $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/
-	tar -xvf $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil-crypto-2.0.4-go-linux-x86_64.tgz --strip-components=1 -C $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/
-endif
+clear_artifact:
+		rm -rf artf
 
-test_all: test test_integration
+test: get
+		go test -v ./...
 
-test:
-	go test -v ./...
-
-test_integration:
+test_all: get
 	go test -v ./... -tags=integration
 
-clear:
-	rm -rf build
 
-build:
-	go build -o $(ARTF)
+$(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.go:
+ifeq ($(C_CRYPTO),true)
+	go get -d gopkg.in/virgilsecurity/virgil-crypto-go.v4
+	cd $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4 ;	 make
+endif
 
-build_in_docker:
-	go get -v  ./...
-	CGO_ENABLED=1 GOARCH=amd64 go build -tags=c_crypto  --ldflags '-extldflags "-static"' -o build/docker/$(ARTF)
+get: $(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.go
+	go get -v -d -t -tags docker  ./...
 
-build/docker/$(ARTF):
-	docker build -t build_docker -f build_docker .
-	docker run --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild build_docker make build_in_docker
+build: get
+	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
 
-build_docker: build/docker/$(ARTF)
+$(BUILD_FILE_NAME):
+	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
+
+
+docker: build_docker docker_test
+
+
+rebuild_docker: build build_docker
+	
+build_docker: $(BUILD_FILE_NAME)
 	docker build -t $(IMAGENAME) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) .
 
 docker_test:
@@ -82,17 +113,14 @@ docker_inspect:
 		docker inspect -f '{{index .ContainerConfig.Labels "git-commit"}}' $(IMAGENAME)
 		docker inspect -f '{{index .ContainerConfig.Labels "git-branch"}}' $(IMAGENAME)
 
-build_artifacts: get build/linux-amd64.tar.gz build/windows-amd64.zip build/macosx-amd64.tar.gz
+build_artifacts: clear_artifact $(BUILD_FILE_NAME)
+	mkdir -p artf/src/$(PROJECT)
+	mv $(BUILD_FILE_NAME) artf/src/$(PROJECT)/
+  
+ifeq ($(TARGET_OS),windows)
+	cd artf/src &&	zip -r ../$(ARTF_OS_NAME)-amd64.zip . &&	cd ../..
+else
+	tar -zcvf artf/$(ARTF_OS_NAME)-amd64.tar.gz -C artf/src .
+endif
 
-build/linux-amd64.tar.gz: build/docker/$(ARTF)
-	mkdir -p build/linux-amd64/$(ARTF)
-	cp build/docker/$(ARTF) build/linux-amd64/$(ARTF)/$(ARTF)
-	tar -zcvf build/linux-amd64.tar.gz -C build/linux-amd64/ .
-
-build/windows-amd64.zip:
-	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build  --ldflags '-extldflags "-static"' -o build/windows-amd64/$(ARTF)/$(ARTF).exe
-	cd build/windows-amd64 &&	zip -r ../windows-amd64.zip . &&	cd ../..
-
-build/macosx-amd64.tar.gz:
-	CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 CC=o64-clang go build -tags=c_crypto  -o build/macosx-amd64/$(ARTF)/$(ARTF)
-	tar -zcvf build/macosx-amd64.tar.gz -C build/macosx-amd64/ .
+	rm -rf artf/src
