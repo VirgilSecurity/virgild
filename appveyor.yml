@@ -7,8 +7,6 @@ clone_folder: c:\gopath\src\github.com\VirgilSecurity\virgild
 environment:
   GOPATH: c:\gopath
 
-skip_branch_with_pr: true
-
 pull_requests:
   do_not_increment_build_number: true
 
