@@ -13,6 +13,7 @@ import (
 	"github.com/allegro/bigcache"
 	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -185,6 +186,8 @@ func initDB(db string) (*xorm.Engine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Cannot connect to (driver: %v name: %v) database: %v", d, c, err)
 	}
+
+	e.Logger().SetLevel(core.LOG_WARNING)
 
 	hc := metrics.NewHealthcheck(func(h metrics.Healthcheck) {
 		err := e.Ping()

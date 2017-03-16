@@ -165,7 +165,7 @@ func saveConfigToFole(config Config, file string) error {
 	saveBoolVal(f, "metrics-log-enabled", config.Metrics.Log.Enabled)
 	saveDurationVal(f, "metrics-log-interval", config.Metrics.Log.Interval)
 
-	saveStrVal(f, "metrics-graphite-addres", config.Metrics.Graphite.Address)
+	saveStrVal(f, "metrics-graphite-address", config.Metrics.Graphite.Address)
 	saveStrVal(f, "metrics-graphite-prefix", config.Metrics.Graphite.Prefix)
 	saveDurationVal(f, "metrics-graphite-interval", config.Metrics.Graphite.Interval)
 
