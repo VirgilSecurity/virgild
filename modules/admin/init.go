@@ -32,18 +32,18 @@ func Init(conf *config.App) *AdminHandlers {
 		ctx.ResetBody()
 		ctx.Error("", fasthttp.StatusMethodNotAllowed)
 	}
-	authForbidden := func(next fasthttp.RequestHandler) fasthttp.RequestHandler {
-		return func(ctx *fasthttp.RequestCtx) {
-			ctx.ResetBody()
-			ctx.Error("", fasthttp.StatusForbidden)
-		}
-	}
+	// authForbidden := func(next fasthttp.RequestHandler) fasthttp.RequestHandler {
+	// 	return func(ctx *fasthttp.RequestCtx) {
+	// 		ctx.ResetBody()
+	// 		ctx.Error("", fasthttp.StatusForbidden)
+	// 	}
+	// }
 	return &AdminHandlers{
 		Index:        methodNotAllowed,
 		GetConfig:    methodNotAllowed,
 		CardInfo:     getVirgilDCardInfo(conf.Site.VirgilD),
 		UpdateConfig: methodNotAllowed,
-		Auth:         authForbidden,
+		Auth:         adminWrap(staticLogin(conf.Site.Admin.Login, conf.Site.Admin.Password)),
 	}
 }
 

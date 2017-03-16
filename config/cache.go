@@ -32,12 +32,12 @@ type Logger interface {
 	Printf(format string, args ...interface{})
 }
 
-type CacheManager struct {
+type Cache struct {
 	Cache  *bigcache.BigCache
 	Logger Logger
 }
 
-func (m *CacheManager) Get(key string, val interface{}) bool {
+func (m *Cache) Get(key string, val interface{}) bool {
 	r, err := m.Cache.Get(key)
 	if _, ok := err.(*bigcache.EntryNotFoundError); ok {
 		return false
@@ -60,7 +60,7 @@ func (m *CacheManager) Get(key string, val interface{}) bool {
 	return true
 }
 
-func (m *CacheManager) Set(key string, v interface{}) {
+func (m *Cache) Set(key string, v interface{}) {
 	b, err := json.Marshal(v)
 	if err != nil {
 		m.Logger.Printf("Cache manager: set(%v) marshal error: %+v", key, errors.WithStack(err))
@@ -73,7 +73,7 @@ func (m *CacheManager) Set(key string, v interface{}) {
 	}
 }
 
-func (m *CacheManager) Del(key string) {
+func (m *Cache) Del(key string) {
 	_, err := m.Cache.Get(key)
 	if err != nil {
 		m.Logger.Printf("Cache manager: del(%v) internal error: %+v", key, errors.WithStack(err))

@@ -5,18 +5,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/VirgilSecurity/virgild/config"
 	"github.com/VirgilSecurity/virgild/modules/cards/core"
 	virgil "gopkg.in/virgil.v4"
 )
 
-type CacheManager interface {
-	Get(key string, val interface{}) bool
-	Set(key string, val interface{})
-	Del(key string)
-}
-
 type CacheCardsMiddleware struct {
-	Manager CacheManager
+	Manager config.CacheManager
 }
 
 func (ccm *CacheCardsMiddleware) Get(next core.GetCard) core.GetCard {

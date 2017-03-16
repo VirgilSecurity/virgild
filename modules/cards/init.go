@@ -72,10 +72,10 @@ func Init(conf *config.App) *CardsHandlers {
 }
 
 func makeCardMode(conf *config.App) (get core.GetCard, search core.SearchCards, create core.CreateCard, revoke core.RevokeCard) {
-	cardRepo := &db.CardRepository{
+	cardRepo := &db.MetricsCardRepository{R: db.CardRepository{
 		Orm:   conf.Common.DB,
 		Cache: conf.Cards.Remote.Cache,
-	}
+	}}
 
 	switch conf.Cards.Mode {
 	case config.CardModeCache:

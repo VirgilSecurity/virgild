@@ -1,17 +1,11 @@
 package mode
 
 import (
+	"github.com/VirgilSecurity/virgild/config"
 	"github.com/VirgilSecurity/virgild/modules/cards/core"
 	"github.com/pkg/errors"
 	virgil "gopkg.in/virgil.v4"
 )
-
-type VirgilClient interface {
-	GetCard(id string) (*virgil.Card, error)
-	SearchCards(*virgil.Criteria) ([]*virgil.Card, error)
-	CreateCard(req *virgil.SignableRequest) (*virgil.Card, error)
-	RevokeCard(req *virgil.SignableRequest) error
-}
 
 func vcard2Card(vcard *virgil.Card) *core.Card {
 	c := &core.Card{
@@ -28,7 +22,7 @@ func vcard2Card(vcard *virgil.Card) *core.Card {
 }
 
 type RemoteCardsMiddleware struct {
-	Client VirgilClient
+	Client config.VirgilClient
 }
 
 func (rcm *RemoteCardsMiddleware) Get(id string) (*core.Card, error) {

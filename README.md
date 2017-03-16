@@ -154,6 +154,14 @@ address | ADDRESS | ADDRESS | VirgilD address
  authority-pubkey | AUTHORITY_PUBKEY | authority-pubkey | Authority public key
  remote-token | REMOTE_TOKEN | remote-token | Token for get access to Virgil cloud
  auth-mode | AUTH_MODE | auth-mode | Authentication mode
+ cache-duration | CACHE_DURATION | cache-duration | Caching duration of cards (in seconds)
+ cache-size | CACHE_SIZE | cache-size | Size of cache (in megabytes)
+ metrics-log-enabled | METRICS_LOG_ENABLED | metrics-log-enabled | Metrics are printing in log file
+ metrics-log-interval | METRICS_LOG_INTERVAL | metrics-log-interval | Interval between flushing data to log file
+ metrics-graphite-address | METRICS_GRAPHITE_ADDRESS | metrics-graphite-address | Address of graphite service where will be sending metrics (if this parameter is empty then metrics will not send)
+ metrics-graphite-interval |  METRICS_GRAPHITE_INTERVAL | metrics-graphite-interval | Interval between flushing data to graphite
+ metrics-graphite-prefix | METRICS_GRAPHITE_PREFIX | metrics-graphite-prefix | Prefix for VirgilD in graphite 
+
 
 ## Default arguments
 
@@ -175,6 +183,11 @@ address | ADDRESS | ADDRESS | VirgilD address
  authority-card-id | 3e29d43373348cfb373b7eae189214dc01d7237765e572db685839b64adca853
  authority-pubkey | MCowBQYDK2VwAyEAYR501kV1tUne2uOdkw4kErRRbJrc2Syaz5V1fuG+rVs=
  auth-mode | no
+ cache-duration | 3600
+ cache-size | 1024
+ metrics-log-enabled | false
+ metrics-log-interval | 1m
+ metrics-graphite-interval |  1m
 
 # Appendix B. Token base authentication
 
