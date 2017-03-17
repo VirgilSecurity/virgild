@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/tochka/flag"
 )
@@ -40,6 +41,13 @@ func init() {
 	flag.StringVar(&defaultConfig.DB, "db", "sqlite3:virgild.db", "Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql")
 	flag.StringVar(&defaultConfig.LogFile, "log", "console", "Path to file log. 'console' is special value for print to stdout")
 	flag.StringVar(&defaultConfig.Address, "address", ":8080", "VirgilD address")
+
+	flag.BoolVar(&defaultConfig.Metrics.Log.Enabled, "metrics-log-enabled", false, "Print Metrics into log file")
+	flag.DurationVar(&defaultConfig.Metrics.Log.Interval, "metrics-log-interval", time.Minute, "How often print metrics to log file")
+
+	flag.StringVar(&defaultConfig.Metrics.Graphite.Address, "metrics-graphite-address", "", "Send metrics into graphite by address")
+	flag.DurationVar(&defaultConfig.Metrics.Graphite.Interval, "metrics-graphite-interval", time.Minute, "How often send metrics to the graphite")
+	flag.StringVar(&defaultConfig.Metrics.Graphite.Prefix, "metrics-graphite-prefix", "", "Prefix in graphit system")
 
 	flag.StringVar(&configPath, flag.DefaultConfigFlagname, "virgild.conf", "path to config file")
 }
@@ -96,12 +104,29 @@ type AuthConfig struct {
 	} `json:"params"`
 }
 
+type LogMetrics struct {
+	Enabled  bool
+	Interval time.Duration
+}
+
+type GraphiteMetrics struct {
+	Address  string
+	Interval time.Duration
+	Prefix   string
+}
+
+type Metrics struct {
+	Log      LogMetrics
+	Graphite GraphiteMetrics
+}
+
 type Config struct {
 	Admin   AdminConfig `json:"admin"`
 	DB      string      `json:"db"`
 	LogFile string      `json:"log,omitempty"`
 	Cards   CardsConfig `json:"cards"`
 	Auth    AuthConfig  `json:"auth"`
+	Metrics Metrics
 	Address string
 }
 
@@ -137,6 +162,13 @@ func saveConfigToFole(config Config, file string) error {
 	saveStrVal(f, "log", config.LogFile)
 	saveStrVal(f, "address", config.Address)
 
+	saveBoolVal(f, "metrics-log-enabled", config.Metrics.Log.Enabled)
+	saveDurationVal(f, "metrics-log-interval", config.Metrics.Log.Interval)
+
+	saveStrVal(f, "metrics-graphite-address", config.Metrics.Graphite.Address)
+	saveStrVal(f, "metrics-graphite-prefix", config.Metrics.Graphite.Prefix)
+	saveDurationVal(f, "metrics-graphite-interval", config.Metrics.Graphite.Interval)
+
 	f.Close()
 	return err
 }
@@ -147,6 +179,10 @@ func saveStrVal(w io.Writer, name, val string) {
 
 func saveBoolVal(w io.Writer, name string, val bool) {
 	fmt.Fprintf(w, "%v %t\n", name, val)
+}
+
+func saveDurationVal(w io.Writer, name string, val time.Duration) {
+	fmt.Fprintf(w, "%v %v\n", name, val)
 }
 
 func saveIntVal(w io.Writer, name string, val int) {

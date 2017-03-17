@@ -13,9 +13,11 @@ import (
 	"github.com/allegro/bigcache"
 	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rcrowley/go-metrics"
 	"github.com/tochka/flag"
 	virgil "gopkg.in/virgil.v4"
 	"gopkg.in/virgil.v4/transport/virgilhttp"
@@ -33,9 +35,16 @@ type Authority struct {
 	PublicKey virgilcrypto.PublicKey
 }
 
+type VirgilClient interface {
+	GetCard(id string) (*virgil.Card, error)
+	SearchCards(*virgil.Criteria) ([]*virgil.Card, error)
+	CreateCard(req *virgil.SignableRequest) (*virgil.Card, error)
+	RevokeCard(req *virgil.SignableRequest) error
+}
+
 type Remote struct {
 	Cache   time.Duration
-	VClient *virgil.Client
+	VClient VirgilClient
 }
 
 type CardMode string
@@ -68,11 +77,17 @@ type Site struct {
 	VirgilD VirgilDCard
 }
 
+type CacheManager interface {
+	Get(key string, val interface{}) bool
+	Set(key string, val interface{})
+	Del(key string)
+}
+
 type Common struct {
 	DB           *xorm.Engine
 	Logger       *log.Logger
 	Config       Config
-	Cache        *CacheManager
+	Cache        CacheManager
 	ConfigUpdate *Updater
 	ConfigPath   string
 	Address      string
@@ -171,6 +186,19 @@ func initDB(db string) (*xorm.Engine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Cannot connect to (driver: %v name: %v) database: %v", d, c, err)
 	}
+
+	e.Logger().SetLevel(core.LOG_WARNING)
+
+	hc := metrics.NewHealthcheck(func(h metrics.Healthcheck) {
+		err := e.Ping()
+		if err != nil {
+			h.Unhealthy(err)
+		} else {
+			h.Healthy()
+		}
+	})
+	metrics.Register("db.health", hc)
+
 	return e, nil
 }
 
@@ -291,7 +319,7 @@ func createVirgilCard(key virgilcrypto.PrivateKey) (*virgil.Card, error) {
 	}, nil
 }
 
-func initCache(conf CardsCacheConfig, logger *log.Logger) (*CacheManager, error) {
+func initCache(conf CardsCacheConfig, logger *log.Logger) (CacheManager, error) {
 	hasher, err := newHasher()
 	if err != nil {
 		return nil, fmt.Errorf("Cannot create hash function for cache: %v", err)
@@ -304,7 +332,12 @@ func initCache(conf CardsCacheConfig, logger *log.Logger) (*CacheManager, error)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot create cache: %v", err)
 	}
-	return &CacheManager{Cache: cache, Logger: logger}, nil
+
+	metrics.NewRegisteredFunctionalGauge("cache.size", nil, func() int64 {
+		return int64(cache.Len())
+	})
+
+	return &MetricsCacheManager{Cache{Cache: cache, Logger: logger}}, nil
 }
 
 func initRemote(conf RemoteConfig) (Remote, error) {
@@ -331,8 +364,19 @@ func initRemote(conf RemoteConfig) (Remote, error) {
 	if err != nil {
 		return Remote{}, fmt.Errorf("Cannot init Virgil Client: %+v", err)
 	}
+
+	hc := metrics.NewHealthcheck(func(h metrics.Healthcheck) {
+		_, err := vclient.GetCard(conf.Authority.CardID)
+		if err != nil {
+			h.Unhealthy(err)
+		} else {
+			h.Healthy()
+		}
+	})
+	metrics.Register("cards-service.health", hc)
+
 	return Remote{
-		VClient: vclient,
+		VClient: &MetricsVirgilClient{vclient},
 		Cache:   time.Duration(conf.Cache) * time.Second,
 	}, nil
 }

@@ -17,7 +17,7 @@ func (f fakeLogger) Printf(format string, args ...interface{}) {
 	f.T.Fatalf(format, args)
 }
 
-func makeCacheManager(t *testing.T, logger Logger) (*bigcache.BigCache, *CacheManager) {
+func makeCacheManager(t *testing.T, logger Logger) (*bigcache.BigCache, *Cache) {
 	hasher, err := newHasher()
 	if err != nil {
 		t.Fatalf("Cannot create hash function for cache: %v", err)
@@ -30,7 +30,7 @@ func makeCacheManager(t *testing.T, logger Logger) (*bigcache.BigCache, *CacheMa
 	if err != nil {
 		t.Fatalf("Cannot create cache: %v", err)
 	}
-	return cache, &CacheManager{Cache: cache, Logger: logger}
+	return cache, &Cache{Cache: cache, Logger: logger}
 }
 
 type fakeStruct struct {
