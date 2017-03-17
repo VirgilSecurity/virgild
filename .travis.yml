@@ -60,9 +60,14 @@ deploy:
     file: artf/*
     on:
       tags: true
+# Update latest docker image      
   - provider: script
     script: make docker_dockerhub_publish
     on:
-      branch: master
+      condition: "$TARGET_OS = linux"
+# Publish tagged docker image
+  - provider: script
+    script: make docker_dockerhub_publish
+    on:
       tags: true
       condition: "$TARGET_OS = linux"
