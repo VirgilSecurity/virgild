@@ -1,4 +1,4 @@
-.PHONY: get test test_all clear_artifact build_artifacts docker build_docker docker_test docker_inspect docker_dockerhub_publish
+.PHONY: get test test_all clean_artifact build_artifacts docker build_docker docker_test docker_inspect docker_dockerhub_publish
 
 PROJECT =virgild
 IMAGENAME=$(PROJECT)
@@ -44,7 +44,10 @@ define tag_docker
   fi
 endef
 
-clear_artifact:
+clean:
+	rm $(BUILD_FILE_NAME)
+
+clean_artifact:
 		rm -rf artf
 
 test: get
@@ -116,7 +119,7 @@ docker_inspect:
 		docker inspect -f '{{index .ContainerConfig.Labels "git-commit"}}' $(IMAGENAME)
 		docker inspect -f '{{index .ContainerConfig.Labels "git-branch"}}' $(IMAGENAME)
 
-build_artifacts: clear_artifact $(BUILD_FILE_NAME)
+build_artifacts: clean_artifact $(BUILD_FILE_NAME)
 	mkdir -p artf/src/$(PROJECT)
 	mv $(BUILD_FILE_NAME) artf/src/$(PROJECT)/
 
