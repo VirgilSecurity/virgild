@@ -254,12 +254,12 @@ $ curl http://localhost:8080/api/tokens -d '{"permissions":{"get_card":true,"sea
 ``` json
 [{
 	"token":"a707ccaabc1d2fcdad5a6cfb2487ecca7b52c53164e1ddb8ab293b0ab276391d",
-    "permissions": {
-    	"create_card":true,
-        "get_card":true,
-        "revoke_card":true,
-        "search_cards":true
-    }
+	"permissions": {
+		"create_card":true,
+		"get_card":true,
+		"revoke_card":true,
+		"search_cards":true
+	}
 }, ...]
 ```
 
@@ -275,11 +275,11 @@ $ curl http://localhost:8080/api/tokens -H 'Authorization: Basic YWRtaW46YWRtaW4
 ``` json
 {
 	"permissions":{
-      "get_card":true,
-      "search_cards":true,
-      "create_card":true,
-      "revoke_card":true
-   }
+	"get_card":true,
+		"search_cards":true,
+		"create_card":true,
+		"revoke_card":true
+	}
 }
 ```
 
@@ -288,12 +288,12 @@ $ curl http://localhost:8080/api/tokens -H 'Authorization: Basic YWRtaW46YWRtaW4
 ``` json
 {
 	"token":"{token_id}",
-    "permissions": {
-    	"create_card":true,
-        "get_card":true,
-        "revoke_card":true,
-        "search_cards":true
-    }
+	"permissions": {
+		"create_card":true,
+		"get_card":true,
+		"revoke_card":true,
+		"search_cards":true
+    	}
 }
 ```
 
