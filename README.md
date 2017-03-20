@@ -37,7 +37,7 @@ By moving to a distributed trust model, Virgil will accelerate its ability to pe
 * [API](#api)
 * [Appendix A. Environment](#appendix-a-environment)
 	* [Default arguments](#default-arguments)
-* [Appendix B. Token base authentication](#appendix-b-token-base-authentication)
+* [Appendix B. Token based authentication](#appendix-b-token-based-authentication)
 	* [Prepere](#prepere)
 	* [Create token](#create-token)
 	* [Get tokens](#get-tokens)
@@ -48,7 +48,7 @@ By moving to a distributed trust model, Virgil will accelerate its ability to pe
 
 ## Install
 
-You can download pre-build release from the [GitHub](https://github.com/VirgilSecurity/virgild/release) or use [docker](https://hub.docker.com/r/virgilsecurity/virgild/). Also you can compile app from source code.
+You can download pre-build release from the [GitHub](https://github.com/VirgilSecurity/virgild/releases) or use [docker](https://hub.docker.com/r/virgilsecurity/virgild/). Also you can compile app from source code.
 
 ### Hot to build
 
@@ -72,13 +72,13 @@ Build by default
  Windows  | native crypto
 
 ``` shell
-$ make build
+$ make
 # output file virgild (virgild.exe for Windows) in root folder
 ```
 
 You can manually disable use C crypto bypass C_CRYPTO=false.
 ``` shell
-$ make C_CRYPTO=false build
+$ make C_CRYPTO=false
 ```
 
 
@@ -95,7 +95,7 @@ $ ./virgild
 ```
 
 ### Local PKI
-Virgild card will be generated on the first program start. All information  will be stored in */srv/virgild.conf*  config file so we recomended add a volume for persistence.
+Virgild card will be generated on the first program start. All information  will be stored in *./virgild.conf*  config file so we recomended add a volume for persistence.
 
 ``` shell
 $ ./virgild -mode=local
@@ -125,7 +125,7 @@ $ curl http://localhost:8080/api/card
 ```
 
 * *Authority card* - It's a card whose signature we trust. If this parameter is set up then a client's card must have signature of the authority. The parameter contains of two values: card ID card and public key
-* *Auth mode* - it's authentication mode for getting access to VirgilD. It can take two values: no and local. No mode - will give you full access to VirgilD without any permissions. Local mode - provides permissions by tokens. ([Settup token base permission](#appendix-b-token-base-permission))
+* *Auth mode* - it's authentication mode for getting access to VirgilD. It can take two values: no and local. No mode - will give you full access to VirgilD without any permissions. Local mode - provides permissions by tokens. ([Setup token based permission](#appendix-b-token-based-authentication))
 
 Full list of parameters in [Appendix A. Environment](#appendix-a-environment).
 
@@ -138,7 +138,7 @@ All information you can find on the [development portal](https://virgilsecurity.
 
 For using command line arguments (args) use prefix -
 
-Arg | Environment name | File name | Description
+Arg | Environment variable name | Config variable name | Description
 ---|---|---|---
 address | ADDRESS | ADDRESS | VirgilD address
  config | CONFIG | - | Path to config file
@@ -150,7 +150,7 @@ address | ADDRESS | ADDRESS | VirgilD address
  vd-key-password | VD_KEY_PASSWORD | vd-key-password | Password for Virgild private key
  admin-enabled | ADMIN_ENABLED | admin-enabled | Enabled admin panel
  admin-login | ADMIN_LOGIN | admin_login | User name for login to admin panel
- admin-passwrod | ADMIN_PASSWROD | admin_passwrod | SHA256 hash of admin password
+ admin-password | ADMIN_PASSWORD | admin_password | SHA256 hash of admin password
  cache | CACHE | cache | Caching duration for global cards (in seconds)
  cards-service | CARDS_SERVICE | cards-service |  Address of Cards service
  cards-ro-service | CARDS_RO_SERVICE | cards-ro-service | Address of Read only cards  service
@@ -180,7 +180,7 @@ address | ADDRESS | ADDRESS | VirgilD address
  mode | cache
  admin-enabled | false
  admin-login | admin
- admin-passwrod | admin
+ admin-password | admin
  cache | 3600
  cards-service | https://cards.virgilsecurity.com
  cards-ro-service | https://cards-ro.virgilsecurity.com
@@ -195,7 +195,7 @@ address | ADDRESS | ADDRESS | VirgilD address
  metrics-log-interval | 1m
  metrics-graphite-interval |  1m
 
-# Appendix B. Token base authentication
+# Appendix B. Token based authentication
 
 ## Topic
 * [Prepere](#prepere)
@@ -253,13 +253,13 @@ $ curl http://localhost:8080/api/tokens -d '{"permissions":{"get_card":true,"sea
 
 ``` json
 [{
-	"token":"a707ccaabc1d2fcdad5a6cfb2487ecca7b52c53164e1ddb8ab293b0ab276391d",
-    "permissions": {
-    	"create_card":true,
-        "get_card":true,
-        "revoke_card":true,
-        "search_cards":true
-    }
+  "token": "a707ccaabc1d2fcdad5a6cfb2487ecca7b52c53164e1ddb8ab293b0ab276391d",
+  "permissions": {
+    "create_card": true,
+    "get_card": true,
+    "revoke_card": true,
+    "search_cards": true
+  }
 }, ...]
 ```
 
@@ -274,12 +274,12 @@ $ curl http://localhost:8080/api/tokens -H 'Authorization: Basic YWRtaW46YWRtaW4
 
 ``` json
 {
-	"permissions":{
-      "get_card":true,
-      "search_cards":true,
-      "create_card":true,
-      "revoke_card":true
-   }
+  "permissions": {
+    "get_card": true,
+    "search_cards": true,
+    "create_card": true,
+    "revoke_card": true
+  }
 }
 ```
 
@@ -287,13 +287,13 @@ $ curl http://localhost:8080/api/tokens -H 'Authorization: Basic YWRtaW46YWRtaW4
 
 ``` json
 {
-	"token":"{token_id}",
-    "permissions": {
-    	"create_card":true,
-        "get_card":true,
-        "revoke_card":true,
-        "search_cards":true
-    }
+  "token": "{token_id}",
+  "permissions": {
+    "create_card": true,
+    "get_card": true,
+    "revoke_card": true,
+    "search_cards": true
+  }
 }
 ```
 
