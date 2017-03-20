@@ -95,7 +95,7 @@ $ ./virgild
 ```
 
 ### Local PKI
-Virgild card will be generated on the first program start. All information  will be stored in */srv/virgild.conf*  config file so we recomended add a volume for persistence.
+Virgild card will be generated on the first program start. All information  will be stored in *./virgild.conf*  config file so we recomended add a volume for persistence.
 
 ``` shell
 $ ./virgild -mode=local
