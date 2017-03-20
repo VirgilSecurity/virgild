@@ -65,6 +65,7 @@ In first option you must install [required packages](https://github.com/VirgilSe
 `NOTE: C crypto is not supported on Windows OS. `
 
 Build by default
+
  OS       | Default crypto
  ---------|-----------------------|
  LINUX    | C crypto
