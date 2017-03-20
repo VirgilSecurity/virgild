@@ -72,13 +72,13 @@ Build by default
  Windows  | native crypto
 
 ``` shell
-$ make build
+$ make
 # output file virgild (virgild.exe for Windows) in root folder
 ```
 
 You can manually disable use C crypto bypass C_CRYPTO=false.
 ``` shell
-$ make C_CRYPTO=false build
+$ make C_CRYPTO=false
 ```
 
 
