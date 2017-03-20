@@ -27,6 +27,7 @@ By moving to a distributed trust model, Virgil will accelerate its ability to pe
 # Topics
 * [Getting started](#getting-started)
 	* [Install](#install)
+		* [Hot to build](#hot-to-build)  
 	* [Usage mode](#usage-mode)
 		* [Cache servcie](#cache-servcie)
 		* [Local PKI](#local-pki)
@@ -47,7 +48,39 @@ By moving to a distributed trust model, Virgil will accelerate its ability to pe
 
 ## Install
 
-Visit [Docker Hub](https://hub.docker.com/r/virgilsecurity/virgild/) see all available images and tags.
+You can download pre-build release from the [GitHub](https://github.com/VirgilSecurity/virgild/release) or use [docker](https://hub.docker.com/r/virgilsecurity/virgild/). Also you can compile app from source code.
+
+### Hot to build
+
+#### Step 1 - Get source code
+``` shell
+$ git clone https://github.com/VirgilSecurity/virgild
+```
+
+#### Step 2 - Build
+The application support two cryptographic provider [C crypto](https://github.com/VirgilSecurity/virgil-crypto) (CGO required) and pure [Go crypto](https://gopkg.in/virgil.v4).
+
+In first option you must install [required packages](https://github.com/VirgilSecurity/virgil-crypto#build-prerequisites) for build C crypto.
+
+`NOTE: C crypto is not supported on Windows OS. `
+
+Build by default
+ OS       | Default crypto
+ ---------|-----------------------|
+ LINUX    | C crypto
+ MAC OS   | C crypto
+ Windows  | native crypto
+
+``` shell
+$ make build
+# output file virgild (virgild.exe for Windows) in root folder
+```
+
+You can manually disable use C crypto bypass C_CRYPTO=false.
+``` shell
+$ make C_CRYPTO=false build
+```
+
 
 ## Usage mode
 Virgild can work in 3 modes.
@@ -57,49 +90,22 @@ Virgild can work in 3 modes.
 
 ### Cache service
 
-Run docker container using following commands
-
-```
-# Pull image from Docker Hub.
-$ docker pull virgilsecurity/virgild
-
-
-# Use `docker run` for the first time.
-$ docker run --name=virgild -p 80:8080 virgilsecurity/virgild
-
-# Use `docker start` if you stopped it.
-$ docker start virgild
+``` shell
+$ ./virgild
 ```
 
 ### Local PKI
 Virgild card will be generated on the first program start. All information  will be stored in */srv/virgild.conf*  config file so we recomended add a volume for persistence.
-Run docker container using following commands
 
-```
-# Pull image from Docker Hub.
-$ docker pull virgilsecurity/virgild
-
-
-# Use `docker run` for the first time.
-$ docker run --name=virgild -p 80:8080 -e MODE=local -v :/srv virgilsecurity/virgild
-
-# Use `docker start` if you stopped it.
-$ docker start virgild
+``` shell
+$ ./virgild -mode=local
 ```
 
 ### PKI with sync mode
-Register on [develop portal](https://developer.virgilsecurity.com) and create your application. Run the docker container by following commands where {VD_CARD_ID} and {VD_KEY} should be replaced with values from developer portal. You can use copied base64 string from developer portal or encode your private key file with base64 and supply as a command line argument
+Register on [develop portal](https://developer.virgilsecurity.com) and create your application. Run app by following command where {VD_CARD_ID} and {VD_KEY} should be replaced with values from developer portal. You can use copied base64 string from developer portal or encode your private key file with base64 and supply as a command line argument
 
 ```
-# Pull image from Docker Hub.
-$ docker pull virgilsecurity/virgild
-
-
-# Use `docker run` for the first time.
-$ docker run --name=virgild -p 80:8080 -e MODE=sync -e VD_CARD_ID={CARD_ID} -e VD_KEY={PRIVATE_KEY} -e VD_KEY_PASSWORD={PRIVATE_KEY_PASSWORD}  -e REMOTE_TOKEN={REMOTE_TOKEN} virgilsecurity/virgild
-
-# Use `docker start` if you stopped it.
-$ docker start virgild
+$ ./virgild -mode=sync -vd-card-id={CARD_ID} -vd-key={PRIVATE_KEY} -vd-key-password={PRIVATE_KEY_PASSWORD} -remote-token={REMOTE_TOKEN}
 ```
 
 ## Check
@@ -160,7 +166,7 @@ address | ADDRESS | ADDRESS | VirgilD address
  metrics-log-interval | METRICS_LOG_INTERVAL | metrics-log-interval | Interval between flushing data to log file
  metrics-graphite-address | METRICS_GRAPHITE_ADDRESS | metrics-graphite-address | Address of graphite service where will be sending metrics (if this parameter is empty then metrics will not send)
  metrics-graphite-interval |  METRICS_GRAPHITE_INTERVAL | metrics-graphite-interval | Interval between flushing data to graphite
- metrics-graphite-prefix | METRICS_GRAPHITE_PREFIX | metrics-graphite-prefix | Prefix for VirgilD in graphite 
+ metrics-graphite-prefix | METRICS_GRAPHITE_PREFIX | metrics-graphite-prefix | Prefix for VirgilD in graphite
 
 
 ## Default arguments
