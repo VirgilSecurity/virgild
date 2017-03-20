@@ -48,7 +48,7 @@ By moving to a distributed trust model, Virgil will accelerate its ability to pe
 
 ## Install
 
-You can download pre-build release from the [GitHub](https://github.com/VirgilSecurity/virgild/release) or use [docker](https://hub.docker.com/r/virgilsecurity/virgild/). Also you can compile app from source code.
+You can download pre-build release from the [GitHub](https://github.com/VirgilSecurity/virgild/releases) or use [docker](https://hub.docker.com/r/virgilsecurity/virgild/). Also you can compile app from source code.
 
 ### Hot to build
 
