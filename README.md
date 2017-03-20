@@ -37,7 +37,7 @@ By moving to a distributed trust model, Virgil will accelerate its ability to pe
 * [API](#api)
 * [Appendix A. Environment](#appendix-a-environment)
 	* [Default arguments](#default-arguments)
-* [Appendix B. Token base authentication](#appendix-b-token-based-authentication)
+* [Appendix B. Token based authentication](#appendix-b-token-based-authentication)
 	* [Prepere](#prepere)
 	* [Create token](#create-token)
 	* [Get tokens](#get-tokens)
@@ -125,7 +125,7 @@ $ curl http://localhost:8080/api/card
 ```
 
 * *Authority card* - It's a card whose signature we trust. If this parameter is set up then a client's card must have signature of the authority. The parameter contains of two values: card ID card and public key
-* *Auth mode* - it's authentication mode for getting access to VirgilD. It can take two values: no and local. No mode - will give you full access to VirgilD without any permissions. Local mode - provides permissions by tokens. ([Setup token based permission](#appendix-b-token-based-permission))
+* *Auth mode* - it's authentication mode for getting access to VirgilD. It can take two values: no and local. No mode - will give you full access to VirgilD without any permissions. Local mode - provides permissions by tokens. ([Setup token based permission](#appendix-b-token-based-authentication))
 
 Full list of parameters in [Appendix A. Environment](#appendix-a-environment).
 
