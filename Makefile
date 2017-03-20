@@ -69,12 +69,15 @@ build: get
 $(BUILD_FILE_NAME):
 	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
 
+build_in_docker-env:
+	docker pull virgilsecurity/virgil-crypto-go-env
+	docker run -it --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild virgilsecurity/virgil-crypto-go-env make
 
 docker: build_docker docker_test
 
 
 rebuild_docker: build build_docker
-	
+
 build_docker: $(BUILD_FILE_NAME)
 	docker build -t $(IMAGENAME) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) .
 
@@ -116,7 +119,7 @@ docker_inspect:
 build_artifacts: clear_artifact $(BUILD_FILE_NAME)
 	mkdir -p artf/src/$(PROJECT)
 	mv $(BUILD_FILE_NAME) artf/src/$(PROJECT)/
-  
+
 ifeq ($(TARGET_OS),windows)
 	cd artf/src &&	zip -r ../$(ARTF_OS_NAME)-amd64.zip . &&	cd ../..
 else
