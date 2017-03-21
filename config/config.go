@@ -41,6 +41,9 @@ func init() {
 	flag.StringVar(&defaultConfig.DB, "db", "sqlite3:virgild.db", "Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql")
 	flag.StringVar(&defaultConfig.LogFile, "log", "console", "Path to file log. 'console' is special value for print to stdout")
 	flag.StringVar(&defaultConfig.Address, "address", ":8080", "VirgilD address")
+	flag.BoolVar(&defaultConfig.HTTPS.Enabled, "https-enabled", false, "Enable HTTPS mode")
+	flag.StringVar(&defaultConfig.HTTPS.CertFile, "https-certificate", "", "The path of the certificate file.")
+	flag.StringVar(&defaultConfig.HTTPS.PrivateKey, "https-private-key", "", "The path of private key file.")
 
 	flag.BoolVar(&defaultConfig.Metrics.Log.Enabled, "metrics-log-enabled", false, "Print Metrics into log file")
 	flag.DurationVar(&defaultConfig.Metrics.Log.Interval, "metrics-log-interval", time.Minute, "How often print metrics to log file")
@@ -120,6 +123,12 @@ type Metrics struct {
 	Graphite GraphiteMetrics
 }
 
+type HTTPS struct {
+	Enabled    bool
+	CertFile   string
+	PrivateKey string
+}
+
 type Config struct {
 	Admin   AdminConfig `json:"admin"`
 	DB      string      `json:"db"`
@@ -128,6 +137,7 @@ type Config struct {
 	Auth    AuthConfig  `json:"auth"`
 	Metrics Metrics
 	Address string
+	HTTPS   HTTPS
 }
 
 func saveConfigToFole(config Config, file string) error {
@@ -160,7 +170,11 @@ func saveConfigToFole(config Config, file string) error {
 	saveStrVal(f, "ra-pubkey", config.Cards.VRA.PublicKey)
 	saveStrVal(f, "db", config.DB)
 	saveStrVal(f, "log", config.LogFile)
+
 	saveStrVal(f, "address", config.Address)
+	saveBoolVal(f, "https-enabled", config.HTTPS.Enabled)
+	saveStrVal(f, "https-certificate", config.HTTPS.CertFile)
+	saveStrVal(f, "https-private-key", config.HTTPS.PrivateKey)
 
 	saveBoolVal(f, "metrics-log-enabled", config.Metrics.Log.Enabled)
 	saveDurationVal(f, "metrics-log-interval", config.Metrics.Log.Interval)
