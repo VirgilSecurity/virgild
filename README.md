@@ -141,7 +141,10 @@ For using command line arguments (args) use prefix -
 
 Arg | Environment variable name | Config variable name | Description
 ---|---|---|---
-address | ADDRESS | ADDRESS | VirgilD address
+ address | ADDRESS | address | VirgilD address
+ https-enabled | HTTPS_ENABLED | https-enabled | Enable HTTPS mode
+ https-certificate | HTTPS_CERTIFICATE | https-certificate | The path of the certificate file.
+ https-private-key | HTTPS_PRIVATE_KEY | https-private-key | The path of private key file.
  config | CONFIG | - | Path to config file
  db | DB | db |  Database connection string {driver}:{connection}. Supported drivers: sqlite3, mysql, pq, mssql
  log | LOG | log | Path to file log. 'console' is special value for print to stdout
@@ -175,6 +178,7 @@ address | ADDRESS | ADDRESS | VirgilD address
  Arg | Value
  ---|---
  address | :8080
+ https-enabled | false
  config | virgild.conf
  db | sqlite3:virgild.db
  log | console
