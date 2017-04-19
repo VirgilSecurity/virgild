@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/bmizerany/pat"
+	"github.com/goji/httpauth"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/namsral/flag"
@@ -85,6 +86,7 @@ func Init() Core {
 		HTTP: HTTP{
 			Router:         pat.New(),
 			WrapAPIHandler: wrapAPIHandler(l),
+			AdminAuth:      httpauth.SimpleBasicAuth(adminLogin, adminPassword),
 		},
 	}
 	return app
