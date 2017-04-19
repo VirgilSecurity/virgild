@@ -20,7 +20,7 @@ func (c *cacheCardMiddleware) GetCard(f core.GetCardHandler) core.GetCardHandler
 	return func(ctx context.Context, id string) (card *virgil.CardResponse, err error) {
 		owner := core.GetOwnerRequest(ctx)
 		key := getCardKey(owner, id)
-		has := c.cache.Get(key, card)
+		has := c.cache.Get(key, &card)
 
 		if has {
 			return card, err
@@ -54,7 +54,7 @@ func (c *cacheCardMiddleware) SearchCards(f core.SearchCardsHandler) core.Search
 			cachePass := true
 			for _, id := range ids {
 				var card *virgil.CardResponse
-				has = c.cache.Get(getCardKey(owner, id), card)
+				has = c.cache.Get(getCardKey(owner, id), &card)
 				if !has {
 					cachePass = false
 					break
