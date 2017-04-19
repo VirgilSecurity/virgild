@@ -5,6 +5,7 @@ import (
 
 	"github.com/VirgilSecurity/virgild/coreapi"
 	"github.com/VirgilSecurity/virgild/modules/card"
+	"github.com/VirgilSecurity/virgild/modules/healthcheck"
 	_ "github.com/VirgilSecurity/virgild/plugins/cache"
 	_ "github.com/VirgilSecurity/virgild/plugins/logs"
 	_ "github.com/VirgilSecurity/virgild/plugins/metrics"
@@ -23,6 +24,7 @@ func main() {
 
 	c := coreapi.Init()
 	card.Init(c)
+	healthcheck.Init(c)
 
 	c.Common.Logger.Info("Start listening...")
 	err := http.ListenAndServe(address, responseMetrics{c.HTTP.Router})

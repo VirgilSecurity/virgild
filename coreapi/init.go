@@ -27,7 +27,7 @@ func init() {
 	flag.StringVar(&loggerType, "logger", "file", "Logger type")
 	flag.StringVar(&database, "database", "sqlite3:virgild.db", "Databse")
 	flag.StringVar(&cacheType, "cache", "mem", "Cache type")
-	flag.StringVar(&metricsType, "metrics", "console", "Metrics output type")
+	flag.StringVar(&metricsType, "metrics", "disabled", "Metrics output type")
 
 	flag.StringVar(&adminLogin, "admin-login", "admin", "Admin login")
 	flag.StringVar(&adminPassword, "admin-password", "admin", "Admin password")

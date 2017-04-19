@@ -3,13 +3,14 @@ package coreapi
 var (
 	loggers       map[string]func() (Logger, error)
 	cachers       map[string]func() (RawCache, error)
-	metricsOutput map[string]func() error
+	metricsOutput = map[string]func() error{
+		"disabled": func() error { return nil },
+	}
 )
 
 func init() {
 	loggers = make(map[string]func() (Logger, error))
 	cachers = make(map[string]func() (RawCache, error))
-	metricsOutput = make(map[string]func() error)
 }
 
 func RegisterLogger(key string, makeF func() (Logger, error)) {
