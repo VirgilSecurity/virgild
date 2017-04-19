@@ -3,7 +3,7 @@ package validator
 import (
 	"testing"
 
-	"github.com/VirgilSecurity/virgild/modules/cards/core"
+	"github.com/VirgilSecurity/virgild/modules/card/core"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/virgil.v4"
 )
@@ -14,7 +14,7 @@ func TestValidateVRASign_SignNotExist_ReturnErr(t *testing.T) {
 	s := ValidateVRASign("123", kp.PublicKey())
 
 	_, err := s(req)
-	assert.Equal(t, core.ErrorVRASignInvalid, err)
+	assert.Equal(t, core.VRASignInvalidErr, err)
 }
 
 func TestValidateVRASign_SignInvalid_ReturnErr(t *testing.T) {
@@ -24,7 +24,7 @@ func TestValidateVRASign_SignInvalid_ReturnErr(t *testing.T) {
 	s := ValidateVRASign("123", kp.PublicKey())
 
 	_, err := s(req)
-	assert.Equal(t, core.ErrorVRASignInvalid, err)
+	assert.Equal(t, core.VRASignInvalidErr, err)
 }
 
 func TestValidateVRASign_SignValid_ReturnErr(t *testing.T) {
