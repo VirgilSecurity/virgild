@@ -73,15 +73,16 @@ $(BUILD_FILE_NAME):
 	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
 
 build_in_docker-env:
+ifeq ($(TARGET_OS),linux)
+	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
+else
 	docker pull virgilsecurity/virgil-crypto-go-env
 	docker run -it --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild virgilsecurity/virgil-crypto-go-env make
+endif
 
 docker: build_docker docker_test
 
-
-rebuild_docker: build build_docker
-
-build_docker: $(BUILD_FILE_NAME)
+build_docker: build_in_docker-env
 	docker build -t $(IMAGENAME) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg GIT_BRANCH=$(GIT_BRANCH) .
 
 docker_test:
@@ -101,7 +102,7 @@ endif
 	# CACHE
 	docker-compose up -d virgild_cache
 	go test -tags=docker -v
-	docker-compose down	
+	docker-compose down
 
 docker_dockerhub_publish:
 	$(call tag_docker, $(DOCKERHUB_REPOSITORY))

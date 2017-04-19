@@ -52,7 +52,7 @@ func TestGetAppCard(t *testing.T) {
 	appID := os.Getenv("SYNC_APP_ID")
 	token := os.Getenv("SYNC_TOKEN")
 
-	lc, err := virgil.NewClient("", virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
+	lc, err := virgil.NewClient(token, virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
 	assert.NoError(t, err, "Cannot create virgil client")
 	vc, err := virgil.NewClient(token)
 	assert.NoError(t, err, "Cannot create virgil client")
@@ -103,11 +103,6 @@ func TestSearchAppCards(t *testing.T) {
 	card, err := vc.CreateCard(req)
 	assert.NoError(t, err, "Cannot create card in the cloud")
 
-	// HOT FIX
-	if card.Relations == nil {
-		card.Relations = make(map[string][]byte)
-	}
-
 	time.Sleep(5 * time.Second)
 
 	defer func() {
@@ -116,7 +111,7 @@ func TestSearchAppCards(t *testing.T) {
 		vc.RevokeCard(req)
 	}()
 
-	lc, err := virgil.NewClient("", virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
+	lc, err := virgil.NewClient(token, virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
 	assert.NoError(t, err, "Cannot create virgil client")
 	cs, err := lc.SearchCards(virgil.SearchCriteriaByIdentities(uid))
 	assert.NoError(t, err, "Cannot search cards by temp name (%v)", uid)
@@ -154,8 +149,9 @@ func TestCreateAppCard(t *testing.T) {
 	signer := virgil.RequestSigner{}
 	err = signer.SelfSign(req, deviceKeypair.PrivateKey())
 	assert.NoError(t, err, "Cannot self sign")
+	signer.AuthoritySign(req, appID, priv)
 
-	lc, err := virgil.NewClient("", virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
+	lc, err := virgil.NewClient(token, virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
 	assert.NoError(t, err, "Cannot create virgil client")
 
 	vc, err := virgil.NewClient(token)
@@ -209,7 +205,7 @@ func TestRevokeAppCard(t *testing.T) {
 	err = signer.AuthoritySign(req, appID, priv)
 	assert.NoError(t, err, "Cannot add app sing")
 
-	lc, err := virgil.NewClient("", virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
+	lc, err := virgil.NewClient(token, virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
 	assert.NoError(t, err, "Cannot create virgil client")
 
 	vc, err := virgil.NewClient(token)
@@ -221,6 +217,7 @@ func TestRevokeAppCard(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	req, _ = virgil.NewRevokeCardRequest(card.ID, virgil.RevocationReason.Unspecified)
+	signer.AuthoritySign(req, appID, priv)
 	err = lc.RevokeCard(req)
 
 	assert.NoError(t, err, "Cannot revoke card")
