@@ -21,7 +21,7 @@ type Common struct {
 type HTTP struct {
 	WrapAPIHandler func(fun APIHandler) http.Handler
 	Router         *pat.PatternServeMux
-	//	AdminProtection Middleware
+	AdminAuth      Middleware
 }
 
 // API declaration
