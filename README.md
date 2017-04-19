@@ -166,8 +166,7 @@ Arg | Environment variable name | Config variable name | Description
  auth-mode | AUTH_MODE | auth-mode | Authentication mode
  cache-duration | CACHE_DURATION | cache-duration | Caching duration of cards (in seconds)
  cache-size | CACHE_SIZE | cache-size | Size of cache (in megabytes)
- metrics-log-enabled | METRICS_LOG_ENABLED | metrics-log-enabled | Metrics are printing in log file
- metrics-log-interval | METRICS_LOG_INTERVAL | metrics-log-interval | Interval between flushing data to log file
+ metrics-console-interval | METRICS_LOG_INTERVAL | metrics-log-interval | Interval between flushing data to log file
  metrics-graphite-address | METRICS_GRAPHITE_ADDRESS | metrics-graphite-address | Address of graphite service where will be sending metrics (if this parameter is empty then metrics will not send)
  metrics-graphite-interval |  METRICS_GRAPHITE_INTERVAL | metrics-graphite-interval | Interval between flushing data to graphite
  metrics-graphite-prefix | METRICS_GRAPHITE_PREFIX | metrics-graphite-prefix | Prefix for VirgilD in graphite
