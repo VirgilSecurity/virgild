@@ -63,7 +63,7 @@ ifeq ($(C_CRYPTO),true)
 	cd $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4 ;	 make
 endif
 
-get: $(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.go
+get:
 	go get -v -d -t -tags docker  ./...
 
 build: get
@@ -100,16 +100,8 @@ endif
 
 	# CACHE
 	docker-compose up -d virgild_cache
-	go test -tags=docker -run Cache -v
-	docker-compose down
-	# SYNC
-	docker-compose up -d virgild_sync
-	go test -tags=docker -run Sync -v
-	docker-compose down
-	# LOCAL
-	docker-compose up -d virgild_local
-	go test -tags=docker -run Local -v
-	docker-compose down
+	go test -tags=docker -v
+	docker-compose down	
 
 docker_dockerhub_publish:
 	$(call tag_docker, $(DOCKERHUB_REPOSITORY))

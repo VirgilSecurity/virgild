@@ -4,21 +4,3 @@ services:
     image: 'virgild'
     ports:
      - '8080:8080'
-
-  virgild_local:
-    image: 'virgild'
-    ports:
-     - '8080:8080'
-    environment:
-      MODE: local
-
-  virgild_sync:
-    image: 'virgild'
-    ports:
-     - '8080:8080'
-    environment:
-      MODE: sync
-      REMOTE_TOKEN: ${SYNC_TOKEN}
-      VD_CARD_ID: ${SYNC_APP_ID}
-      VD_KEY: ${SYNC_APP_KEY}
-      VD_KEY_PASSWORD: ${SYNC_APP_KEY_PASS}
