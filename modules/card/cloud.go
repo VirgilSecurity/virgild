@@ -150,10 +150,13 @@ func (c *cloudCard) send(ctx context.Context, method string, urlStr string, payl
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, core.EntityNotFoundErr
 	}
-	verr, err := b2VirgilError(respBody)
+
+	verr := new(virgilError)
+	err = json.Unmarshal(respBody, verr)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Cloud.Send(unmarshal error [body: %s])", respBody)
 	}
+
 	return nil, coreapi.APIError{
 		Code:       verr.Code,
 		StatusCode: resp.StatusCode,
@@ -162,10 +165,4 @@ func (c *cloudCard) send(ctx context.Context, method string, urlStr string, payl
 
 type virgilError struct {
 	Code int
-}
-
-func b2VirgilError(b []byte) (*virgilError, error) {
-	verr := new(virgilError)
-	err := json.Unmarshal(b, verr)
-	return verr, err
 }
