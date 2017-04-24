@@ -63,7 +63,7 @@ ifeq ($(C_CRYPTO),true)
 	cd $$GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4 ;	 make
 endif
 
-get:
+get:$(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.go
 	go get -v -d -t -tags docker  ./...
 
 build: get
