@@ -56,6 +56,17 @@ test: get
 test_all: get
 	go test -v ./... -tags=integration
 
+test_coverage:
+	@echo "" > coverage.txt
+
+	@for d in $$(go list ./... | grep -v vendor); do \
+	    go test -race -tags=integration -coverprofile=profile.out -covermode=atomic $$d; \
+	    if [ -f profile.out ]; then \
+	        cat profile.out >> coverage.out; \
+	        rm profile.out; \
+	    fi; \
+	done
+
 
 $(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.go:
 ifeq ($(C_CRYPTO),true)
