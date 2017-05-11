@@ -32,7 +32,8 @@ ifneq ($(TARGET_OS),darwin)
 BUILD_ARGS+= --ldflags '-extldflags "-static"'
 endif
 
-.DEFAULT_GOAL := build
+all: get build
+.DEFAULT_GOAL := all
 
 
 define tag_docker
@@ -64,17 +65,16 @@ ifeq ($(C_CRYPTO),true)
 endif
 
 get:$(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.go
+	go get github.com/jteeuwen/go-bindata/...
 	go get -v -d -t -tags docker  ./...
 
-build: get
-	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
-
-$(BUILD_FILE_NAME):
+build:
+	go-bindata -pkg card -o modules/card/bindata.go -prefix modules/card/ modules/card/migrations/
 	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
 
 build_in_docker-env:
 ifeq ($(TARGET_OS),linux)
-	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
+	make
 else
 	docker pull virgilsecurity/virgil-crypto-go-env
 	docker run -it --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild virgilsecurity/virgil-crypto-go-env make
@@ -112,7 +112,7 @@ docker_inspect:
 		docker inspect -f '{{index .ContainerConfig.Labels "git-commit"}}' $(IMAGENAME)
 		docker inspect -f '{{index .ContainerConfig.Labels "git-branch"}}' $(IMAGENAME)
 
-build_artifacts: clean_artifact $(BUILD_FILE_NAME)
+build_artifacts: clean_artifact build
 	mkdir -p artf/src/$(PROJECT)
 	mv $(BUILD_FILE_NAME) artf/src/$(PROJECT)/
 

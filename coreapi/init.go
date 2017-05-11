@@ -30,10 +30,10 @@ func init() {
 	flag.StringVar(&cacheType, "cache", "mem", "Cache type")
 	flag.StringVar(&metricsType, "metrics", "disabled", "Metrics output type")
 
-	flag.StringVar(&adminLogin, "admin-login", "admin", "Admin login")
-	flag.StringVar(&adminPassword, "admin-password", "admin", "Admin password")
-	flag.StringVar(&apiAuthMode, "api-auth-mode", "no", "API Auth mode(no,local)")
-	flag.BoolVar(&statisticEnabled, "statistic", false, "Request statistics")
+	// flag.StringVar(&adminLogin, "admin-login", "admin", "Admin login")
+	// flag.StringVar(&adminPassword, "admin-password", "admin", "Admin password")
+	// flag.StringVar(&apiAuthMode, "api-auth-mode", "no", "API Auth mode(no,local)")
+	// flag.BoolVar(&statisticEnabled, "statistic", false, "Request statistics")
 }
 
 func Init() Core {
