@@ -28,12 +28,13 @@ func UpdateAppsCronJob(appStore AppStore, client DevPortalClient) func() error {
 		if err != nil {
 			return errors.Wrap(err, "UpdateApplications.GetDevPortalApplications")
 		}
+
 		locApps, err := appStore.GetAll()
 		if err != nil {
 			return errors.Wrap(err, "UpdateApplications.GetAll")
 		}
-		var addApps []core.Application
 
+		var addApps []core.Application
 		for _, devApp := range devApps {
 			var exist = false
 			for i, locApp := range locApps {
