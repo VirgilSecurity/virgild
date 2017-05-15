@@ -69,7 +69,7 @@ get:$(GOPATH)/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/virgil_crypto_go.g
 	go get -v -d -t -tags docker  ./...
 
 build:
-	go-bindata -pkg card -o modules/card/bindata.go -prefix modules/card/ modules/card/migrations/
+	go-bindata -pkg db -o modules/card/db/bindata.go -prefix modules/card/ modules/card/db/migrations/
 	CGO_ENABLED=1 GOOS=$(TARGET_OS) go build  $(BUILD_ARGS) -o $(BUILD_FILE_NAME)
 
 build_in_docker-env:

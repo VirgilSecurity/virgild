@@ -2,6 +2,7 @@ package coreapi
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/bmizerany/pat"
 	"github.com/jmoiron/sqlx"
@@ -10,6 +11,11 @@ import (
 type Core struct {
 	Common Common
 	HTTP   HTTP
+	Scheduler
+}
+
+type Scheduler interface {
+	Add(period time.Duration, f func() error, name string)
 }
 
 type Common struct {

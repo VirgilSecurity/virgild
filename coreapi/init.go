@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"gopkg.in/robfig/cron.v2"
+
 	"github.com/bmizerany/pat"
 	"github.com/goji/httpauth"
 	"github.com/jmoiron/sqlx"
@@ -74,6 +76,9 @@ func Init() Core {
 		os.Exit(-1)
 	}
 
+	s := &scheduler{c: cron.New(), l: l}
+	s.c.Start()
+
 	app := Core{
 		Common: Common{
 			Logger: l,
@@ -88,6 +93,7 @@ func Init() Core {
 			WrapAPIHandler: wrapAPIHandler(l),
 			AdminAuth:      httpauth.SimpleBasicAuth(adminLogin, adminPassword),
 		},
+		Scheduler: s,
 	}
 	return app
 }
