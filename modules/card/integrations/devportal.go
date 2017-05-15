@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/VirgilSecurity/virgild/modules/card/core"
@@ -22,73 +23,33 @@ type DevPortalClient struct {
 }
 
 func (c *DevPortalClient) GetApplications() ([]core.Application, error) {
-	if c.token == "" {
-		return nil, errors.New("DevPortalClient.GetApplications [not authorized]")
+	url := fmt.Sprintf("%v/account/%v/collections/applications", c.Address, c.accountID)
+	body, err := c.send(url)
+	if err != nil {
+		return nil, errors.Wrapf(err, "DevPortalClient.GetApplications [account_id: %s]", c.accountID)
 	}
 
-	uri := fmt.Sprintf("%v/account/%v/collections/applications", c.Address, c.accountID)
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	var apps []core.Application
+	err = json.Unmarshal(body, &apps)
 	if err != nil {
-		return nil, errors.Wrap(err, "DevPortalClient.GetApplications [new request]")
+		return nil, errors.Wrapf(err, "DevPortalClient.GetApplications [unmarshal apps (account_id: %s)]", c.accountID)
 	}
-	req.Header.Add("Authorization", "bearer "+c.token)
-
-	doer := c.getDoer()
-	resp, err := doer.Do(req)
-	if err != nil {
-		return nil, errors.Wrapf(err, "DevPortalClient.GetApplications [send request (account_id: %s)]", c.accountID)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusOK {
-		var apps []core.Application
-		err = json.NewDecoder(resp.Body).Decode(&apps)
-		if err != nil {
-			return nil, errors.Wrapf(err, "DevPortalClient.GetApplications [unmarshal apps (account_id: %s)]", c.accountID)
-		}
-		return apps, nil
-	}
-	var dpErr devPortalError
-	err = json.NewDecoder(resp.Body).Decode(&dpErr)
-	if err != nil {
-		return nil, errors.Wrapf(err, "DevPortalClient.GetApplications [unmarshal err obj (account_id: %s status code: %v)]", c.accountID, resp.StatusCode)
-	}
-	return nil, dpErr
+	return apps, nil
 }
 
 func (c *DevPortalClient) GetTokens() ([]core.Token, error) {
-	if c.token == "" {
-		return nil, errors.New("DevPortalClient.GetTokens [not authorized]")
+	url := fmt.Sprintf("%v/account/%v/collections/tokens", c.Address, c.accountID)
+	body, err := c.send(url)
+	if err != nil {
+		return nil, errors.Wrapf(err, "DevPortalClient.GetTokens [account_id: %s]", c.accountID)
 	}
 
-	uri := fmt.Sprintf("%v/account/%v/collections/tokens", c.Address, c.accountID)
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	var tokens []core.Token
+	err = json.Unmarshal(body, &tokens)
 	if err != nil {
-		return nil, errors.Wrap(err, "DevPortalClient.GetTokens [new request]")
+		return nil, errors.Wrapf(err, "DevPortalClient.GetTokens [unmarshal tokens (account_id: %s)]", c.accountID)
 	}
-	req.Header.Add("Authorization", "bearer "+c.token)
-
-	doer := c.getDoer()
-	resp, err := doer.Do(req)
-	if err != nil {
-		return nil, errors.Wrapf(err, "DevPortalClient.GetTokens [send request (account_id: %s)]", c.accountID)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusOK {
-		var tokens []core.Token
-		err = json.NewDecoder(resp.Body).Decode(&tokens)
-		if err != nil {
-			return nil, errors.Wrapf(err, "DevPortalClient.GetTokens [unmarshal tokens (account_id: %s)]", c.accountID)
-		}
-		return tokens, nil
-	}
-	var dpErr devPortalError
-	err = json.NewDecoder(resp.Body).Decode(&dpErr)
-	if err != nil {
-		return nil, errors.Wrapf(err, "DevPortalClient.GetTokens [unmarshal err obj (account_id: %s status code: %v)]", c.accountID, resp.StatusCode)
-	}
-	return nil, dpErr
+	return tokens, nil
 }
 
 func (c *DevPortalClient) Authorize(login, password string) error {
@@ -97,10 +58,8 @@ func (c *DevPortalClient) Authorize(login, password string) error {
 		"email":    login,
 		"password": password,
 	})
-	req, err := http.NewRequest(http.MethodPost, c.Address+"/authorization", bytes.NewReader(body))
-	if err != nil {
-		return errors.Wrap(err, "DevPortalClient.Authorize [new request]")
-	}
+	req, _ := http.NewRequest(http.MethodPost, c.Address+"/authorization", bytes.NewReader(body))
+
 	resp, err := doer.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "DevPortalClient.Authorize [send request]")
@@ -109,7 +68,7 @@ func (c *DevPortalClient) Authorize(login, password string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var dpErr devPortalError
-		err := json.NewDecoder(resp.Body).Decode(&dpErr)
+		err = json.NewDecoder(resp.Body).Decode(&dpErr)
 		if err != nil {
 			return errors.Wrapf(err, "DevPortalClient.Authorize [unmarshal error obj (resp status code: %v)]", resp.StatusCode)
 		}
@@ -123,6 +82,37 @@ func (c *DevPortalClient) Authorize(login, password string) error {
 	c.accountID = auth.AccountID
 	c.token = auth.AuthToken
 	return nil
+}
+
+func (c *DevPortalClient) send(url string) ([]byte, error) {
+	if c.token == "" {
+		return nil, errors.New("DevPortalClient.Send [not authorized]")
+	}
+
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	req.Header.Add("Authorization", "bearer "+c.token)
+
+	doer := c.getDoer()
+	resp, err := doer.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "DevPortalClient.Send [send request]")
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "DevPortalClient.Send [read body]")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var dpErr devPortalError
+		err = json.Unmarshal(body, &dpErr)
+		if err != nil {
+			return nil, errors.Wrapf(err, "DevPortalClient.Send [unmarshal err obj (status code: %v)]", resp.StatusCode)
+		}
+		return nil, dpErr
+	}
+	return body, nil
 }
 
 type devPortalAuth struct {
