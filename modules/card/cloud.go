@@ -143,7 +143,7 @@ func send(ctx context.Context, method string, urlStr string, payload interface{}
 		return respBody, nil
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, core.EntityNotFoundErr
+		return nil, coreapi.EntityNotFoundErr
 	}
 	verr, err := b2VirgilError(respBody)
 	if err != nil {

@@ -7,10 +7,6 @@ import (
 )
 
 var (
-	EntityNotFoundErr = coreapi.APIError{
-		StatusCode: http.StatusNotFound,
-	}
-
 	UnsupportedAuthTypeErr = coreapi.APIError{
 		Code:       20300,
 		StatusCode: http.StatusUnauthorized,
