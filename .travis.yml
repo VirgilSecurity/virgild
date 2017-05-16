@@ -41,7 +41,6 @@ script:
   - make build
   - make test_all
   - 'if [ "$TARGET_OS" = "linux" ]; then
-      make test_coverage;
       make build_docker;
       make docker_test;
     fi'
