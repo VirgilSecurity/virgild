@@ -1,6 +1,8 @@
 package db
 
 import (
+	"database/sql"
+
 	"github.com/VirgilSecurity/virgild/modules/card/core"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -12,7 +14,11 @@ type TokenStore struct {
 
 func (s TokenStore) GetByValue(val string) (*core.Token, error) {
 	token := new(core.Token)
-	err := s.DB.Get(token, "SELECT * from tokens where value=$1", val)
+	err := s.DB.Get(token, s.DB.Rebind("SELECT * from tokens where value=?"), val)
+	if err == sql.ErrNoRows {
+		return nil, core.EntityNotFoundErr
+	}
+
 	if err != nil {
 		return nil, errors.Wrapf(err, "TokenStore.GetByVal(%s)", val)
 	}
@@ -28,7 +34,7 @@ func (s *TokenStore) Add(token core.Token) error {
 }
 
 func (s *TokenStore) Delete(id string) error {
-	_, err := s.DB.Exec("DELETE tokens where id=$1", id)
+	_, err := s.DB.Exec(s.DB.Rebind("DELETE tokens where id=?"), id)
 	if err != nil {
 		return errors.Wrap(err, "TokenStore.Delete")
 	}

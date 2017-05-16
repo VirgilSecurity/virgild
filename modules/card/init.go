@@ -52,10 +52,7 @@ func Init(c coreapi.Core) {
 	hRevokeRelation := middleware.RequestOwner(vhttp.RevokeRelation(cache.RevokeRelations(cloud.revokeRelation)))
 
 	if devPortalLogin != "" && devPortalPassword != "" {
-		devPortalClient := &inegrations.DevPortalClient{
-			Address: devPortalService,
-		}
-
+		devPortalClient := &inegrations.DevPortalClient{Address: devPortalService}
 		err := devPortalClient.Authorize(devPortalLogin, devPortalPassword)
 		if err != nil {
 			c.Common.Logger.Err("Cannot authorize to dev portal (login: %s password: %s): %+v", devPortalLogin, devPortalPassword, err)
@@ -70,7 +67,6 @@ func Init(c coreapi.Core) {
 			appMidware := middleware.AppMiddleware{
 				Cache:      c.Common.Cache,
 				TokenStore: tokenStore,
-				AppStore:   appStore,
 			}
 			hGet = appMidware.RequestApp(hGet)
 			hSearch = appMidware.RequestApp(hSearch)
