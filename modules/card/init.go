@@ -1,6 +1,7 @@
 package card
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/VirgilSecurity/virgild/coreapi"
@@ -40,6 +41,7 @@ func Init(c coreapi.Core) {
 	cloud := cloudCard{
 		CardsService: cardsService,
 		RAService:    raService,
+		Client:       http.DefaultClient,
 	}
 
 	hGet := middleware.RequestOwner(vhttp.GetCard(cache.GetCard(cloud.getCard)))

@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/VirgilSecurity/virgild.svg?branch=master)](https://travis-ci.org/VirgilSecurity/virgild)
-[![Build status](https://ci.appveyor.com/api/projects/status/pdaahgsdva7bd0w3?svg=true)](https://ci.appveyor.com/project/tochka/virgild)
+[![Build status](https://ci.appveyor.com/api/projects/status/pdaahgsdva7bd0w3/branch/master?svg=true)](https://ci.appveyor.com/project/tochka/virgild/branch/master)
 
 # VirgilD
 

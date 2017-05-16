@@ -41,6 +41,7 @@ script:
   - make build
   - make test_all
   - 'if [ "$TARGET_OS" = "linux" ]; then
+      make test_coverage;
       make build_docker;
       make docker_test;
     fi'
@@ -48,6 +49,7 @@ script:
 
 after_seccess:
   - 'if [ "$TARGET_OS" = "linux" ]; then
+      bash <(curl -s https://codecov.io/bash);
       make docker_inspect;
     fi'
 
@@ -60,7 +62,7 @@ deploy:
     file: artf/*
     on:
       tags: true
-# Update latest docker image      
+# Update latest docker image
   - provider: script
     script: make docker_dockerhub_publish
     on:
