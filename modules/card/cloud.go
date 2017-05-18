@@ -16,9 +16,14 @@ import (
 	metrics "github.com/rcrowley/go-metrics"
 )
 
+type client interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type cloudCard struct {
 	RAService    string
 	CardsService string
+	Client       client
 }
 
 func (c *cloudCard) getCard(ctx context.Context, id string) (*virgil.CardResponse, error) {
@@ -27,7 +32,7 @@ func (c *cloudCard) getCard(ctx context.Context, id string) (*virgil.CardRespons
 
 	t := metrics.GetOrRegisterTimer("cards-service.get", nil)
 	t.Time(func() {
-		body, err = send(ctx, http.MethodGet, c.CardsService+"/v4/card/"+id, nil)
+		body, err = c.send(ctx, http.MethodGet, c.CardsService+"/v4/card/"+id, nil)
 	})
 	if err != nil {
 		return nil, err
@@ -43,7 +48,7 @@ func (c *cloudCard) searchCards(ctx context.Context, crit *virgil.Criteria) ([]v
 
 	t := metrics.GetOrRegisterTimer("cards-service.search", nil)
 	t.Time(func() {
-		body, err = send(ctx, http.MethodPost, c.CardsService+"/v4/card/actions/search", crit)
+		body, err = c.send(ctx, http.MethodPost, c.CardsService+"/v4/card/actions/search", crit)
 	})
 	if err != nil {
 		return nil, err
@@ -59,7 +64,7 @@ func (c *cloudCard) createCard(ctx context.Context, req *core.CreateCardRequest)
 
 	t := metrics.GetOrRegisterTimer("cards-service.create-card", nil)
 	t.Time(func() {
-		body, err = send(ctx, http.MethodPost, c.RAService+"/v1/card", req.Request)
+		body, err = c.send(ctx, http.MethodPost, c.RAService+"/v1/card", req.Request)
 	})
 
 	if err != nil {
@@ -75,7 +80,7 @@ func (c *cloudCard) revokeCard(ctx context.Context, req *core.RevokeCardRequest)
 
 	t := metrics.GetOrRegisterTimer("cards-service.revoke-card", nil)
 	t.Time(func() {
-		_, err = send(ctx, http.MethodDelete, c.RAService+"/v1/card/"+req.Info.ID, req.Request)
+		_, err = c.send(ctx, http.MethodDelete, c.RAService+"/v1/card/"+req.Info.ID, req.Request)
 	})
 
 	return err
@@ -87,7 +92,7 @@ func (c *cloudCard) createRelation(ctx context.Context, req *core.CreateRelation
 
 	t := metrics.GetOrRegisterTimer("cards-service.create-relation", nil)
 	t.Time(func() {
-		body, err = send(ctx, http.MethodPost, c.CardsService+"/v4/card/"+req.ID+"/collections/relations", req.Request)
+		body, err = c.send(ctx, http.MethodPost, c.CardsService+"/v4/card/"+req.ID+"/collections/relations", req.Request)
 	})
 	if err != nil {
 		return nil, err
@@ -103,7 +108,7 @@ func (c *cloudCard) revokeRelation(ctx context.Context, req *core.RevokeRelation
 
 	t := metrics.GetOrRegisterTimer("cards-service.revoke-relation", nil)
 	t.Time(func() {
-		body, err = send(ctx, http.MethodDelete, c.CardsService+"/v4/card/"+req.ID+"/collections/relations", req.Request)
+		body, err = c.send(ctx, http.MethodDelete, c.CardsService+"/v4/card/"+req.ID+"/collections/relations", req.Request)
 	})
 
 	if err != nil {
@@ -114,7 +119,7 @@ func (c *cloudCard) revokeRelation(ctx context.Context, req *core.RevokeRelation
 	return card, err
 }
 
-func send(ctx context.Context, method string, urlStr string, payload interface{}) ([]byte, error) {
+func (c *cloudCard) send(ctx context.Context, method string, urlStr string, payload interface{}) ([]byte, error) {
 	var body io.Reader
 	if payload != nil {
 		bp, err := json.Marshal(payload)
@@ -130,7 +135,7 @@ func send(ctx context.Context, method string, urlStr string, payload interface{}
 	auth := core.GetAuthHeader(ctx)
 	req.Header.Set("Authorization", auth)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "Cloud.Send(default client send req)")
 	}
@@ -145,10 +150,13 @@ func send(ctx context.Context, method string, urlStr string, payload interface{}
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, coreapi.EntityNotFoundErr
 	}
-	verr, err := b2VirgilError(respBody)
+
+	verr := new(virgilError)
+	err = json.Unmarshal(respBody, verr)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Cloud.Send(unmarshal error [body: %s])", respBody)
 	}
+
 	return nil, coreapi.APIError{
 		Code:       verr.Code,
 		StatusCode: resp.StatusCode,
@@ -157,10 +165,4 @@ func send(ctx context.Context, method string, urlStr string, payload interface{}
 
 type virgilError struct {
 	Code int
-}
-
-func b2VirgilError(b []byte) (*virgilError, error) {
-	verr := new(virgilError)
-	err := json.Unmarshal(b, verr)
-	return verr, err
 }
