@@ -31,6 +31,10 @@ var (
 		Code:       30123,
 		StatusCode: http.StatusBadRequest,
 	}
+	SingItemInvalidForApplicationErr = coreapi.APIError{
+		Code:       30128,
+		StatusCode: http.StatusBadRequest,
+	}
 	SignItemInvalidForClientErr = coreapi.APIError{
 		Code:       30142,
 		StatusCode: http.StatusBadRequest,
