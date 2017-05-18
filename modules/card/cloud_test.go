@@ -156,7 +156,7 @@ func TestCloudGetCard_ClientReturn404_ReturnVirgilErr(t *testing.T) {
 	f.On("Do", mock.Anything).Return(resp, nil)
 	cloud := cloudCard{RAService: "ra-service", CardsService: "cards-service", Client: f}
 	_, err := cloud.getCard(context.Background(), "1234")
-	assert.Error(t, err, core.EntityNotFoundErr)
+	assert.Error(t, err, coreapi.EntityNotFoundErr)
 }
 
 func TestCloudGetCard_ClientReturnOk_ReturnVal(t *testing.T) {
