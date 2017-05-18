@@ -48,7 +48,6 @@ script:
 
 after_seccess:
   - 'if [ "$TARGET_OS" = "linux" ]; then
-      bash <(curl -s https://codecov.io/bash);
       make docker_inspect;
     fi'
 
