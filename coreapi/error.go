@@ -15,7 +15,12 @@ func (err APIError) Error() string {
 	return fmt.Sprintf("code:%v msg:%s", err.Code, err.Message)
 }
 
-var InternalServerErr = APIError{
-	Code:       10000,
-	StatusCode: http.StatusInternalServerError,
-}
+var (
+	InternalServerErr = APIError{
+		Code:       10000,
+		StatusCode: http.StatusInternalServerError,
+	}
+	EntityNotFoundErr = APIError{
+		StatusCode: http.StatusNotFound,
+	}
+)

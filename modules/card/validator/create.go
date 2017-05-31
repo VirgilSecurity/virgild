@@ -61,7 +61,7 @@ func cardPublicKeyLengthInvalid(ctx context.Context, req *core.CreateCardRequest
 }
 
 func createCardRequestSignsEmpty(ctx context.Context, req *core.CreateCardRequest) (bool, error) {
-	if len(req.Request.Meta.Signatures) == 0 {
+	if req.Request.Meta.Signatures == nil {
 		return false, core.SignsIsEmptyErr
 	}
 	return true, nil

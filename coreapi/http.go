@@ -26,6 +26,11 @@ func (wh wrapperHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			apiErr = InternalServerErr
 		}
 		w.WriteHeader(apiErr.StatusCode)
+
+		if apiErr == EntityNotFoundErr {
+			return
+		}
+
 		b, _ := json.Marshal(apiErr)
 		w.Write(b)
 		return

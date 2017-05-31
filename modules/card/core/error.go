@@ -7,10 +7,6 @@ import (
 )
 
 var (
-	EntityNotFoundErr = coreapi.APIError{
-		StatusCode: http.StatusNotFound,
-	}
-
 	UnsupportedAuthTypeErr = coreapi.APIError{
 		Code:       20300,
 		StatusCode: http.StatusUnauthorized,
@@ -33,6 +29,10 @@ var (
 	}
 	SignsIsEmptyErr = coreapi.APIError{
 		Code:       30123,
+		StatusCode: http.StatusBadRequest,
+	}
+	SingItemInvalidForApplicationErr = coreapi.APIError{
+		Code:       30128,
 		StatusCode: http.StatusBadRequest,
 	}
 	SignItemInvalidForClientErr = coreapi.APIError{
