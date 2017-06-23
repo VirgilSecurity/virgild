@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/VirgilSecurity/virgild/coreapi"
-	"github.com/allegro/bigcache"
+	"github.com/coocood/freecache"
 	"github.com/dchest/siphash"
 	"github.com/namsral/flag"
 	"github.com/pkg/errors"
-	"github.com/rcrowley/go-metrics"
 )
 
 var (
@@ -32,28 +31,28 @@ func makeMemoryCache() (coreapi.RawCache, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Create hash function")
 	}
-	bconf := bigcache.DefaultConfig(cacheDuration)
-	bconf.HardMaxCacheSize = cacheSize
-	bconf.Hasher = h
-	bc, err := bigcache.NewBigCache(bconf)
-	if err != nil {
-		return nil, errors.Wrap(err, "Create memory cache")
-	}
 
-	metrics.NewFunctionalGauge(func() int64 {
-		return int64(bc.Len())
-	})
-
-	return cache{bc}, nil
+	return freeCache{
+		Cache:         freecache.NewCache(cacheSize * 1024 * 1024),
+		ExpireSeconds: int(cacheDuration / time.Second),
+		Hasher:        h,
+	}, nil
 }
 
-type cache struct {
-	Cache *bigcache.BigCache
+type hasher interface {
+	Sum64(string) int64
 }
 
-func (m cache) Get(key string, val interface{}) (bool, error) {
-	r, err := m.Cache.Get(key)
-	if _, ok := err.(*bigcache.EntryNotFoundError); ok {
+type freeCache struct {
+	Cache         *freecache.Cache
+	Hasher        hasher
+	ExpireSeconds int
+}
+
+func (m freeCache) Get(key string, val interface{}) (bool, error) {
+	hash := m.Hasher.Sum64(key)
+	r, err := m.Cache.GetInt(hash)
+	if err == freecache.ErrNotFound {
 		return false, nil
 	}
 
@@ -72,30 +71,23 @@ func (m cache) Get(key string, val interface{}) (bool, error) {
 	return true, nil
 }
 
-func (m cache) Set(key string, v interface{}) error {
+func (m freeCache) Set(key string, v interface{}) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return errors.Wrapf(err, "Cache: set(%v) marshal error", key)
 	}
-	err = m.Cache.Set(key, b)
+	hash := m.Hasher.Sum64(key)
+	err = m.Cache.SetInt(hash, b, m.ExpireSeconds)
 	if err != nil {
 		return errors.Wrapf(err, "Cache: set(%v,%s) internal error", key, b)
 	}
 	return nil
 }
 
-func (m cache) Del(key string) error {
-	_, err := m.Cache.Get(key)
-	if _, ok := err.(*bigcache.EntryNotFoundError); ok {
-		return nil
-	}
-	if err != nil {
-		return errors.Wrapf(err, "Cache: del(%v) get key", key)
-	}
-	err = m.Cache.Set(key, nil)
-	if err != nil {
-		return errors.Wrapf(err, "Cache: del(%v) set nil", key)
-	}
+func (m freeCache) Del(key string) error {
+	hash := m.Hasher.Sum64(key)
+	m.Cache.DelInt(hash)
+
 	return nil
 }
 
@@ -103,10 +95,10 @@ type siph struct {
 	k0, k1 uint64
 }
 
-func (h siph) Sum64(data string) uint64 {
-	return siphash.Hash(h.k0, h.k1, []byte(data))
+func (h siph) Sum64(data string) int64 {
+	return int64(siphash.Hash(h.k0, h.k1, []byte(data)))
 }
-func newHasher() (bigcache.Hasher, error) {
+func newHasher() (hasher, error) {
 	key := make([]byte, 16)
 	_, err := rand.Read(key)
 
