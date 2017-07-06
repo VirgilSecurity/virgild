@@ -11,6 +11,7 @@ import (
 	"github.com/dchest/siphash"
 	"github.com/namsral/flag"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -19,8 +20,8 @@ var (
 )
 
 func init() {
-	flag.DurationVar(&cacheDuration, "cache-duration", time.Hour, "Cache duration")
-	flag.IntVar(&cacheSize, "cache-size", 1024, "Cache size (mb)")
+	flag.DurationVar(&cacheDuration, "cache-mem-duration", time.Hour, "Cache duration")
+	flag.IntVar(&cacheSize, "cache-mem-size", 1024, "Cache size (mb)")
 
 	coreapi.RegisterCache("mem", makeMemoryCache)
 
@@ -32,8 +33,28 @@ func makeMemoryCache() (coreapi.RawCache, error) {
 		return nil, errors.Wrap(err, "Create hash function")
 	}
 
+	fc := freecache.NewCache(cacheSize * 1024 * 1024)
+
+	hitRate := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+		Name:      "hit_rate",
+		Subsystem: "cache_memory",
+		Namespace: "virgild",
+	}, func() float64 {
+		return fc.HitRate()
+	})
+
+	entryCount := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
+		Name:      "entry_count",
+		Subsystem: "cache_memory",
+		Namespace: "virgild",
+	}, func() float64 {
+		return float64(fc.EntryCount())
+	})
+
+	prometheus.MustRegister(hitRate, entryCount)
+
 	return freeCache{
-		Cache:         freecache.NewCache(cacheSize * 1024 * 1024),
+		Cache:         fc,
 		ExpireSeconds: int(cacheDuration / time.Second),
 		Hasher:        h,
 	}, nil

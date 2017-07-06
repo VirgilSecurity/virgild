@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/bmizerany/pat"
-	"github.com/jmoiron/sqlx"
 )
 
 type Core struct {
@@ -14,18 +13,17 @@ type Core struct {
 
 type Common struct {
 	Logger Logger
-	DB     *sqlx.DB
 	Cache  Cache
 }
 
 type HTTP struct {
 	WrapAPIHandler func(fun APIHandler) http.Handler
 	Router         *pat.PatternServeMux
-	AdminAuth      Middleware
 }
 
 // API declaration
 type APIHandler func(req *http.Request) (interface{}, error)
+type APIMiddleware func(next APIHandler) APIHandler
 type Middleware func(next http.Handler) http.Handler
 
 type Logger interface {
