@@ -51,10 +51,10 @@ clean_artifact:
 		rm -rf artf
 
 test: get
-		go test -v ./...
+		go test ./...
 
 test_all: get
-	go test -v ./... -tags=integration
+	go test ./... -tags=integration
 
 test_coverage:
 	@echo "" > coverage.txt
