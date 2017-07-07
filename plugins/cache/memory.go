@@ -38,6 +38,7 @@ func makeMemoryCache() (coreapi.RawCache, error) {
 	hitRate := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
 		Name:      "hit_rate",
 		Subsystem: "cache_memory",
+		Help:      "Memory cache display hit rate",
 		Namespace: "virgild",
 	}, func() float64 {
 		return fc.HitRate()
@@ -46,6 +47,7 @@ func makeMemoryCache() (coreapi.RawCache, error) {
 	entryCount := prometheus.NewGaugeFunc(prometheus.GaugeOpts{
 		Name:      "entry_count",
 		Subsystem: "cache_memory",
+		Help:      "Memory cache display count entity",
 		Namespace: "virgild",
 	}, func() float64 {
 		return float64(fc.EntryCount())

@@ -21,6 +21,7 @@ var (
 var rpc = prometheus.NewSummary(prometheus.SummaryOpts{
 	Name:      "duration_seconds",
 	Subsystem: "http",
+	Help:      "HTTP handler latency in seconds",
 	Namespace: "virgild",
 })
 
