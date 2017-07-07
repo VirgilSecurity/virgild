@@ -9,6 +9,7 @@ var (
 		Name:       "duration_seconds",
 		Subsystem:  "cache_manager",
 		Namespace:  "virgild",
+		Help:       "Cache manager implement standard CRUD operation and collect latency by operation type",
 		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 	}, []string{"type"})
 )
