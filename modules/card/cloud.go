@@ -13,8 +13,14 @@ import (
 	"github.com/VirgilSecurity/virgild/coreapi"
 	"github.com/VirgilSecurity/virgild/modules/card/core"
 	"github.com/pkg/errors"
-	metrics "github.com/rcrowley/go-metrics"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var cloudDurationMetrics = prometheus.NewSummaryVec(prometheus.SummaryOpts{
+	Name:      "cards_service",
+	Subsystem: "cards",
+	Namespace: "virgild",
+}, []string{"type"})
 
 type client interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -30,10 +36,10 @@ func (c *cloudCard) getCard(ctx context.Context, id string) (*virgil.CardRespons
 	var body []byte
 	var err error
 
-	t := metrics.GetOrRegisterTimer("cards-service.get", nil)
-	t.Time(func() {
-		body, err = c.send(ctx, http.MethodGet, c.CardsService+"/v4/card/"+id, nil)
-	})
+	timer := prometheus.NewTimer(cloudDurationMetrics.WithLabelValues("get_card"))
+	body, err = c.send(ctx, http.MethodGet, c.CardsService+"/v4/card/"+id, nil)
+	timer.ObserveDuration()
+
 	if err != nil {
 		return nil, err
 	}
@@ -46,10 +52,10 @@ func (c *cloudCard) searchCards(ctx context.Context, crit *virgil.Criteria) ([]v
 	var body []byte
 	var err error
 
-	t := metrics.GetOrRegisterTimer("cards-service.search", nil)
-	t.Time(func() {
-		body, err = c.send(ctx, http.MethodPost, c.CardsService+"/v4/card/actions/search", crit)
-	})
+	timer := prometheus.NewTimer(cloudDurationMetrics.WithLabelValues("search"))
+	body, err = c.send(ctx, http.MethodPost, c.CardsService+"/v4/card/actions/search", crit)
+	timer.ObserveDuration()
+
 	if err != nil {
 		return nil, err
 	}
@@ -62,10 +68,9 @@ func (c *cloudCard) createCard(ctx context.Context, req *core.CreateCardRequest)
 	var body []byte
 	var err error
 
-	t := metrics.GetOrRegisterTimer("cards-service.create-card", nil)
-	t.Time(func() {
-		body, err = c.send(ctx, http.MethodPost, c.RAService+"/v1/card", req.Request)
-	})
+	timer := prometheus.NewTimer(cloudDurationMetrics.WithLabelValues("create_card"))
+	body, err = c.send(ctx, http.MethodPost, c.RAService+"/v1/card", req.Request)
+	timer.ObserveDuration()
 
 	if err != nil {
 		return nil, err
@@ -78,10 +83,9 @@ func (c *cloudCard) createCard(ctx context.Context, req *core.CreateCardRequest)
 func (c *cloudCard) revokeCard(ctx context.Context, req *core.RevokeCardRequest) error {
 	var err error
 
-	t := metrics.GetOrRegisterTimer("cards-service.revoke-card", nil)
-	t.Time(func() {
-		_, err = c.send(ctx, http.MethodDelete, c.RAService+"/v1/card/"+req.Info.ID, req.Request)
-	})
+	timer := prometheus.NewTimer(cloudDurationMetrics.WithLabelValues("revoke_card"))
+	_, err = c.send(ctx, http.MethodDelete, c.RAService+"/v1/card/"+req.Info.ID, req.Request)
+	timer.ObserveDuration()
 
 	return err
 }
@@ -90,10 +94,10 @@ func (c *cloudCard) createRelation(ctx context.Context, req *core.CreateRelation
 	var body []byte
 	var err error
 
-	t := metrics.GetOrRegisterTimer("cards-service.create-relation", nil)
-	t.Time(func() {
-		body, err = c.send(ctx, http.MethodPost, c.CardsService+"/v4/card/"+req.ID+"/collections/relations", req.Request)
-	})
+	timer := prometheus.NewTimer(cloudDurationMetrics.WithLabelValues("create_relation"))
+	body, err = c.send(ctx, http.MethodPost, c.CardsService+"/v4/card/"+req.ID+"/collections/relations", req.Request)
+	timer.ObserveDuration()
+
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +110,9 @@ func (c *cloudCard) revokeRelation(ctx context.Context, req *core.RevokeRelation
 	var body []byte
 	var err error
 
-	t := metrics.GetOrRegisterTimer("cards-service.revoke-relation", nil)
-	t.Time(func() {
-		body, err = c.send(ctx, http.MethodDelete, c.CardsService+"/v4/card/"+req.ID+"/collections/relations", req.Request)
-	})
+	timer := prometheus.NewTimer(cloudDurationMetrics.WithLabelValues("revoke_relation"))
+	body, err = c.send(ctx, http.MethodDelete, c.CardsService+"/v4/card/"+req.ID+"/collections/relations", req.Request)
+	timer.ObserveDuration()
 
 	if err != nil {
 		return nil, err
