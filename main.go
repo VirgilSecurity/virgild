@@ -8,9 +8,8 @@ import (
 	"github.com/VirgilSecurity/virgild/modules/healthcheck"
 	_ "github.com/VirgilSecurity/virgild/plugins/cache"
 	_ "github.com/VirgilSecurity/virgild/plugins/logs"
-	_ "github.com/VirgilSecurity/virgild/plugins/metrics"
 	"github.com/namsral/flag"
-	metrics "github.com/rcrowley/go-metrics"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -19,12 +18,20 @@ var (
 	httpsSertificat string
 	httpsPrivateKey string
 )
+var rpc = prometheus.NewSummary(prometheus.SummaryOpts{
+	Name:      "duration_seconds",
+	Subsystem: "http",
+	Help:      "HTTP handler latency in seconds",
+	Namespace: "virgild",
+})
 
 func init() {
 	flag.StringVar(&address, "address", ":8080", "Address of service")
+	flag.BoolVar(&httpsEnabled, "https-enabled", false, "Enable HTTPS mode")
 	flag.StringVar(&httpsSertificat, "https-certificate", "", "The path of the certificate file")
 	flag.StringVar(&httpsPrivateKey, "https-private-key", "", "The path of private key file")
-	flag.BoolVar(&httpsEnabled, "https-enabled", false, "Enable HTTPS mode")
+
+	prometheus.MustRegister(rpc)
 }
 
 func main() {
@@ -34,14 +41,14 @@ func main() {
 	card.Init(c)
 	healthcheck.Init(c)
 
-	c.Common.Logger.Info("Start listening...")
+	c.Common.Logger.Info("Start listening address %v ...", address)
 
-	h := responseMetrics{c.HTTP.Router}
+	http.Handle("/", httpDuration(c.HTTP.Router))
 	var err error
 	if httpsEnabled {
-		err = http.ListenAndServeTLS(address, httpsSertificat, httpsPrivateKey, h)
+		err = http.ListenAndServeTLS(address, httpsSertificat, httpsPrivateKey, nil)
 	} else {
-		err = http.ListenAndServe(address, h)
+		err = http.ListenAndServe(address, nil)
 	}
 
 	if err != nil {
@@ -49,13 +56,10 @@ func main() {
 	}
 }
 
-type responseMetrics struct {
-	router http.Handler
-}
-
-func (m responseMetrics) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	t := metrics.GetOrRegisterTimer("response", nil)
-	t.Time(func() {
-		m.router.ServeHTTP(w, r)
+func httpDuration(hander http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t := prometheus.NewTimer(rpc)
+		hander.ServeHTTP(w, r)
+		t.ObserveDuration()
 	})
 }

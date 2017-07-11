@@ -21,10 +21,7 @@ func TestWrapperAPIHandlerServeHTTP_SeccessStruct(t *testing.T) {
 	w := &thttp.TestResponseWriter{}
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	wrap := wrapperHandler{
-		apiHandler: handler,
-		logger:     l,
-	}
+	wrap := wrapAPIHandler(l)(handler)
 	wrap.ServeHTTP(w, r)
 
 	assert.Equal(t, http.StatusOK, w.StatusCode)
@@ -40,10 +37,7 @@ func TestWrapperAPIHandlerServeHTTP_SeccessNil(t *testing.T) {
 	w := &thttp.TestResponseWriter{}
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	wrap := wrapperHandler{
-		apiHandler: handler,
-		logger:     l,
-	}
+	wrap := wrapAPIHandler(l)(handler)
 	wrap.ServeHTTP(w, r)
 
 	assert.Equal(t, http.StatusOK, w.StatusCode)
@@ -59,10 +53,7 @@ func TestWrapperAPIHandlerServeHTTP_SeccessByte(t *testing.T) {
 	w := &thttp.TestResponseWriter{}
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	wrap := wrapperHandler{
-		apiHandler: handler,
-		logger:     l,
-	}
+	wrap := wrapAPIHandler(l)(handler)
 	wrap.ServeHTTP(w, r)
 
 	assert.Equal(t, http.StatusOK, w.StatusCode)
@@ -83,10 +74,7 @@ func TestWrapperAPIHandlerServeHTTP_APIError(t *testing.T) {
 	w := &thttp.TestResponseWriter{}
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	wrap := wrapperHandler{
-		apiHandler: handler,
-		logger:     l,
-	}
+	wrap := wrapAPIHandler(l)(handler)
 	wrap.ServeHTTP(w, r)
 
 	assert.Equal(t, statusCode, w.StatusCode)
@@ -103,10 +91,7 @@ func TestWrapperAPIHandlerServeHTTP_InternalErr(t *testing.T) {
 	w := &thttp.TestResponseWriter{}
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	wrap := wrapperHandler{
-		apiHandler: handler,
-		logger:     l,
-	}
+	wrap := wrapAPIHandler(l)(handler)
 	wrap.ServeHTTP(w, r)
 
 	assert.Equal(t, http.StatusInternalServerError, w.StatusCode)
@@ -123,10 +108,7 @@ func TestWrapperAPIHandlerServeHTTP_InternalErr_LogIt(t *testing.T) {
 	w := &thttp.TestResponseWriter{}
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	wrap := wrapperHandler{
-		apiHandler: handler,
-		logger:     l,
-	}
+	wrap := wrapAPIHandler(l)(handler)
 	wrap.ServeHTTP(w, r)
 
 	l.AssertExpectations(t)

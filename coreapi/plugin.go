@@ -1,11 +1,8 @@
 package coreapi
 
 var (
-	loggers       map[string]func() (Logger, error)
-	cachers       map[string]func() (RawCache, error)
-	metricsOutput = map[string]func() error{
-		"disabled": func() error { return nil },
-	}
+	loggers map[string]func() (Logger, error)
+	cachers map[string]func() (RawCache, error)
 )
 
 func init() {
@@ -19,10 +16,6 @@ func RegisterLogger(key string, makeF func() (Logger, error)) {
 
 func RegisterCache(key string, makeF func() (RawCache, error)) {
 	cachers[key] = makeF
-}
-
-func RegisterMetrics(key string, makeF func() error) {
-	metricsOutput[key] = makeF
 }
 
 type RawCache interface {
