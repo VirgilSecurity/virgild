@@ -43,7 +43,7 @@ func main() {
 
 	c.Common.Logger.Info("Start listening address %v ...", address)
 
-	http.Handle("/", httpDuration(c.HTTP.Router))
+	http.Handle("/", corsHandler(httpDuration(c.HTTP.Router)))
 	var err error
 	if httpsEnabled {
 		err = http.ListenAndServeTLS(address, httpsSertificat, httpsPrivateKey, nil)
@@ -61,5 +61,19 @@ func httpDuration(hander http.Handler) http.Handler {
 		t := prometheus.NewTimer(rpc)
 		hander.ServeHTTP(w, r)
 		t.ObserveDuration()
+	})
+}
+func corsHandler(hander http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT")
+		w.Header().Set("Access-Control-Allow-Headers", "X-Virgil-Request-Id, X-Virgil-Request-Sign, X-Virgil-Response-Id, X-Virgil-Response-Sign, X-Virgil-Access-Token, X-Virgil-Application-Token, X-Virgil-Request-Uuid, X-Virgil-Request-Sign-Virgil-Card-ID, X-Virgil-Request-Sign-Pk-Id, X-Virgil-Authentication, Content-Type, User-Agent, Origin, Authorization, Accept, DNT, X-Requested-With, If-Modified-Since, Cache-Control")
+		w.Header().Set("Access-Control-Expose-Headers", "X-Virgil-Response-Id, X-Virgil-Response-Sign")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		hander.ServeHTTP(w, r)
 	})
 }
