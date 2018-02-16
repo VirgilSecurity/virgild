@@ -51,6 +51,7 @@ func (c *cacheCardMiddleware) SearchCards(f core.SearchCardsHandler) core.Search
 		has := c.cache.Get(key, &ids)
 
 		if has {
+			cards = make([]virgil.CardResponse, 0)
 			cachePass := true
 			for _, id := range ids {
 				var card *virgil.CardResponse
