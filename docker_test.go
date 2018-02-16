@@ -3,11 +3,12 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 
 	"gopkg.in/virgil.v4"
@@ -79,7 +80,7 @@ func TestSearchAppCards(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := genID()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
@@ -121,6 +122,22 @@ func TestSearchAppCards(t *testing.T) {
 	assert.EqualValues(t, card, c)
 }
 
+func TestSearchCardsSecondRequestReturnEmptyArra(t *testing.T) {
+	token := os.Getenv("SYNC_TOKEN")
+	uid := genID()
+	lc, err := virgil.NewClient(token, virgil.ClientTransport(virgilhttp.NewTransportClient(host, host, host, host)))
+	assert.NoError(t, err, "Cannot create virgil client")
+
+	cs, err := lc.SearchCards(virgil.SearchCriteriaByIdentities(uid))
+	assert.NoError(t, err, "Cannot search cards by temp name (%v)", uid)
+	assert.Empty(t, cs)
+
+	// second request
+	cs, err = lc.SearchCards(virgil.SearchCriteriaByIdentities(uid))
+	assert.NoError(t, err, "Cannot search cards by temp name (%v)", uid)
+	assert.Empty(t, cs)
+}
+
 func TestCreateAppCard(t *testing.T) {
 	appID := os.Getenv("SYNC_APP_ID")
 	token := os.Getenv("SYNC_TOKEN")
@@ -133,7 +150,7 @@ func TestCreateAppCard(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := genID()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
@@ -186,7 +203,7 @@ func TestRevokeAppCard(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := genID()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
@@ -224,4 +241,13 @@ func TestRevokeAppCard(t *testing.T) {
 
 	_, err = vc.GetCard(card.ID)
 	assert.Error(t, err, "We expected that card not found")
+}
+
+func genID() string {
+	var b [16]byte
+	_, err := rand.Read(b[:])
+	if err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(b[:])
 }
