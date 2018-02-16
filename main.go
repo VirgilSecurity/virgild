@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	address         string
-	httpsEnabled    bool
-	httpsSertificat string
-	httpsPrivateKey string
+	address          string
+	httpsEnabled     bool
+	httpsCertificate string
+	httpsPrivateKey  string
 )
 var rpc = prometheus.NewSummary(prometheus.SummaryOpts{
 	Name:      "duration_seconds",
@@ -28,7 +28,7 @@ var rpc = prometheus.NewSummary(prometheus.SummaryOpts{
 func init() {
 	flag.StringVar(&address, "address", ":8080", "Address of service")
 	flag.BoolVar(&httpsEnabled, "https-enabled", false, "Enable HTTPS mode")
-	flag.StringVar(&httpsSertificat, "https-certificate", "", "The path of the certificate file")
+	flag.StringVar(&httpsCertificate, "https-certificate", "", "The path of the certificate file")
 	flag.StringVar(&httpsPrivateKey, "https-private-key", "", "The path of private key file")
 
 	prometheus.MustRegister(rpc)
@@ -46,7 +46,7 @@ func main() {
 	http.Handle("/", httpDuration(c.HTTP.Router))
 	var err error
 	if httpsEnabled {
-		err = http.ListenAndServeTLS(address, httpsSertificat, httpsPrivateKey, nil)
+		err = http.ListenAndServeTLS(address, httpsCertificate, httpsPrivateKey, nil)
 	} else {
 		err = http.ListenAndServe(address, nil)
 	}
