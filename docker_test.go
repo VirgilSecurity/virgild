@@ -133,7 +133,7 @@ func TestSearchCardsSecondRequestReturnEmptyArra(t *testing.T) {
 	assert.Empty(t, cs)
 
 	// second request
-	cs, err := lc.SearchCards(virgil.SearchCriteriaByIdentities(uid))
+	cs, err = lc.SearchCards(virgil.SearchCriteriaByIdentities(uid))
 	assert.NoError(t, err, "Cannot search cards by temp name (%v)", uid)
 	assert.Empty(t, cs)
 }
