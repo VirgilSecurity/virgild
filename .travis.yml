@@ -14,6 +14,7 @@ matrix:
           - GIT_BRANCH=$TRAVIS_BRANCH
           - TARGET_OS=linux
           - SWIG_VERSION=3.0.7
+          - CDN_C_CRYPTO_NAME=virgil-crypto-2.3.0-go-linux-x86_64.tgz
 # MACOS
     - os: osx
       language: go
@@ -21,17 +22,14 @@ matrix:
       env:
         global:
           - TARGET_OS=darwin
+          - CDN_C_CRYPTO_NAME=virgil-crypto-2.3.0-go-darwin-17.4-x86_64.tgz
 
 before_install:
-  - if [[ "$TARGET_OS" == "darwin" ]]; then
-      brew update;
-      brew install swig;
-    fi
+  go get -d gopkg.in/virgilsecurity/virgil-crypto-go.v4;
+  wget https://cdn.virgilsecurity.com/crypto-go/$CDN_C_CRYPTO_NAME;
+  tar -xvf $CDN_C_CRYPTO_NAME  --strip-components=1 -C $GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/;
   - 'if [ "$TARGET_OS" = "linux" ]; then
       docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD";
-      go get -d gopkg.in/virgilsecurity/virgil-crypto-go.v4;
-      wget https://cdn.virgilsecurity.com/crypto-go/virgil-crypto-2.0.4-go-linux-x86_64.tgz;
-      tar -xvf virgil-crypto-2.0.4-go-linux-x86_64.tgz --strip-components=1 -C $GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/;
     fi'
 
 install:

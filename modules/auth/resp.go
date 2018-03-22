@@ -74,5 +74,5 @@ var errMap = map[errResponse]string{
 	20301: `The Virgil authenticator service responded with an error`,
 	20302: `The Virgil access token validation has failed on the Virgil Authenticator service`,
 	20303: `The application was not found for the access token`,
-	20500: `The Virgil Card is not available in this application`,
+	20500: `The Virgil Card is not available`,
 }
