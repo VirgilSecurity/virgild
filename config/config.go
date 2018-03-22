@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/tochka/flag"
+	"github.com/namsral/flag"
 )
 
 var defaultConfig Config
@@ -52,7 +52,7 @@ func init() {
 	flag.DurationVar(&defaultConfig.Metrics.Graphite.Interval, "metrics-graphite-interval", time.Minute, "How often send metrics to the graphite")
 	flag.StringVar(&defaultConfig.Metrics.Graphite.Prefix, "metrics-graphite-prefix", "", "Prefix in graphit system")
 
-	flag.StringVar(&configPath, flag.DefaultConfigFlagname, "virgild.conf", "path to config file")
+	flag.StringVar(&configPath, flag.DefaultConfigFlagname, "", "path to config file")
 }
 
 type SignerConfig struct {

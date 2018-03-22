@@ -11,4 +11,5 @@ func (e errResponse) Error() string {
 var (
 	errTokenInvalid     errResponse = 20300
 	errAuthServiceDenny errResponse = 20302
+	errForbidden        errResponse = 20500
 )
