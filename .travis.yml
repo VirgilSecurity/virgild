@@ -25,9 +25,9 @@ matrix:
           - CDN_C_CRYPTO_NAME=virgil-crypto-2.3.0-go-darwin-17.4-x86_64.tgz
 
 before_install:
-  go get -d gopkg.in/virgilsecurity/virgil-crypto-go.v4;
-  wget https://cdn.virgilsecurity.com/crypto-go/$CDN_C_CRYPTO_NAME;
-  tar -xvf $CDN_C_CRYPTO_NAME  --strip-components=1 -C $GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/;
+  - go get -d gopkg.in/virgilsecurity/virgil-crypto-go.v4;
+  - wget https://cdn.virgilsecurity.com/crypto-go/$CDN_C_CRYPTO_NAME;
+  - tar -xvf $CDN_C_CRYPTO_NAME  --strip-components=1 -C $GOPATH/src/gopkg.in/virgilsecurity/virgil-crypto-go.v4/;
   - 'if [ "$TARGET_OS" = "linux" ]; then
       docker login -u="$DOCKERHUB_USERNAME" -p="$DOCKERHUB_PASSWORD";
     fi'
