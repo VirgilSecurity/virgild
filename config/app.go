@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/allegro/bigcache"
-	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
