@@ -82,7 +82,7 @@ func TestSyncSearchCards(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := uuid.Must(uuid.NewV4()).String()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
@@ -141,7 +141,7 @@ func TestSyncCreateCard(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := uuid.Must(uuid.NewV4()).String()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
@@ -193,7 +193,7 @@ func TestSyncRevokeCard(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := uuid.Must(uuid.NewV4()).String()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
@@ -284,7 +284,7 @@ func TestLocalSearchCards(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := uuid.Must(uuid.NewV4()).String()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
@@ -340,7 +340,7 @@ func TestLocalCreateCard(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := uuid.Must(uuid.NewV4()).String()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
@@ -394,7 +394,7 @@ func TestLocalRevokeCard(t *testing.T) {
 	deviceKeypair, err := virgil.Crypto().GenerateKeypair()
 	assert.NoError(t, err, "Cannot generate key pair")
 
-	uid := uuid.NewV4().String()
+	uid := uuid.Must(uuid.NewV4()).String()
 	req, err := virgil.NewCreateCardRequest(uid, "temp", deviceKeypair.PublicKey(), virgil.CardParams{
 		Scope: virgil.CardScope.Application,
 		Data: map[string]string{
