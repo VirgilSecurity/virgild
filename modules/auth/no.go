@@ -1,14 +1,19 @@
 package auth
 
-import "github.com/valyala/fasthttp"
+import (
+	"encoding/json"
+
+	"github.com/valyala/fasthttp"
+)
 
 func noAuth(permission string, next fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx fasthttp.RequestCtx) {
+	return func(ctx *fasthttp.RequestCtx) {
 		if !ctx.RemoteIP().IsLoopback() &&
 			(permission == PermissionCreateCard ||
 				permission == PermissionRevokeCard) {
 
-			errWrap(errForbidden, ctx)
+			json.NewEncoder(ctx).Encode(respErr{errForbidden, errMap[errForbidden]})
+			ctx.SetStatusCode(fasthttp.StatusForbidden)
 			return
 		}
 		next(ctx)
