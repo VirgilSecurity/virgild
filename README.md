@@ -91,7 +91,7 @@ $ ./virgild
 
 
 # API
-All information you can find on the [development portal](https://virgilsecurity.com/docs/services/cards/v4/cards-service)
+All information you can find on the [development portal](https://developer.virgilsecurity.com/docs/api-reference/card-service/)
 
 # Appendix A. Environment
 
