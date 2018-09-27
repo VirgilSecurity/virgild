@@ -18,7 +18,7 @@ matrix:
 # MACOS
     - os: osx
       language: go
-      go: 1.7.5
+      go: 1.9.x
       env:
         global:
           - TARGET_OS=darwin
