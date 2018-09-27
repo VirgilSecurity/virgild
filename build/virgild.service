@@ -4,7 +4,9 @@ Description=virgild service
 [Service]
 User=root
 Restart=always
-ExecStart=/usr/local/bin/virgild -c /etc/virgild.conf
+ExecStart=/usr/local/bin/virgild -config /etc/virgild.conf
+StartLimitInterval=20
+TimeoutStartSec=5
 
 [Install]
 WantedBy=multi-user.target
