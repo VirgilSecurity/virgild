@@ -206,9 +206,9 @@ func initLogger(logFile string) (*log.Logger, error) {
 	if logFile == "console" {
 		w = os.Stderr
 	} else {
-		f, err := os.OpenFile(logFile, os.O_APPEND, 700)
+		f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 644)
 		if err != nil {
-			return nil, fmt.Errorf("Cannot open file config (%v): %v", logFile, err)
+			return nil, fmt.Errorf("Cannot open file log (%v): %v", logFile, err)
 		}
 		w = f
 	}
