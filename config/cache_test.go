@@ -14,7 +14,7 @@ type fakeLogger struct {
 }
 
 func (f fakeLogger) Printf(format string, args ...interface{}) {
-	f.T.Fatalf(format, args)
+	f.T.Fatalf(format, args...)
 }
 
 func makeCacheManager(t *testing.T, logger Logger) (*bigcache.BigCache, *Cache) {
