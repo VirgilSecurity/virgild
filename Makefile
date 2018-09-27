@@ -79,7 +79,7 @@ build_in_docker-env:
 
 build_rpm:
 	mkdir -p rpmbuild/{etc/systemd/system/multi-user.target.wants,usr/local/bin,etc,var/lib/virgild}
-	cp virgild rpmbuild/usr/local/bin/
+	cp $(BUILD_FILE_NAME) rpmbuild/usr/local/bin/
 	cp build/virgild.service rpmbuild/etc/systemd/system/multi-user.target.wants/virgild.service
 	cp build/virgild.conf rpmbuild/etc/
 	docker run --rm -v "$$PWD":/data skandyla/fpm -s dir -t rpm -n "virgild" -v $(VERSION) -p /data -C /data/rpmbuild ./
