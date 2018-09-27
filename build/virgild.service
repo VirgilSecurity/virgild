@@ -1,0 +1,10 @@
+[Unit]
+Description=virgild service
+
+[Service]
+User=root
+Restart=always
+ExecStart=/usr/local/bin/virgild -c /etc/virgild.conf
+
+[Install]
+WantedBy=multi-user.target
