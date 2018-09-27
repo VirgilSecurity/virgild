@@ -131,29 +131,30 @@ func Init() *App {
 		app.Common.ConfigPath = configPath
 	}
 
-	app.Common.Address = conf.Address
-
-	app.Common.DB, err = initDB(conf.DB)
-	if err != nil {
-		panic(err)
-	}
 	app.Common.Logger, err = initLogger(conf.LogFile)
 	if err != nil {
 		panic(err)
 	}
+
+	app.Common.Address = conf.Address
+
+	app.Common.DB, err = initDB(conf.DB)
+	if err != nil {
+		app.Common.Logger.Fatal(err)
+	}
 	app.Cards, err = initCards(&conf.Cards)
 	if err != nil {
-		panic(err)
+		app.Common.Logger.Fatal(err)
 	}
 
 	app.Common.Cache, err = initCache(conf.Cards.Cache, app.Common.Logger)
 	if err != nil {
-		panic(err)
+		app.Common.Logger.Fatal(err)
 	}
 
 	app.Site.VirgilD, err = setSiteVirgilD(app.Cards.Signer)
 	if err != nil {
-		panic(err)
+		app.Common.Logger.Fatal(err)
 	}
 	app.Site.Admin.Login = conf.Admin.Login
 	app.Site.Admin.Password = conf.Admin.Password
@@ -161,7 +162,7 @@ func Init() *App {
 
 	app.Auth, err = initAtuh(conf.Auth)
 	if err != nil {
-		panic(err)
+		app.Common.Logger.Fatal(err)
 	}
 	if app.Common.Config != conf { // has changes
 		app.Common.Config = conf
