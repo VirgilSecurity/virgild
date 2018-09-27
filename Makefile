@@ -3,6 +3,7 @@
 PROJECT =virgild
 IMAGENAME=$(PROJECT)
 DOCKERHUB_REPOSITORY=virgilsecurity/$(IMAGENAME)
+VERSION ?= $(shell git tag -l|tail -n 1)
 
 ifeq ($(OS),Windows_NT)
 TARGET_OS ?= windows
@@ -81,7 +82,8 @@ build_rpm:
 	cp virgild rpmbuild/usr/local/bin/
 	cp build/virgild.service rpmbuild/etc/systemd/system/multi-user.target.wants/virgild.service
 	cp build/virgild.conf rpmbuild/etc/
-	docker run --rm -v "$$PWD":/data skandyla/fpm -s dir -t rpm -n "virgild" -v $(shell git tag  --sort=-version:refname|head -n1) -p /data -C /data/rpmbuild ./
+	docker run --rm -v "$$PWD":/data skandyla/fpm -s dir -t rpm -n "virgild" -v $(VERSION) -p /data -C /data/rpmbuild ./
+	rm -rf rpmbuild
 
 
 docker: build_docker docker_test
