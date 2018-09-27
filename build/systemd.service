@@ -1,0 +1,12 @@
+[Unit]
+Description=virgild service
+
+[Service]
+User=root
+Restart=always
+ExecStartPre=/usr/bin/mkdir -p /var/lib/virgild
+ExecStartPre=/usr/bin/touch /var/log/virgild.log
+ExecStart=/usr/local/bin/virgild -config /etc/virgild.conf
+
+[Install]
+WantedBy=multi-user.target
