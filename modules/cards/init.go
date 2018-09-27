@@ -108,7 +108,7 @@ func makeCardMode(conf *config.App) (get core.GetCard, search core.SearchCards, 
 		create = local.Create(remote.Create)
 		revoke = local.Revoke(remote.Revoke)
 	default:
-		conf.Common.Logger.Fatalln("Unsupported cards mode (%v)", conf.Cards.Mode)
+		conf.Common.Logger.Fatalf("Unsupported cards mode (%v)\n", conf.Cards.Mode)
 		return nil, nil, nil, nil
 	}
 
