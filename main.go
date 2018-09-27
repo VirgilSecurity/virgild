@@ -74,6 +74,7 @@ func main() {
 		go graphite.WithConfig(graphanaConf)
 	}
 
+	conf.Common.Logger.Println("VirgilD start listening", conf.Common.Address)
 	var err error
 	if conf.Common.Config.HTTPS.Enabled {
 		err = fasthttp.ListenAndServeTLS(conf.Common.Address, conf.Common.Config.HTTPS.CertFile, conf.Common.Config.HTTPS.PrivateKey, f(r.Handler))
