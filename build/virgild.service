@@ -4,6 +4,7 @@ Description=virgild service
 [Service]
 User=root
 Restart=always
+#ExecStartPre=/usr/bin/touch /var/log/virgild.log
 ExecStart=/usr/local/bin/virgild -config /etc/virgild.conf
 StartLimitInterval=20
 TimeoutStartSec=5
