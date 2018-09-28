@@ -3,6 +3,7 @@
 PROJECT =virgild
 IMAGENAME=$(PROJECT)
 DOCKERHUB_REPOSITORY=virgilsecurity/$(IMAGENAME)
+VERSION ?= $(shell git tag -l|tail -n 1)
 
 ifeq ($(OS),Windows_NT)
 TARGET_OS ?= windows
@@ -75,6 +76,10 @@ $(BUILD_FILE_NAME):
 build_in_docker-env:
 	docker pull virgilsecurity/virgil-crypto-go-env
 	docker run -it --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild virgilsecurity/virgil-crypto-go-env make
+
+build_rpm:
+	rpmbuild -bb build/rpm.spec --define "_sourcedir $$PWD" --define "_topdir $$PWD/rpmbuild" --define "version $(VERSION)"
+
 
 docker: build_docker docker_test
 

@@ -1,0 +1,12 @@
+[Unit]
+Description=virgild service
+
+[Service]
+User=virgild
+Restart=always
+ExecStart=/usr/bin/virgild -config /etc/virgild.conf
+StartLimitInterval=20
+TimeoutStartSec=5
+
+[Install]
+WantedBy=multi-user.target
