@@ -78,12 +78,7 @@ build_in_docker-env:
 	docker run -it --rm -v "$$PWD":/go/src/github.com/VirgilSecurity/virgild -w /go/src/github.com/VirgilSecurity/virgild virgilsecurity/virgil-crypto-go-env make
 
 build_rpm:
-	mkdir -p rpmbuild/{etc/systemd/system/multi-user.target.wants,usr/local/bin,etc,var/lib/virgild}
-	cp $(BUILD_FILE_NAME) rpmbuild/usr/local/bin/
-	cp build/virgild.service rpmbuild/etc/systemd/system/multi-user.target.wants/virgild.service
-	cp build/virgild.conf rpmbuild/etc/
-	docker run --rm -v "$$PWD":/data skandyla/fpm -s dir -t rpm -n "virgild" -v $(VERSION) -p /data -C /data/rpmbuild ./
-	rm -rf rpmbuild
+	rpmbuild -bb build/rpm.spec --define "_sourcedir $$PWD" --define "_topdir $$PWD/rpmbuild" --define "version $(VERSION)"
 
 
 docker: build_docker docker_test
